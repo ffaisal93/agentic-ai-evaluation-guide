@@ -66,3 +66,5 @@ temp/
 Thumbs.db
 .DS_Store
 
+# mdBook build output
+book/
