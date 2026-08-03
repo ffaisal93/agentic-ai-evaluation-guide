@@ -378,6 +378,7 @@ Historically every framework had its own tool format, so a tool you wrote for on
 - **The spec matured.** The **2025-03** revision added **Streamable HTTP** transport and **OAuth 2.1**; the **2025-11-25** revision added **async tasks** (long-running operations), refined auth (OAuth Resource Server, Client ID Metadata Documents), **elicitation**, an **extensions** system, and **MCP Apps** (interactive UI in chat).
 - **Transports:** **stdio** (local subprocess, great for desktop/CLI) and **Streamable HTTP + SSE** (remote, production-grade).
 - **A public **registry** indexes ~2,000 servers.
+- **The 2026-07-28 spec rewrote the transport core.** Sessions and the `initialize`/session-ID handshake are gone — every request is now stateless and self-contained, so MCP servers can scale horizontally behind a plain load balancer with no sticky sessions. It adds **Multi Round-Trip Requests (MRTR)** for "ask the user for missing input mid-call" flows, moves tool/method names into HTTP headers (`Mcp-Method`, `Mcp-Name`) for gateway-level routing, and adds `ttlMs`/`cacheScope` cache hints on list/read results. Breaking for existing servers: Roots, Sampling, and Logging are deprecated (12-month sunset), Tasks move into a formal extension framework, and Dynamic Client Registration is being superseded by Client ID Metadata Documents. **If you're building a server today: design it stateless from the start** — don't stash per-session state in memory keyed by a session ID, since the spec no longer guarantees you'll see the same server instance twice.
 
 **Core MCP primitives a server exposes:** **Tools** (model-callable functions), **Resources** (readable data/context, like files or DB rows), and **Prompts** (reusable templated interactions).
 
@@ -1140,6 +1141,7 @@ Every link below was checked (mid-2026) before being included. Frameworks and pr
 ### 12.4 Model Context Protocol (§5.5)
 
 - **MCP specification, 2025-11-25 revision** — the current spec version discussed in §5.5 (async tasks, elicitation, extensions, MCP Apps). [modelcontextprotocol.io/specification/2025-11-25](https://modelcontextprotocol.io/specification/2025-11-25)
+- **MCP specification, 2026-07-28 revision** — supersedes 2025-11-25: the stateless-core rewrite (dropped session/handshake), Multi Round-Trip Requests, header-based routing, cache hints on list results, and deprecation of Roots/Sampling/Logging (12-month sunset). [blog.modelcontextprotocol.io/posts/2026-07-28](https://blog.modelcontextprotocol.io/posts/2026-07-28/)
 - **MCP joins the Agentic AI Foundation** (Dec 2025) — the governance handoff from Anthropic to the Linux Foundation–hosted foundation. [blog.modelcontextprotocol.io/posts/2025-12-09-mcp-joins-agentic-ai-foundation](https://blog.modelcontextprotocol.io/posts/2025-12-09-mcp-joins-agentic-ai-foundation/)
 - **MCP spec & schema source** (for tracking future revisions). [github.com/modelcontextprotocol/modelcontextprotocol](https://github.com/modelcontextprotocol/modelcontextprotocol)
 
