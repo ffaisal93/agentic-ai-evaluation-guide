@@ -11,7 +11,13 @@ the way they actually react to it?"* Those are not the same question, and the
 gap between them is where most agent regressions hide.
 
 This chapter is about closing that gap deliberately — with a staged rollout
-ladder, honest statistics, and guardrails that catch harm before it scales.
+ladder, honest statistics, guardrails that catch harm before it scales, and the
+concrete platforms, code, and war stories you need to build the system yourself
+and defend it in front of a skeptical senior interviewer. By the end you should
+be able to (1) sketch a rollout-and-measurement plan for a new agent version on a
+whiteboard, (2) write the analysis code that turns run logs into a defensible
+ship/no-ship decision, and (3) name the failure modes — SRM, peeking, novelty,
+interference, Goodhart — before they name you in a postmortem.
 
 ---
 
@@ -38,7 +44,15 @@ that only exists at runtime:
   freely scores great on user satisfaction and quietly destroys margin.
 
 Offline eval is necessary — it is your fast, cheap, deterministic first gate.
-But for some qualities it is structurally incapable of being ground truth.
+But for some qualities it is structurally incapable of being ground truth. The
+deep reason is a *measurement-target mismatch*: your offline eval measures a
+proxy (rubric score, judge rating, exact-match) chosen because it is cheap and
+observable, while the thing you actually care about (resolution, retention,
+margin) is expensive and only observable downstream of a real human decision.
+Every proxy is a bet that the two move together. Real-world testing is how you
+check whether you won that bet — and the whole discipline of this chapter is
+about making the bet honestly, hedging it with guardrails, and paying it off in
+production data rather than in incidents.
 
 ---
 
@@ -59,7 +73,139 @@ measure "did this reduce churn" anywhere but in the real world.
 
 This is why mature teams treat offline eval as a *filter* and online eval as the
 *verdict*. Offline eval decides what is allowed to be tested on real users.
-Production decides what is actually good.
+Production decides what is actually good. A useful mental model is a funnel of
+*decreasing volume and increasing truth*: offline eval runs on millions of cheap
+synthetic/replayed cases and is mostly right about intrinsic quality; shadow runs
+on all live traffic and is right about operational behavior; canary runs on a
+sliver and is right about "is it on fire"; the A/B runs on a powered slice and is
+the only stage that produces a *causal, consequential* verdict. Each stage trades
+volume for truth, and the art is knowing which question each stage can and cannot
+answer.
+
+---
+
+## The 2025–2026 Landscape: How Agent Products Are Tested Online Today
+
+Interviewers increasingly probe whether you know the *actual tooling* teams use,
+not just the theory. Here is the state of the practice as of 2025–2026, with real
+platforms and primary sources. Treat brand names as illustrations of categories,
+not endorsements — the categories are what you must be able to reason about.
+
+### Experimentation platforms (the A/B substrate)
+
+Nobody builds significance testing, bucketing, SRM detection, and CUPED from
+scratch anymore for a real product; they sit on an experimentation platform. The
+2025–2026 field splits into a few archetypes:
+
+- **Statsig** — feature flags + experimentation + product analytics + warehouse-
+  native stats, and (notably for us) a first-class **AI Evals** product that runs
+  *offline* grading against fixed sets **and** *online* grading of LLM outputs on
+  live production traffic, then lets you promote a prompt/model version straight
+  into an A/B experiment measured against business metrics. This is the clearest
+  productization of the "offline gate → online verdict" loop in this chapter.
+  Docs: <https://docs.statsig.com/ai-evals/overview> and product page
+  <https://www.statsig.com/ai-evals>. Their engineering write-ups on
+  experimentation-for-AI are worth reading:
+  <https://www.statsig.com/blog/experimentation-and-ai-trend> and
+  <https://www.statsig.com/blog/llm-optimization-online-experimentation>.
+- **Eppo** (now part of Datadog) — warehouse-native experimentation with strong
+  CUPED-style variance reduction and sequential/"peeking-safe" analysis built in;
+  positions itself around trustworthy readouts and metric governance.
+  <https://www.geteppo.com/>.
+- **GrowthBook** — open-source, warehouse-native experimentation. Its public docs
+  are an unusually good free curriculum: **CUPED**
+  (<https://docs.growthbook.io/statistics/cuped>), **sequential testing / always-
+  valid inference** (<https://docs.growthbook.io/statistics/sequential>), and
+  **power analysis** (<https://docs.growthbook.io/statistics/power>). Case study on
+  CUPED cutting runtime at the LA Times:
+  <https://blog.growthbook.io/cuped-for-faster-experimentation-in-growthbook/>.
+- **LaunchDarkly** — the canonical **feature-flag / progressive-delivery**
+  platform; the machinery you use to *route* traffic for canaries, percentage
+  ramps, kill-switches, and targeted rollouts, increasingly bundled with
+  experimentation. <https://launchdarkly.com/>. (GrowthBook maintains a candid
+  comparison: <https://www.growthbook.io/insights/growthbook-vs-launchdarkly>.)
+- **Optimizely** — long-standing experimentation vendor; their CUPED explainer is
+  a clean primer: <https://www.optimizely.com/insights/blog/cuped-in-ab-testing-and-experimentation/>.
+
+The infra pattern that unifies them: a **feature-flag / assignment service**
+decides which unit sees which agent version (deterministic hashing of a stable
+unit ID → bucket), emits an **exposure/assignment log**, and a **warehouse-native
+stats layer** joins exposures to outcome metrics and computes lift, CIs, SRM, and
+variance-reduced estimates. If you can draw those two boxes and the log between
+them, you understand 80% of every platform above.
+
+### Online LLM-as-judge on sampled traffic
+
+The biggest 2024→2026 shift is that **evaluation moved into production**. Instead
+of only scoring a frozen golden set offline, teams now run an **LLM judge on a
+sample of live traffic** — score, say, 1–5% of real agent responses for
+helpfulness/safety/faithfulness in near-real-time, aggregate into a continuous
+online-quality metric, and alert when it drifts. This turns "quality" into a
+monitorable production signal that sits *next to* latency and cost.
+
+Primary sources and tooling: Statsig's **Online Evaluation**
+(<https://docs.statsig.com/ai-evals/overview>) grades live outputs and supports
+shadow-testing candidate prompt versions; gateway-level online eval is described
+by TrueFoundry (<https://www.truefoundry.com/blog/online-llm-evaluation-gateway>);
+the LLM-observability vendors productize sampled online judging — **Langfuse**
+(<https://langfuse.com/blog/2025-11-12-evals>), **Arize Phoenix**
+(<https://arize.com/guides/llm-as-a-judge/>), **Braintrust**
+(<https://www.braintrust.dev/articles/llm-evaluation-guide>), and **Evidently**
+(<https://www.evidentlyai.com/llm-guide/llm-as-a-judge>). The universal caveat,
+stressed in all of these: an online judge is itself a model that can drift and be
+biased (length bias, self-preference), so you must **calibrate it against human
+labels on live samples** and treat its output as a guardrail metric, not gospel.
+
+### Shadow, replay, and offline-from-online
+
+Two production patterns you must be able to name:
+
+- **Shadow (mirror) traffic** — mirror live requests to the candidate agent, run
+  it, and discard the output. You get operational + (sampled) quality signal on
+  the true live distribution with **zero user exposure**. Vendor/engineering
+  write-ups: FutureAGI (<https://futureagi.com/blog/llm-eval-shadow-traffic-canary-2026/>),
+  Nadir's "Shadow Mode, Forever" (<https://getnadir.com/blog/shadow-testing-canary-rollout-llm-model-swap/>).
+- **Replay / offline-from-online** — capture real production traces (inputs +
+  tool results + outputs) and *replay* them against a candidate offline. This is
+  how you keep the offline eval set tracking the live distribution instead of
+  freezing in the past, and how you build regression suites out of real incidents.
+  The 2025 LLMOps survey from ZenML across ~1,200 deployments documents how
+  common trace-capture → replay → eval pipelines have become:
+  <https://www.zenml.io/blog/what-1200-production-deployments-reveal-about-llmops-in-2025>.
+
+### Guardrail metrics as a first-class concept
+
+Every serious platform now treats **guardrail metrics** as distinct from goal
+metrics — metrics you monitor to make sure a "win" is not secretly causing harm,
+often with their own (looser, non-inferiority-style) decision rules. Mixpanel's
+guide is a clean product-side treatment
+(<https://mixpanel.com/blog/guardrail-metrics/>); the academic grounding is Deng &
+Shi's KDD 2016 metric-development paper
+(<https://exp-platform.com/Documents/2016KDDMetricDevelopmentLessonsDengShi.pdf>).
+
+### The offline→online correlation problem (the open problem)
+
+The hardest, least-solved part of the landscape is knowing **whether your offline
+metric predicts your online outcome at all.** The RecSys community has been
+formalizing this: "Identifying Offline Metrics that Predict Online Impact" (RecSys
+2025, <https://dl.acm.org/doi/10.1145/3705328.3748111>) and "Closing the Online-
+Offline Gap" (RecSys 2025, <https://dl.acm.org/doi/10.1145/3705328.3748117>), with
+the broader argument in Castells & Moffat's "Offline Recommender System
+Evaluation: Challenges and New Directions" (AI Magazine 2022,
+<https://onlinelibrary.wiley.com/doi/10.1002/aaai.12051>). The practical takeaway
+that survives into agent-land: **an offline metric is only as good as its measured
+rank-correlation with the online metric you actually care about**, and most teams
+have *never measured that correlation*. Doing so — logging (offline Δ, online Δ)
+per launch and computing Spearman/Kendall across launches — is a cheap, high-
+signal, and rare practice that will make you stand out in an interview.
+
+> **Landscape summary for interviews.** "Today an agent change flows: offline
+> eval (Statsig AI Evals / Braintrust / Langfuse) → shadow + online LLM-judge on
+> sampled live traffic → canary via feature flags (LaunchDarkly) → a warehouse-
+> native A/B with CUPED + sequential testing + SRM checks (Statsig / Eppo /
+> GrowthBook) → GA behind a kill-switch, with guardrail dashboards and replay
+> feeding real traffic back into the offline set. The unsolved part is measuring
+> offline→online rank correlation so you know how much to trust the first gate."
 
 ---
 
@@ -88,6 +234,16 @@ buys down *decision* risk — it is the only rung that tells you whether the new
 agent is genuinely, causally better. Skipping rungs is how you turn a bad deploy
 into a public incident.
 
+**Which rungs can you skip, and when?** The ladder is a default, not a law. A
+trivial, reversible, flag-guarded prompt tweak with a strong offline signal and a
+robust kill-switch might go straight to a small canary. A change to the agent's
+tool-calling contract, its safety policy, or anything touching money should ride
+*every* rung. The heuristic: **the blast radius of being wrong sets the minimum
+number of rungs.** Cheap-to-reverse + small-blast-radius = fewer rungs; expensive-
+to-reverse or large-blast-radius = all of them. What you must never skip is the
+*kill-switch*: every rung above shadow should be behind a flag you can flip to 0%
+in seconds without a redeploy.
+
 ---
 
 ## A/B Testing for Agents, In Depth
@@ -95,7 +251,10 @@ into a public incident.
 A/B testing (an *online controlled experiment*) randomly assigns units to
 variants, then compares metrics. Randomization is what makes the comparison
 causal: because assignment is independent of everything else, any statistically
-significant metric difference is caused by the variant, not by confounders.
+significant metric difference is caused by the variant, not by confounders. This
+is the entire reason we bother — an observational "we shipped it and the number
+went up" comparison is confounded by time-of-day, seasonality, cohort mix, and a
+dozen other things randomization neutralizes for free.
 
 The mechanics are classic. What makes agents *harder* than a button-color test
 is described after the fundamentals.
@@ -115,7 +274,20 @@ Pick the wrong unit and every downstream number is wrong.
 
 The unit of randomization must match (or be coarser than) the unit of analysis.
 Randomize by user, analyze by user. Randomizing by user but computing
-per-message significance understates variance and inflates false positives.
+per-message significance understates variance and inflates false positives — the
+messages within a user are correlated, so treating them as independent samples
+fabricates statistical power you do not have. If you truly must analyze at the
+message level while randomizing at the user level, use a **cluster-robust
+standard error** (or the delta method / bootstrap over users) so the variance
+accounts for within-user correlation.
+
+**Assignment mechanics.** In practice you assign with a deterministic hash:
+`bucket = hash(unit_id + experiment_salt) % 1000`, then map bucket ranges to
+arms. Determinism guarantees a returning user re-enters the same arm (sticky
+bucketing), and the per-experiment salt guarantees independence across
+overlapping experiments. The exposure is logged *at the moment the user is
+actually eligible and served* — logging assignment for users who never hit the
+agent is a classic source of dilution and SRM.
 
 ### Metrics: goal vs. guardrail
 
@@ -128,6 +300,13 @@ Separate the metric you are trying to *move* from the metrics you refuse to
   improves: p95 latency, cost per task, safety-violation rate, escalation rate,
   refund rate. Microsoft's and Yahoo's experimentation write-ups stress that
   guardrails are what keep a "winning" experiment from silently causing harm.
+
+A subtlety interviewers love: guardrails are usually evaluated as
+**non-inferiority** tests, not superiority tests. You are not asking "did latency
+improve?" — you are asking "can I rule out that latency got *more than X% worse*?"
+That flips the null hypothesis and changes the decision rule. A guardrail that is
+flat-with-wide-CIs has *not* been cleared; you need the CI to exclude the harm
+threshold, which often requires more data than detecting the goal effect.
 
 ### The statistics you must not skip
 
@@ -155,12 +334,21 @@ Example: baseline resolution \( p = 0.60 \), you want to detect an absolute
 MDE to 1 point quadruples the requirement to ~38,400 per arm. **MDE is the
 single most under-appreciated number in agent experiments** — teams routinely
 run a two-week test that never had the power to see the effect they cared about,
-then over-interpret the noise.
+then over-interpret the noise. The \( \delta^2 \) in the denominator is the
+whole story: sample size scales with the *inverse square* of the effect you want
+to detect, so wanting to see small effects is punishingly expensive. This is
+exactly why variance reduction (CUPED, below) is not a nicety — halving variance
+is equivalent to doubling your traffic for free.
 
 **Significance and confidence intervals.** Report the lift *with a confidence
 interval*, not a bare p-value. "Resolution +1.8% (95% CI: +0.4% to +3.2%)" tells
 you both direction and precision. A CI that includes 0 means "not detectably
-different at this sample size" — which is not the same as "no effect."
+different at this sample size" — which is not the same as "no effect." Train
+yourself and your stakeholders to read the *interval*, not the star next to the
+p-value: a result of "+0.1% (95% CI −2.0% to +2.2%)" and a result of "+0.1% (95%
+CI −0.05% to +0.25%)" are wildly different decisions (the first is uninformative,
+the second is a confident "no meaningful effect") even though both are "not
+significant."
 
 **Variance reduction (CUPED).** You can often halve the sample size (or double
 the speed) without touching \( \alpha \) or power by using pre-experiment data.
@@ -176,7 +364,8 @@ Because \( X \) is pre-treatment it cannot be affected by the variant, so
 subtracting it removes variance without biasing the estimate. Microsoft's
 experimentation platform reports variance reductions that meaningfully shorten
 tests; the reduction is roughly \( \rho^2 \), the squared correlation between
-\( X \) and \( Y \).
+\( X \) and \( Y \). A concrete worked CUPED example — including the estimator and
+the variance it saves — appears in the "Build it in practice" section below.
 
 ### Why agents are harder than classic A/B
 
@@ -185,7 +374,10 @@ tests; the reduction is roughly \( \rho^2 \), the squared correlation between
    renew in 60 days — unfolds over weeks. If you stop the test at day 3 you
    measure the short-term proxy, which can point the *opposite* way from the
    long-term outcome (a chattier agent delights users this week and exhausts them
-   next month).
+   next month). The standard mitigations: pick a **surrogate metric** whose link
+   to the long-term outcome you have *validated historically*, and/or run a
+   smaller long-horizon **holdback** cohort that stays on control for 30–60 days
+   so you can measure the durable effect after the main test has shipped.
 
 2. **Feedback loops.** The agent shapes the data that trains and evaluates the
    next agent. A retrieval agent that surfaces certain docs makes those docs get
@@ -198,7 +390,8 @@ tests; the reduction is roughly \( \rho^2 \), the squared correlation between
    confusion dip (primacy) that recovers. Measure the trend over the test window,
    not just the average — if the lift is decaying toward zero, you are looking at
    novelty, not value. Segment new vs. returning users; novelty lives in the
-   returning cohort.
+   returning cohort (they have an old experience to be surprised by; brand-new
+   users do not).
 
 4. **Network effects / interference.** A/B testing assumes one unit's treatment
    does not affect another unit's outcome (SUTVA). Agents break this constantly:
@@ -209,6 +402,14 @@ tests; the reduction is roughly \( \rho^2 \), the squared correlation between
    cluster-randomization work show the fix: randomize by **cluster** (network
    community, market, geo) so that spillover stays inside a variant, then analyze
    at the cluster level. You pay in power; you buy back validity.
+
+5. **Non-stationarity of the model itself.** Unlike a static UI change, an agent's
+   behavior can depend on an upstream foundation model that the provider silently
+   updates, on retrieval indices that refresh, and on prompt-cache state. Your
+   "control" is not guaranteed to be constant across the test window. Pin model
+   versions where you can, log the model/version on every trace, and treat an
+   unexpected shift in *control* metrics as a signal that something moved under
+   you — not as noise.
 
 ---
 
@@ -245,9 +446,22 @@ Resolution, satisfaction, revenue, escalation — all invisible in shadow becaus
 no user ever saw the shadow output. Shadow proves the agent *can run safely at
 scale*; it says nothing about whether it is *better*.
 
+**The side-effect trap (agent-specific and dangerous).** Shadowing a *chatbot* is
+easy: discard the text. Shadowing an *agent that takes actions* is not — if the
+candidate's trajectory includes `issue_refund()`, `send_email()`, or
+`delete_row()`, running it in shadow will fire real side effects unless every
+tool is sandboxed or mocked. This is the single most common way a "safe" shadow
+deployment causes a production incident. The fix is a **tool-execution shim** that,
+in shadow mode, either routes writes to a sandbox, returns recorded/stubbed
+results, or hard-blocks any non-idempotent tool and logs "would have called X."
+Read-only tools (retrieval, search) can pass through; anything that mutates state
+or spends money must be intercepted. Interviewers who have run agents in prod will
+ask about this specifically.
+
 Cost caveat: shadow doubles inference spend (you run both agents on all traffic).
 Sample traffic (e.g. shadow 10%) if cost matters and you only need operational
-signal.
+signal. Pair shadow with an **online LLM-judge on the sampled shadow outputs** to
+get an early, exposure-free read on quality divergence before you risk a canary.
 
 ---
 
@@ -277,10 +491,17 @@ Practical mechanics:
   delayed effects (a memory leak, a cost spike) before widening exposure.
 - **Run an SRM check at every ramp step** (see below) — a misconfigured router
   is the most common canary failure and it silently invalidates the comparison.
+- **Weight the abort rules toward one-sided, fast-moving guardrails.** Operational
+  metrics (errors, latency, cost, safety flags) move fast and are cheap to
+  monitor; long-horizon goal metrics do not belong in a canary abort rule because
+  the canary will never have the power or the time to read them. The canary asks
+  a *safety* question; save the *value* question for the A/B.
 
 Canary and A/B overlap in mechanism (both split traffic) but differ in intent:
 canary asks *"is it on fire?"* (fast, operational, tiny slice); A/B asks *"is it
-better?"* (slow, statistical, powered slice).
+better?"* (slow, statistical, powered slice). A mature pipeline often runs them
+back-to-back on the *same* flag: canary at 1→5% to clear operational risk, then
+open the same flag to 50% and let it run as a powered A/B.
 
 ---
 
@@ -305,6 +526,19 @@ build a scatter of (offline Δ, online Δ). Then:
   and online said worse. Each one is a bug in your *eval*, not just your agent.
   Do a root-cause: distribution shift? A judge that rewards verbosity users hate?
   A metric that ignores latency?
+
+**A concrete way to picture it.** Plot offline Δ on the x-axis and online Δ on the
+y-axis, one point per launch. Four quadrants:
+
+| | Online worse (−) | Online better (+) |
+|---|---|---|
+| **Offline better (+)** | *False promote* — the dangerous quadrant; your gate lets harm through | True positive — gate working |
+| **Offline worse (−)** | True negative — gate working | *False block* — you are killing good changes; your gate is too strict |
+
+A trustworthy gate keeps points on the diagonal (both-better or both-worse). The
+off-diagonal points are your eval's error budget: *false promotes* cost you
+incidents, *false blocks* cost you velocity. Counting them per quarter turns "is
+our offline eval any good?" from a vibe into a metric.
 
 **How to close it:**
 
@@ -449,9 +683,214 @@ compare the CI against your MDE and your guardrails, not just against zero.
 > valid if you decide the sample size in advance and read the result once. If you
 > watch this dashboard daily and ship the moment `p < 0.05`, your true
 > false-positive rate is not 5% — empirically it inflates to ~20%+ under
-> continuous peeking, and toward 100% if you peek indefinitely. Use a sequential
-> test (always-valid p-values / mSPRT) if you need to monitor continuously. More
-> in Pitfalls.
+> continuous peeking, and toward 100% if you peek indefinitely. The next section
+> *demonstrates and fixes* this with runnable code.
+
+---
+
+## Build It in Practice: A Realistic A/B Analysis for an Agent Rollout
+
+The worked example above is the *core readout*. A production analysis needs three
+more things that separate a credible engineer from someone who read one blog post:
+a **peeking guardrail** (so a continuously-watched dashboard does not lie), a
+**sample-ratio-mismatch gate** (already shown), and **variance reduction** (so the
+test finishes before the quarter does). This section builds all three as
+self-contained, dependency-free Python you can actually run (stdlib only —
+`random` and `math`), and every printed number below is real output from running
+the code, not a plausible-looking guess.
+
+### 1. Demonstrate the peeking problem, then control it
+
+First, prove the danger. We simulate 4,000 experiments in which **the treatment is
+identical to control** (the null is true, so any "win" is a false positive). Each
+experiment is peeked at 10 times (think: a daily dashboard over a two-week test),
+and we stop-and-declare-victory the first time the naive \( |z| > 1.96 \):
+
+```python
+import random, math
+
+def normal_cdf(z): return 0.5 * (1.0 + math.erf(z / math.sqrt(2.0)))
+
+def two_prop_z(cn, cs, tn, ts):
+    pc, pt = cs / cn, ts / tn
+    pp = (cs + ts) / (cn + tn)
+    se = math.sqrt(pp * (1 - pp) * (1 / cn + 1 / tn))
+    return (pt - pc) / se if se else 0.0
+
+def run_peeking(n_experiments, users_per_arm, n_looks,
+                p_true=0.60, seq_z=None):
+    """Simulate repeated experiments under the NULL and count how often each
+    rule ever crosses. seq_z, if given, is an alternative (sequential) boundary."""
+    z_naive = 1.959963985
+    fp_naive = fp_seq = 0
+    look_sizes = [int(users_per_arm * (k + 1) / n_looks) for k in range(n_looks)]
+    for _ in range(n_experiments):
+        cs = ts = prev = 0
+        crossed_naive = crossed_seq = False
+        for size in look_sizes:
+            add = size - prev; prev = size
+            cs += sum(1 for _ in range(add) if random.random() < p_true)
+            ts += sum(1 for _ in range(add) if random.random() < p_true)
+            z = abs(two_prop_z(size, cs, size, ts))
+            if z > z_naive:            crossed_naive = True
+            if seq_z and z > seq_z:    crossed_seq = True
+        fp_naive += crossed_naive
+        fp_seq  += crossed_seq
+    return fp_naive / n_experiments, (fp_seq / n_experiments if seq_z else None)
+
+random.seed(7)
+fpr_naive, _ = run_peeking(4000, 8000, 10)
+print(f"naive fixed-horizon z, 10 looks, null true -> FPR = {fpr_naive:.3f}")
+```
+
+Output:
+
+```
+naive fixed-horizon z, 10 looks, null true -> FPR = 0.194
+```
+
+**Nearly one in five "significant wins" is pure noise.** That is the peeking tax,
+demonstrated. Now control it. Rather than derive a closed-form always-valid
+boundary (mSPRT / confidence sequences — the modern approach productized by Eppo,
+GrowthBook, and Optimizely), we do the transparent thing: **calibrate a constant
+boundary by Monte Carlo** so that the probability of *ever* crossing across all 10
+looks — under the null — is exactly 5%. This is a legitimate group-sequential
+approach (it is how you would sanity-check a vendor's boundary) and it is
+impossible to get subtly wrong, because it is defined by the error rate it
+controls:
+
+```python
+def calibrate_boundary(target_fpr, users_per_arm, n_looks,
+                       p_true=0.60, n_cal=6000, seed=11):
+    """Find the constant |z| threshold whose family-wise 'ever cross' rate
+    under the null equals target_fpr, given this peek schedule."""
+    random.seed(seed)
+    look_sizes = [int(users_per_arm * (k + 1) / n_looks) for k in range(n_looks)]
+    max_zs = []
+    for _ in range(n_cal):
+        cs = ts = prev = 0; mz = 0.0
+        for size in look_sizes:
+            add = size - prev; prev = size
+            cs += sum(1 for _ in range(add) if random.random() < p_true)
+            ts += sum(1 for _ in range(add) if random.random() < p_true)
+            mz = max(mz, abs(two_prop_z(size, cs, size, ts)))
+        max_zs.append(mz)
+    max_zs.sort()
+    return max_zs[min(int((1 - target_fpr) * len(max_zs)), len(max_zs) - 1)]
+
+zc = calibrate_boundary(0.05, 8000, 10)
+print(f"calibrated boundary for 5% family-wise FPR over 10 looks = z*={zc:.3f}")
+
+random.seed(99)
+fpr_naive2, fpr_seq = run_peeking(4000, 8000, 10, seq_z=zc)
+print(f"with z*={zc:.3f}:  naive FPR={fpr_naive2:.3f}   sequential FPR={fpr_seq:.3f}")
+```
+
+Output:
+
+```
+calibrated boundary for 5% family-wise FPR over 10 looks = z*=2.560
+with z*=2.560:  naive FPR=0.193   sequential FPR=0.045
+```
+
+The lesson in three numbers: peeking with the naive \( z=1.96 \) boundary gives a
+**19.3%** false-positive rate; raising the bar to the calibrated \( z^\*=2.56 \)
+pulls it back to the **4.5%** you thought you had. That higher bar is exactly the
+price of the right to look early — sequential methods (mSPRT, GAVI, group-
+sequential) all trade a little power for the freedom to monitor continuously.
+Spotify's framework comparison is the best practitioner survey of the options
+(<https://engineering.atspotify.com/2023/03/choosing-sequential-testing-framework-comparisons-and-discussions>).
+
+### 2. CUPED variance reduction: finish the test twice as fast
+
+CUPED subtracts a pre-experiment covariate correlated with the outcome. Below we
+simulate users with a stable latent "propensity" so that each user's *pre-period*
+metric \( X \) correlates with their *experiment-period* outcome \( Y \) — exactly
+the situation for retained agent users (a heavy user last month is a heavy user
+this month). We compute \( \theta = \mathrm{Cov}(Y,X)/\mathrm{Var}(X) \), form
+\( Y_{\text{cuped}} = Y - \theta(X - \bar X) \), and compare standard errors:
+
+```python
+def cuped_demo(n=8000, seed=3, true_effect=0.05):
+    random.seed(seed)
+    def gen(effect):
+        Xs, Ys = [], []
+        for _ in range(n):
+            base = random.gauss(0, 1)               # latent user propensity
+            Xs.append(base + random.gauss(0, 0.6))   # pre-period metric
+            Ys.append(base + random.gauss(0, 0.6) + effect)  # experiment outcome
+        return Xs, Ys
+    Xc, Yc = gen(0.0)              # control
+    Xt, Yt = gen(true_effect)     # treatment (true +0.05 effect)
+
+    allX, allY = Xc + Xt, Yc + Yt
+    mx = sum(allX) / len(allX);  my = sum(allY) / len(allY)
+    cov  = sum((x-mx)*(y-my) for x, y in zip(allX, allY)) / len(allX)
+    varx = sum((x-mx)**2 for x in allX) / len(allX)
+    vary = sum((y-my)**2 for y in allY) / len(allY)
+    theta = cov / varx
+    rho   = cov / math.sqrt(varx * vary)
+
+    def mean_var(v):
+        m = sum(v)/len(v); return m, sum((x-m)**2 for x in v)/(len(v)-1)
+
+    mc, vc = mean_var(Yc);  mt, vt = mean_var(Yt)
+    se_raw = math.sqrt(vc/n + vt/n)
+
+    Yc_a = [y - theta*(x-mx) for x, y in zip(Xc, Yc)]
+    Yt_a = [y - theta*(x-mx) for x, y in zip(Xt, Yt)]
+    mca, vca = mean_var(Yc_a);  mta, vta = mean_var(Yt_a)
+    se_cuped = math.sqrt(vca/n + vta/n)
+    return rho, theta, se_raw, se_cuped, mt-mc, mta-mca
+
+rho, theta, se_raw, se_cuped, d_raw, d_cuped = cuped_demo()
+print(f"corr(X,Y) rho={rho:.3f}  theta={theta:.3f}")
+print(f"SE raw   = {se_raw:.5f}   diff={d_raw:+.4f}")
+print(f"SE cuped = {se_cuped:.5f}   diff={d_cuped:+.4f}")
+print(f"variance reduction = {(1-(se_cuped/se_raw)**2)*100:.1f}%  "
+      f"(theory ~ rho^2 = {rho**2*100:.1f}%)")
+```
+
+Output:
+
+```
+corr(X,Y) rho=0.735  theta=0.742
+SE raw   = 0.01852   diff=+0.0614
+SE cuped = 0.01255   diff=+0.0546
+variance reduction = 54.0%  (theory ~ rho^2 = 54.0%)
+```
+
+The estimate barely moves (both recover the true +0.05 effect — CUPED is
+*unbiased* because \( X \) is pre-treatment and cannot be affected by the
+variant), but the standard error drops from 0.0185 to 0.0126 — a **54% variance
+reduction, matching the theoretical \( \rho^2 = 0.54 \)** for \( \rho = 0.735 \).
+A 54% variance cut is equivalent to **more than doubling your sample size for
+free**: the same precision in roughly half the calendar time. That is why every
+serious platform ships CUPED — GrowthBook's docs
+(<https://docs.growthbook.io/statistics/cuped>) and the LA Times case study
+(<https://blog.growthbook.io/cuped-for-faster-experimentation-in-growthbook/>) are
+good next reads.
+
+### 3. Putting it together: the analysis checklist
+
+A defensible agent A/B readout runs these gates *in order*, and stops at the first
+red:
+
+1. **SRM gate.** Chi-square on the split. Red → the pipeline is broken; fix it
+   before reading anything else. (No amount of downstream sophistication rescues a
+   broken randomizer.)
+2. **Guardrails (non-inferiority).** Latency p95, cost/task, safety-violation
+   rate, escalation, refund/concession. Red → do not ship regardless of the goal.
+3. **Peeking discipline.** If the dashboard was watched continuously, use the
+   sequential boundary, not \( z=1.96 \). Fixed-horizon p-values on a peeked test
+   are not evidence.
+4. **Goal metric with CUPED-reduced CI.** Report absolute lift + CI, compare the
+   *whole interval* against your MDE, not just against zero.
+5. **Segment + trend checks.** New vs. returning (novelty), top geographies /
+   segments (interference, heterogeneous effects), and the day-by-day trend (is
+   the lift decaying?).
+
+Only a change that is green on all five earns a ramp to GA — behind a kill-switch.
 
 ---
 
@@ -468,10 +907,24 @@ compare the CI against your MDE and your guardrails, not just against zero.
 | User satisfaction (CSAT / thumbs) | Goal/Judgment | Perceived quality | Response bias; only a fraction rate; novelty-sensitive |
 | Retention / return rate (D7, D30) | Goal (long-horizon) | Did value actually persist | Slow; needs a long test window; the truest signal |
 | Containment rate | Goal | Fraction of sessions resolved without human | Can be gamed by refusing to escalate — pair with CSAT |
+| Online judge score (sampled) | Guardrail/Judgment | Live quality drift on real outputs | The judge itself drifts; calibrate against human labels |
+| Tool-call error / retry rate | Guardrail | Is the agent's tool use degrading | Silent partial failures the user "recovers" from by re-asking |
 
 **Design rule:** every goal metric needs at least one guardrail that would go the
 wrong way if the agent "cheated" to move the goal. Resolution rate is paired with
 escalation *and* CSAT so an agent cannot win by prematurely closing tickets.
+
+**The metric hierarchy interviewers want you to name.** Serious experimentation
+programs organize metrics into tiers: an **Overall Evaluation Criterion (OEC)** —
+the single (possibly composite) metric the experiment is judged on, chosen to be
+short-term-measurable but validated to predict long-term value; **guardrail
+metrics** that gate the decision via non-inferiority; **debug/diagnostic metrics**
+that explain *why* the OEC moved (per-tool success, per-intent resolution, token
+counts) but never decide the ship. The most common junior mistake is conflating a
+diagnostic metric with the OEC — celebrating that "average tokens dropped 12%"
+when nobody signed up to ship a cheaper-but-worse agent. Decide the OEC and the
+guardrails *before* launch and write them down; post-hoc metric shopping is how
+noise becomes a "win."
 
 ---
 
@@ -479,9 +932,9 @@ escalation *and* CSAT so an agent cannot win by prematurely closing tickets.
 
 - **Peeking / early stopping.** Repeatedly checking a fixed-horizon test and
   stopping when it turns significant inflates false positives from a nominal ~5%
-  to ~20%+ (and to 100% if you peek forever). Fix: pre-register the sample size
-  and read once, *or* switch to sequential / always-valid p-values designed for
-  continuous monitoring.
+  to ~20%+ (and to 100% if you peek forever) — as demonstrated with runnable code
+  above (empirical 19.4%). Fix: pre-register the sample size and read once, *or*
+  switch to sequential / always-valid p-values designed for continuous monitoring.
 
 - **Sample Ratio Mismatch (SRM).** If your 50/50 split arrives as 51.5/48.5 on
   large N, something is broken — a router bug, differential bot filtering, a
@@ -489,7 +942,9 @@ escalation *and* CSAT so an agent cannot win by prematurely closing tickets.
   so **the treatment effect is uninterpretable**. Detect with a chi-square test
   (flag at \( p < 0.0005 \)); when it fires, fix the pipeline before reading any
   lift. Notorious cause: a treatment so engaging it trips bot detection and gets
-  its users filtered out (Microsoft's MSN carousel case).
+  its users filtered out (Microsoft's MSN carousel case). Agent-specific causes:
+  the candidate is slower, so more of its sessions time out and drop before the
+  outcome is logged; or an exception in one arm's code path silently loses events.
 
 - **Feedback loops.** The agent alters the data that trains/evals its successor,
   so the baseline drifts under you. Keep experiments short relative to the loop,
@@ -516,6 +971,127 @@ escalation *and* CSAT so an agent cannot win by prematurely closing tickets.
 - **Guardrail blindness.** Shipping on the goal metric alone. The refund-rate
   disaster in this chapter's epigraph is a guardrail you did not watch.
 
+- **Shadow side effects.** Running an action-taking agent in shadow without
+  sandboxing its tools, so a "no-user-impact" test actually issues refunds or
+  sends emails. Intercept every non-idempotent tool in shadow mode.
+
+- **Simpson's paradox / mix shift.** A treatment can win in every segment yet lose
+  overall (or vice versa) if the arms have different segment mixes — often itself a
+  symptom of SRM or of ramping arms at different times. Always inspect key segments
+  alongside the pooled number, and be suspicious when pooled and segmented results
+  disagree in direction.
+
+- **Multiple comparisons.** Slicing an experiment into 30 metrics × 10 segments and
+  celebrating the one cell with \( p<0.05 \) is guaranteed to find noise. Correct
+  for multiplicity (Benjamini–Hochberg) or pre-register the few slices that matter.
+
+---
+
+## Production Case Studies and War Stories
+
+Theory sticks when it is attached to a scar. These are composite but realistic
+patterns drawn from how teams actually stage agent rollouts and where they get
+burned; the mechanisms are the ones documented in the primary sources cited
+throughout this chapter.
+
+### The canonical rollout: offline → shadow → canary → A/B → GA
+
+A support-automation team shipping a new tool-using resolution agent runs the full
+ladder:
+
+1. **Offline (day 0).** Replay 20k captured production tickets against the
+   candidate; the LLM-judge resolution proxy is +4.1% and tool-call validity is
+   +2%. Green — permission to test, not to ship.
+2. **Shadow (days 1–4).** Mirror 100% of live tickets to the candidate with all
+   write-tools (refund, ticket-close, email) routed to a sandbox. Finds two things
+   offline missed: p95 latency is +2.3s on long multi-tool tickets (a real-tool
+   timeout the replay's cached tool results had hidden), and a 0.4% rate of an
+   exception on tickets with attachments. Both fixed before any user is exposed.
+3. **Canary (days 5–7).** 2% of users, auto-rollback wired to "error rate >
+   control + 1% or p95 > 1.4× control." Holds. SRM checked at each step — clean.
+4. **A/B (days 8–21).** 50/50, per-user randomization, OEC = resolution-without-
+   escalation, guardrails = CSAT, refund rate, cost/task, p95. CUPED on each
+   user's prior-month resolution rate cuts the CI width ~40%, so the test reads
+   clean in two weeks instead of a month.
+5. **GA (day 22+).** Ramp 50→100% behind a kill-switch; guardrail dashboards with
+   paging thresholds stay on; a 5% long-horizon holdback stays on control for D30
+   retention.
+
+The point: **every rung caught a different class of problem, and the ones shadow
+and canary caught (latency, attachment crash) would each have been a visible
+incident at GA.**
+
+### War story 1 — the offline win that tanked a business metric
+
+*Setup.* A billing-support agent's new version scored **+6% on the offline
+resolution eval** — the epigraph of this chapter. The offline judge rewarded
+"resolving the user's stated problem," and the new agent resolved more of them.
+
+*What happened online.* Task completion (as the judge measured it) did rise. But
+the agent resolved billing complaints disproportionately by **issuing refunds and
+credits** — the fastest path to a "resolved" ticket. Refund rate nearly doubled;
+gross margin on the supported segment dropped. CSAT was up (users love refunds!),
+so two metrics were green while the business bled.
+
+*Root cause.* The OEC was a **proxy** (judge-rated resolution) that was
+Goodhart-vulnerable, and **refund rate was not a pre-registered guardrail.** The
+offline eval could never have caught it: no offline judge sees a P&L.
+
+*The fix and the lesson.* Refund/concession rate became a hard guardrail on every
+support experiment; the OEC was redefined as "resolved *without* a concession
+above threshold." The durable lesson: **for any agent that can take a costly
+action to satisfy a user, the cost of that action must be a guardrail — the goal
+metric alone will happily buy satisfaction with your margin.**
+
+### War story 2 — the SRM that invalidated a "winner"
+
+*Setup.* A coding-assistant team ran a 50/50 test of a new planning-heavy agent
+and saw a beautiful **+3.2% task-success lift, p = 0.002.** Champagne on ice.
+
+*The catch.* A reviewer ran the SRM check: the split had arrived as **51.4 /
+48.6** on ~180k sessions — chi-square \( p \approx 10^{-6} \), a screaming SRM.
+
+*Root cause.* The new agent was slower (more planning tokens). Sessions in the
+treatment arm were more likely to hit a **client-side timeout** that dropped the
+session before the success event was logged. The dropped sessions were
+disproportionately the *hard, ultimately-failed* ones — so the treatment arm's
+logged population was **survivorship-biased toward easy wins.** The "+3.2%" was an
+artifact of *which sessions got recorded*, not of agent quality.
+
+*The fix and the lesson.* Fix the logging to record the outcome before the timeout
+boundary, re-run, and the lift collapsed to a non-significant +0.3%. Lesson:
+**SRM is not a formality — it is the smoke alarm that tells you your beautiful
+p-value is measuring your logging pipeline, not your agent.** Any latency-changing
+agent change is an SRM risk, because latency changes *who survives to be counted*.
+
+### War story 3 — novelty masquerading as value
+
+*Setup.* A consumer chat agent got a new, chattier, more proactive persona.
+Week-1 A/B showed engagement (messages/session) **+11%** and thumbs-up rate up.
+Ship it?
+
+*The catch.* Segmenting new vs. returning users, the lift lived almost entirely in
+**returning** users, and the day-by-day trend was **decaying** — +18% on day 1,
++4% by day 7. New users (no prior experience to be surprised by) showed ~0.
+
+*Root cause.* **Novelty effect.** Returning users were reacting to *change*, not
+to durable value; the chattier persona was a curiosity bump that was already
+fading, and qualitative feedback showed some users found it "exhausting."
+
+*The fix and the lesson.* Extend the test, weight the decision toward the new-user
+segment and the asymptotic (late-window) effect, and add a D30 holdback. The
+durable engagement gain was ~+2%, not +11%. Lesson: **an average over a short
+window conflates novelty with value; measure the trend and segment by
+exposure-to-change before you believe a launch-week number.**
+
+### The meta-lesson across the war stories
+
+Every one of these was invisible offline and every one was caught by a *specific*
+online discipline: guardrails (war story 1), SRM (war story 2), trend + segmenting
+(war story 3). The offline eval was not "wrong" — it was answering a different,
+narrower question than the one the business cared about. Real-world testing is the
+machinery that keeps the narrow question from being mistaken for the important one.
+
 ---
 
 ## Monitoring and Feedback Capture
@@ -525,10 +1101,16 @@ finished one. The same discipline that gated the launch must run continuously.
 
 - **Log every run as an evaluable trace.** Persist inputs, tool calls,
   intermediate state, final output, latency, cost, and outcome — enough to replay
-  and to build tomorrow's offline eval set from real traffic.
+  and to build tomorrow's offline eval set from real traffic. Include the model
+  and prompt version on every trace so you can attribute a metric shift to a
+  specific change (and detect a silent upstream model update).
 - **Online guardrail dashboards with alerts.** Safety-violation rate, p95
   latency, cost per task, and escalation rate should have automated thresholds
   that page a human — the production analog of canary abort criteria.
+- **Online LLM-judge on sampled traffic.** Score 1–5% of live outputs
+  continuously for helpfulness/safety/faithfulness and alert on drift — but
+  calibrate the judge against human labels on live samples so you are monitoring
+  quality, not the judge's bias.
 - **Explicit feedback (sparse, biased, cheap).** Thumbs, ratings, "did this
   solve your problem?" Only a small, self-selected fraction responds, so treat it
   as directional, not representative.
@@ -546,7 +1128,31 @@ finished one. The same discipline that gated the launch must run continuously.
 
 ---
 
-## Interview Questions and Answers
+## Interview Mastery
+
+This section is engineered to get you through a senior interview on real-world
+agent testing: a bank of Q&A, a 60-second set-piece, a system-design prompt with a
+worked sketch, decision tables you can redraw on a whiteboard, and the red/green
+flags interviewers listen for.
+
+### The 60-second answer: "explain the offline–online gap"
+
+> Offline eval scores the agent against a frozen dataset with a cheap proxy metric
+> — a rubric or an LLM judge. It is fast, deterministic, and great for catching
+> regressions, but it measures a *proxy* on a *past* distribution. The
+> offline–online gap is the difference between that proxy and what actually happens
+> when real users, on today's traffic, react to the output: distribution shift,
+> latency and cost, human downstream decisions, and second-order effects like
+> margin. You can't eliminate the gap — no offline number equals a churn or revenue
+> outcome — but you can *characterize* it: log every launch's offline delta and its
+> online A/B delta, and compute the rank correlation across launches. High
+> correlation means offline is a trustworthy gate; directional disagreements are
+> bugs in your *eval*, not just your agent. You close the gap by feeding production
+> traffic (especially failures and shadow disagreements) back into the offline set
+> and calibrating your judge against human labels on live data. In one line: offline
+> tells you what's *allowed to ship*; online tells you what's *actually better*.
+
+### Q&A bank
 
 **Q1. Your new agent scores +6% on the offline eval. Do you ship it? Walk me
 through the rollout.**
@@ -565,7 +1171,9 @@ randomization is broken — a router bug, differential filtering, a bad logging
 join. Since the whole causal claim rests on the two arms being comparable, SRM
 makes the treatment effect uninterpretable. I detect it with a chi-square
 goodness-of-fit test, flagging at \( p < 0.0005 \), and I fix the pipeline before
-trusting any lift.
+trusting any lift. For agents specifically, a slower treatment arm that drops more
+timed-out sessions is a classic SRM generator — and it biases *which* sessions get
+counted.
 
 **Q3. Why is A/B testing agents harder than testing a checkout button?**
 Four reasons: (1) **long-horizon outcomes** — the true effect (did the problem
@@ -574,16 +1182,21 @@ the wrong way; (2) **feedback loops** — the agent changes the data that
 trains/evaluates its successor, so the baseline drifts; (3) **novelty effects** —
 users react to change, so early lift can be curiosity, not quality; (4) **network
 effects** — agents in marketplaces or negotiations make one unit's treatment
-affect another's outcome, violating SUTVA and biasing per-user randomization.
+affect another's outcome, violating SUTVA and biasing per-user randomization. A
+fifth, agent-specific one: the underlying foundation model can change under you,
+so even "control" is not guaranteed stationary.
 
 **Q4. Explain the peeking problem and how you would handle continuous
 monitoring.**
 Fixed-horizon tests are valid only if you set N in advance and read once. If you
 check daily and stop when \( p < 0.05 \), you get many chances to cross the
 threshold by luck, inflating the false-positive rate from ~5% to ~20%+ (→100% if
-you peek forever). Options: pre-register N and read once; or, if I genuinely need
-to monitor live, use a **sequential test** with always-valid p-values (e.g.
-mSPRT), which controls error under continuous looking at the cost of some power.
+you peek forever) — I've simulated it at ~19%. Options: pre-register N and read
+once; or, if I genuinely need to monitor live, use a **sequential test** with
+always-valid p-values (e.g. mSPRT, GAVI, or group-sequential boundaries), which
+controls error under continuous looking at the cost of some power. The intuition
+is that the significance bar has to be *raised* (in my simulation from z=1.96 to
+z≈2.56) to buy back the right to look early.
 
 **Q5. What is the difference between a goal metric and a guardrail metric? Give an
 agent example.**
@@ -592,7 +1205,8 @@ guardrail is something that must not regress even if the goal improves (p95
 latency, cost per task, safety-violation rate, escalation rate, refund rate). The
 canonical trap: an agent lifts CSAT by handing out refunds freely — goal up,
 refund-rate guardrail blown. Every goal metric needs a guardrail that would move
-the wrong way if the agent gamed the goal.
+the wrong way if the agent gamed the goal. Guardrails are usually tested for
+*non-inferiority* (rule out harm > X%), not superiority.
 
 **Q6. Shadow mode showed zero errors and great latency. Why can't you ship on
 that alone?**
@@ -601,7 +1215,9 @@ Because in shadow the output never reached a user. Shadow proves the agent can
 it is blind to everything consequential: resolution, satisfaction, revenue,
 escalation, because no human ever saw or acted on the shadow output. Shadow
 clears operational risk; only a canary/A/B where users actually receive the
-output can tell you whether it is *better*.
+output can tell you whether it is *better*. And I'd stress: shadowing an
+action-taking agent requires sandboxing its write-tools, or the "zero-impact" run
+issues real refunds.
 
 **Q7. How do you measure and close the offline–online gap?**
 Measure it by logging, for every launch, the offline score delta against the
@@ -619,33 +1235,285 @@ covariate (usually the same metric measured before the test) from the outcome:
 \( Y_{\text{cuped}} = Y - \theta(X - \bar X) \) with
 \( \theta = \mathrm{Cov}(Y,X)/\mathrm{Var}(X) \). Because \( X \) is
 pre-treatment it cannot be affected by the variant, so the estimate stays
-unbiased while variance drops by roughly \( \rho^2 \). It shines when users have
-stable, autocorrelated behavior (a heavy user last week is a heavy user this
-week) — exactly the case for retained agent users — and can cut required sample
-size substantially, shortening the test.
+unbiased while variance drops by roughly \( \rho^2 \) — in my simulation a
+\( \rho=0.735 \) covariate cut variance 54%, halving the required runtime. It
+shines when users have stable, autocorrelated behavior (a heavy user last week is
+a heavy user this week) — exactly the case for retained agent users.
+
+**Q9. Choose the unit of randomization for a multi-turn conversational agent, and
+justify it.**
+Per-**user** (or per-account), not per-request. Per-request maximizes power but
+gives a user an incoherent old-agent/new-agent experience within one conversation
+and lets carryover contaminate both arms. The unit of randomization must be at
+least as coarse as the unit of analysis; I randomize by user and analyze by user.
+If I need message-level diagnostics I use cluster-robust standard errors so
+within-user correlation doesn't fabricate power. If the agents interact across
+users (marketplace, negotiation), I go coarser still — cluster by market/geo.
+
+**Q10. You have a two-week test but only enough traffic for a 3-point MDE; the
+effect you care about is 1 point. What do you do?**
+Recognize the test is underpowered *before* running it — \( n \propto 1/\delta^2 \),
+so a 1-point MDE needs ~9× the traffic of a 3-point one. Options, roughly in
+order: apply **CUPED** (a good covariate can halve variance ≈ double effective N);
+extend the duration if the effect is stable; pick a **more sensitive OEC** or a
+validated surrogate; reduce variance by trimming outliers/capping; or accept that
+I can only make a decision at the 3-point resolution and say so honestly rather
+than over-reading noise. What I will *not* do is run it anyway and interpret a
+flat, underpowered result as "no difference."
+
+**Q11. Design an automated rollback for a canary. What trips it, and what
+doesn't?**
+Trip on fast, one-sided, operational guardrails compared **canary-vs-concurrent-
+control** (never vs. yesterday): error rate > control + threshold, p95 latency >
+k×control, cost/task spike, safety-violation spike, and an SRM check at each ramp
+step. These need thresholds, not confidence intervals — the decision is "is it on
+fire," and it must fire in minutes without a human at 3 a.m. What must *not* be in
+the abort rule: long-horizon goal metrics (resolution durability, retention) — the
+canary has neither the power nor the time to read them; those are the A/B's job.
+
+**Q12. Give a scenario where per-user randomization is biased, and the fix.**
+A negotiation or marketplace agent: a treatment-arm buyer that negotiates better
+prices does so partly at the expense of control-arm sellers, so treatment's gain
+is control's loss — SUTVA is violated and the measured lift is inflated. Or a
+shared-inventory recommender that shifts demand between users. Fix:
+**cluster-randomize** — assign whole markets/geos/social-communities to a variant
+so spillover stays inside an arm — and analyze at the cluster level (fewer units,
+less power, but unbiased). LinkedIn's "A/B test of A/B tests" and Airbnb's
+cluster-randomization work are the references.
+
+**Q13. Your offline judge and your online metric disagree on a launch — offline
+said better, online said worse. How do you debug it?**
+Treat it as a bug in the *eval*, not just the agent. Check, roughly in order:
+(1) **SRM** — is the online read even valid? (2) **distribution shift** — is live
+traffic different from the offline set (new intents, longer conversations)?
+(3) **judge bias** — is the offline judge rewarding something users dislike
+(verbosity, sycophancy) that doesn't help the real outcome? (4) **missing cost
+dimension** — does offline ignore latency/cost/margin that the online metric
+captures? (5) **long-horizon vs. short** — did the online metric capture a
+downstream effect offline can't see? Each answer either fixes the eval (add the
+missing dimension, resample traffic, recalibrate the judge) or confirms the agent
+is genuinely worse. Log the disagreement — it is a data point for your
+offline–online correlation.
+
+**Q14. How do you separate a novelty effect from a real, durable improvement?**
+Don't trust the window average. (1) Plot the **day-by-day trend** — a lift decaying
+toward zero is novelty. (2) **Segment new vs. returning** users — novelty lives in
+returning users who have an old experience to react to; new users show the durable
+effect. (3) Run a **long-horizon holdback** (a slice kept on control for D30/D60)
+and read the asymptotic effect. If the late-window, new-user, holdback-confirmed
+effect is small, the launch-week number was novelty.
+
+**Q15. What is shadow mode, when is it the right tool, and what is its biggest
+agent-specific pitfall?**
+Shadow runs the candidate on live traffic in parallel with the incumbent and
+discards its output — zero user exposure. It's the right tool to clear
+*operational* risk (latency, cost, crashes, tool errors, drift) on the true live
+distribution, and to harvest incumbent-vs-candidate disagreements as a high-signal
+eval set — before you expose anyone. Biggest agent-specific pitfall: **side
+effects.** If the candidate's trajectory calls write-tools (refund, email, delete),
+shadow will fire them for real unless every non-idempotent tool is sandboxed,
+stubbed, or blocked. A "safe" shadow deploy that isn't sandboxed is a live
+incident waiting to happen.
+
+**Q16. Walk me through why sample size scales as \( 1/\delta^2 \), and one
+consequence.**
+For a proportion, per-arm \( n \approx 16\,p(1-p)/\delta^2 \) at 80% power / 5%
+significance. The signal you're trying to detect is the effect \( \delta \); the
+noise is the standard error, which shrinks like \( 1/\sqrt{n} \). To keep a fixed
+signal-to-noise ratio as \( \delta \) shrinks, \( \sqrt{n} \) must grow like
+\( 1/\delta \), so \( n \) grows like \( 1/\delta^2 \). Consequence: halving the
+effect you want to see **quadruples** the traffic and time — which is exactly why
+variance reduction (CUPED) and sensitive OECs are not luxuries; a 50% variance cut
+is worth as much as doubling your users.
+
+**Q17. What goes in the trace you log for every production agent run, and why?**
+Inputs, full tool-call sequence with args and results, intermediate state/reasoning
+where feasible, final output, latency (per step and total), token cost, the
+**model and prompt version**, the experiment arm, and the eventual outcome
+(resolved/escalated/refunded). Why: it lets me (1) replay real traffic against
+future candidates so the offline set tracks live distribution, (2) attribute a
+metric shift to a specific version and detect silent upstream model changes,
+(3) sample disagreements/low-confidence cases for human review and judge
+calibration, and (4) reconstruct any incident. Traces are the substrate the whole
+offline↔online loop runs on.
+
+**Q18. When would you deliberately *not* run a full A/B, and ship on a lesser
+signal?**
+When the cost of the A/B exceeds the risk it buys down: a trivially reversible,
+flag-guarded change with a strong offline signal and a robust kill-switch (e.g. a
+typo-level prompt fix); an urgent safety hotfix where the risk of *waiting* exceeds
+the risk of shipping (ship behind a flag, monitor guardrails, roll back on alert);
+or a change with such a huge, unambiguous shadow/canary operational signal that an
+A/B would only confirm the obvious. The discipline is the same — kill-switch,
+guardrail monitoring — but the number of rungs scales with blast radius, not
+dogma. I'd still log it for the offline–online correlation.
+
+### System-design prompt: "Design the rollout + measurement plan for a new agent version"
+
+A common senior-level whiteboard prompt. A strong answer names the components, the
+data flow, the statistics, and the failure handling. Here is a compact sketch.
+
+**Restate scope.** New version of a customer-support resolution agent (multi-turn,
+uses tools: KB search, order lookup, refund). Goal: ship it iff it improves
+resolution-without-escalation without harming CSAT, refund rate, latency, or cost.
+
+**Architecture sketch.**
+
+```
+                      ┌──────────────────────────────────────────┐
+   user request ─────►│  Assignment service (feature flag)        │
+                      │  bucket = hash(user_id + salt) % 1000      │
+                      │  → arm; emits EXPOSURE log                 │
+                      └───────────────┬──────────────────────────┘
+                          control │        │ treatment
+                                  ▼        ▼
+                      ┌───────────┐    ┌───────────┐
+                      │ Agent v1  │    │ Agent v2  │──► tool shim (sandbox writes in shadow)
+                      └─────┬─────┘    └─────┬─────┘
+                            └──────┬─────────┘
+                                   ▼
+                      ┌──────────────────────────┐
+                      │  Response to user + TRACE │  (inputs, tools, latency,
+                      │  log (arm, version, cost) │   cost, version, outcome)
+                      └───────────┬──────────────┘
+                                  ▼
+        ┌────────────────────────────────────────────────────────────┐
+        │  Warehouse: join EXPOSURE ⋈ TRACE ⋈ OUTCOME ⋈ pre-period X  │
+        └───────────┬───────────────────────────────┬────────────────┘
+                    ▼                                ▼
+        ┌───────────────────────┐        ┌─────────────────────────────┐
+        │ Guardrail dashboards  │        │ Experiment analysis          │
+        │ (p95, cost, safety,   │        │ SRM → guardrails(non-infer.) │
+        │ escalation) + paging  │        │ → CUPED lift + CI (seq. if   │
+        │ + canary auto-rollback│        │ peeked) → segments/trend     │
+        └───────────────────────┘        └─────────────────────────────┘
+                    ▲                                │
+   online LLM-judge on sampled traffic ─────────────┘  (feeds offline set + judge calib.)
+```
+
+**Rollout plan (the ladder).** Offline replay gate → shadow (100%, tools
+sandboxed; watch latency/cost/errors + judge on samples) → canary 2% with
+auto-rollback → A/B 50/50 for a pre-computed N → GA ramp behind kill-switch + D30
+holdback.
+
+**Measurement plan.** Unit = user (sticky hashed bucketing). OEC =
+resolution-without-escalation; guardrails (non-inferiority) = CSAT, refund rate,
+cost/task, p95 latency; diagnostics = per-tool success, tokens. Pre-compute N from
+MDE; apply CUPED on prior-month resolution; SRM check at every ramp; sequential
+boundary if the dashboard is watched continuously; segment new/returning and inspect
+the daily trend for novelty; correct for multiplicity across guardrails.
+
+**Failure handling.** SRM → halt and fix pipeline. Guardrail breach → no ship even
+if OEC wins. Canary operational breach → auto-rollback. Offline/online
+disagreement → root-cause the eval and log the data point.
+
+**What I'd call out proactively:** tool side effects in shadow, latency-induced SRM,
+the foundation model shifting under control, and the fact that the true retention
+effect needs a holdback the main test won't see.
+
+### Decision tables
+
+**Staging technique — A/B vs. shadow vs. canary:**
+
+| | Shadow | Canary | A/B test |
+|---|---|---|---|
+| User exposure | None (output discarded) | Tiny (1–5%) | Controlled (5–50%) |
+| Primary question | "Can it run safely?" | "Is it on fire?" | "Is it better?" |
+| Catches | Latency, cost, crashes, tool errors, drift | Catastrophic operational regressions | Causal effect on goal + guardrails |
+| Statistical power | N/A (no outcomes) | Low (not powered) | Powered (that's the point) |
+| Decision speed | Fast | Minutes (auto-rollback) | Days–weeks |
+| Blind to | Anything a user must see | Small/slow effects | Effects < MDE or slower than window |
+| Key risk | Unsandboxed side effects | Comparing vs. history not control | Peeking, SRM, novelty, interference |
+
+**Metric role — goal vs. guardrail:**
+
+| | Goal (OEC) | Guardrail |
+|---|---|---|
+| Question | "Did the thing we want improve?" | "Did anything we refuse to break, break?" |
+| Test form | Superiority (is it > 0?) | Non-inferiority (rule out harm > X%) |
+| Examples | Resolution rate, retention | p95 latency, cost/task, safety, refund rate |
+| Decision role | Reason to ship | Veto on shipping |
+| Failure mode | Goodhart (gamed proxy) | Blindness (unwatched harm) |
+| Number needed | One (possibly composite) | Several, each catching a distinct harm |
+
+### Red flags vs. green flags
+
+Interviewers are listening for these.
+
+| Red flag (junior) | Green flag (senior) |
+|---|---|
+| "The offline eval improved, so we shipped it." | "Offline is a gate; the A/B and guardrails decided the ship." |
+| Reports a bare p-value. | Reports lift **with a CI**, read against the MDE. |
+| Watches the dashboard and ships on first \( p<0.05 \). | Pre-registers N or uses a sequential boundary. |
+| Never mentions SRM. | Checks SRM first and treats a breach as invalidating. |
+| One success metric, no guardrails. | Every goal metric paired with a harm guardrail. |
+| Randomizes per request for a chat agent. | Randomizes per user; cluster if units interact. |
+| Believes the launch-week number. | Segments new/returning, checks the trend for novelty. |
+| Runs an action agent in shadow, unsandboxed. | Sandboxes write-tools in shadow. |
+| "Offline and online just differ, nothing to do." | Measures offline→online rank correlation; debugs disagreements. |
+| Ships to 100% and moves on. | GA behind a kill-switch with live guardrail paging + holdback. |
 
 ---
 
 ## Further Reading
 
-- Diagnosing Sample Ratio Mismatch in A/B Testing — Microsoft Research: https://www.microsoft.com/en-us/research/articles/diagnosing-sample-ratio-mismatch-in-a-b-testing/
-- Deep Dive Into Variance Reduction (CUPED) — Microsoft Research EXP: https://www.microsoft.com/en-us/research/group/experimentation-platform-exp/articles/deep-dive-into-variance-reduction/
-- Data-Driven Metric Development for Online Controlled Experiments (Deng & Shi, KDD 2016) — goal vs. guardrail metrics: https://exp-platform.com/Documents/2016KDDMetricDevelopmentLessonsDengShi.pdf
-- Peeking at A/B Tests: Why It Matters, and What to Do About It (Johari et al., KDD 2017): http://library.usc.edu.ph/ACM/KKD%202017/pdfs/p1517.pdf
-- Wish Tackles Peeking with Always-Valid p-values — Towards Data Science: https://towardsdatascience.com/wish-tackles-peeking-with-always-valid-p-values-8a0782ac9654/
-- Detecting Interference: An A/B Test of A/B Tests — LinkedIn Engineering: https://engineering.linkedin.com/blog/2019/06/detecting-interference--an-a-b-test-of-a-b-tests
-- Reducing Interference Bias Using Cluster Randomization (Airbnb, Management Science): https://pubsonline.informs.org/doi/10.1287/mnsc.2020.01157
-- Identifying Offline Metrics that Predict Online Impact (RecSys 2025): https://dl.acm.org/doi/10.1145/3705328.3748111
-- Closing the Online-Offline Gap: A Scalable Framework for Composed Model Evaluation (RecSys 2025): https://dl.acm.org/doi/10.1145/3705328.3748117
-- Offline Recommender System Evaluation: Challenges and New Directions (Castells & Moffat, AI Magazine 2022): https://onlinelibrary.wiley.com/doi/10.1002/aaai.12051
-- Shadow Deployment vs. Canary Release of ML Models — JFrog ML / Qwak: https://www.qwak.com/post/shadow-deployment-vs-canary-release-of-machine-learning-models
-- Safely Deploying ML Models: Four Controlled Strategies (A/B, Canary, Interleaved, Shadow) — MarkTechPost: https://www.marktechpost.com/2026/03/21/safely-deploying-ml-models-to-production-four-controlled-strategies-a-b-canary-interleaved-shadow-testing/
-- Guardrail Metrics: The Complete Guide — Mixpanel: https://mixpanel.com/blog/guardrail-metrics/
-- CUPED in A/B Testing and Experimentation — Optimizely: https://www.optimizely.com/insights/blog/cuped-in-ab-testing-and-experimentation/
+**Experimentation platforms and AI-eval products (2025–2026)**
+- Statsig — AI Evals overview (offline + online LLM-judge, promote to experiment): <https://docs.statsig.com/ai-evals/overview>
+- Statsig — AI Evals product page: <https://www.statsig.com/ai-evals>
+- Statsig — Experimentation in the age of AI: <https://www.statsig.com/blog/experimentation-and-ai-trend>
+- Statsig — Data-driven LLM optimization via online experimentation: <https://www.statsig.com/blog/llm-optimization-online-experimentation>
+- Eppo (Datadog) — warehouse-native experimentation: <https://www.geteppo.com/>
+- GrowthBook — open-source experimentation platform: <https://www.growthbook.io/products/experimentation>
+- LaunchDarkly — feature management / progressive delivery: <https://launchdarkly.com/>
+- GrowthBook vs. LaunchDarkly (candid comparison): <https://www.growthbook.io/insights/growthbook-vs-launchdarkly>
+
+**Online LLM-as-judge and production evaluation**
+- Statsig — Online Evaluation (grade live outputs, shadow-test prompts): <https://docs.statsig.com/ai-evals/overview>
+- TrueFoundry — Online LLM evaluation at the gateway: <https://www.truefoundry.com/blog/online-llm-evaluation-gateway>
+- Langfuse — LLM evaluation methods and best practices (2025): <https://langfuse.com/blog/2025-11-12-evals>
+- Arize — LLM-as-a-Judge primer: <https://arize.com/guides/llm-as-a-judge/>
+- Braintrust — LLM evaluation guide: <https://www.braintrust.dev/articles/llm-evaluation-guide>
+- Evidently — LLM-as-a-judge complete guide: <https://www.evidentlyai.com/llm-guide/llm-as-a-judge>
+- ZenML — What 1,200 production deployments reveal about LLMOps in 2025: <https://www.zenml.io/blog/what-1200-production-deployments-reveal-about-llmops-in-2025>
+
+**Shadow, canary, and progressive delivery for agents/LLMs**
+- FutureAGI — LLM eval with shadow traffic and canary deployment (2026): <https://futureagi.com/blog/llm-eval-shadow-traffic-canary-2026/>
+- Nadir — "Shadow Mode, Forever": <https://getnadir.com/blog/shadow-testing-canary-rollout-llm-model-swap/>
+- Qwak / JFrog ML — Shadow deployment vs. canary release of ML models: <https://www.qwak.com/post/shadow-deployment-vs-canary-release-of-machine-learning-models>
+- MarkTechPost — Four controlled deployment strategies (A/B, canary, interleaved, shadow): <https://www.marktechpost.com/2026/03/21/safely-deploying-ml-models-to-production-four-controlled-strategies-a-b-canary-interleaved-shadow-testing/>
+
+**Statistics: SRM, peeking, sequential testing, CUPED, guardrails**
+- Diagnosing Sample Ratio Mismatch in A/B Testing — Microsoft Research: <https://www.microsoft.com/en-us/research/articles/diagnosing-sample-ratio-mismatch-in-a-b-testing/>
+- Peeking at A/B Tests (Johari et al., KDD 2017): <http://library.usc.edu.ph/ACM/KKD%202017/pdfs/p1517.pdf>
+- Wish tackles peeking with always-valid p-values: <https://towardsdatascience.com/wish-tackles-peeking-with-always-valid-p-values-8a0782ac9654/>
+- Spotify — Choosing a sequential testing framework (mSPRT, GAVI, GST): <https://engineering.atspotify.com/2023/03/choosing-sequential-testing-framework-comparisons-and-discussions>
+- Deep Dive into Variance Reduction (CUPED) — Microsoft EXP: <https://www.microsoft.com/en-us/research/group/experimentation-platform-exp/articles/deep-dive-into-variance-reduction/>
+- GrowthBook — CUPED docs: <https://docs.growthbook.io/statistics/cuped>
+- GrowthBook — Sequential testing docs: <https://docs.growthbook.io/statistics/sequential>
+- GrowthBook — Power analysis docs: <https://docs.growthbook.io/statistics/power>
+- CUPED reduces experiment runtime at the LA Times (GrowthBook): <https://blog.growthbook.io/cuped-for-faster-experimentation-in-growthbook/>
+- Optimizely — CUPED in A/B testing: <https://www.optimizely.com/insights/blog/cuped-in-ab-testing-and-experimentation/>
+- Data-Driven Metric Development (Deng & Shi, KDD 2016) — goal vs. guardrail: <https://exp-platform.com/Documents/2016KDDMetricDevelopmentLessonsDengShi.pdf>
+- Guardrail Metrics: The Complete Guide — Mixpanel: <https://mixpanel.com/blog/guardrail-metrics/>
+
+**Interference / network effects and the offline–online gap**
+- Detecting Interference: An A/B Test of A/B Tests — LinkedIn Engineering: <https://engineering.linkedin.com/blog/2019/06/detecting-interference--an-a-b-test-of-a-b-tests>
+- Reducing Interference Bias Using Cluster Randomization (Airbnb, Management Science): <https://pubsonline.informs.org/doi/10.1287/mnsc.2020.01157>
+- Identifying Offline Metrics that Predict Online Impact (RecSys 2025): <https://dl.acm.org/doi/10.1145/3705328.3748111>
+- Closing the Online-Offline Gap: A Scalable Framework for Composed Model Evaluation (RecSys 2025): <https://dl.acm.org/doi/10.1145/3705328.3748117>
+- Offline Recommender System Evaluation: Challenges and New Directions (Castells & Moffat, AI Magazine 2022): <https://onlinelibrary.wiley.com/doi/10.1002/aaai.12051>
+
+**Experimentation platform engineering (how the big platforms are built)**
+- Under the Hood of Uber's Experimentation Platform: <https://www.uber.com/en-GB/blog/xp/>
+- Supercharging A/B Testing at Uber: <https://www.uber.com/blog/supercharging-a-b-testing-at-uber/>
+- Experiments at Airbnb: <https://medium.com/airbnb-engineering/experiments-at-airbnb-e2db3abf39e7>
+- A curated list of experimentation-platform resources: <https://github.com/DavisTrey/ExperimentationResources>
 
 ---
 
 *Previous: offline evaluation gives you a fast, cheap gate. This chapter gave you
 the ladder — shadow, canary, A/B — that turns a green offline dashboard into a
-safe, causal, guardrail-checked production decision. Next: closing the loop with
-continuous production monitoring as a first-class eval surface.*
+safe, causal, guardrail-checked production decision, plus the platforms, runnable
+statistics, war stories, and interview set-pieces to build it and defend it. Next:
+closing the loop with continuous production monitoring as a first-class eval
+surface.*

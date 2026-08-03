@@ -13,6 +13,8 @@ A chat model that hallucinates a fact produces text a human can read and doubt. 
 3. **The failure compounds downstream.** In a chain — `search → pick_id → fetch_details → book` — a subtly wrong `id` at step 2 poisons every step after it. The agent then confidently narrates a correct-sounding summary of a wrong result.
 
 The consequence: **you cannot evaluate tool use by reading transcripts or scoring final answers alone.** You must inspect the *structured call trace* — the sequence of `(tool_name, arguments)` tuples the agent emitted — and compare it against a specification of what correct behavior looks like. Everything in this chapter is about how to build that comparison rigorously.
+One more property makes tool-use failures uniquely corrosive: **they are asymmetric in cost.** A read that returns the wrong row wastes a few cents of tokens; a write that mutates the wrong row can cost a refund, a reputation, or a compliance breach. A good evaluation harness therefore does not treat all calls as equal-weight classification targets — it weights the loss by the *blast radius* of the tool. Reading `get_weather("Paris")` wrong and calling `wire_transfer(amount=50000)` wrong are not the same event and must not average into the same scalar. This is the through-line of the chapter: measure per-dimension, and weight by consequence.
+
 
 ---
 
@@ -36,6 +38,8 @@ Definitions worth pinning down:
 - **Argument construction** splits into **schema validity** (does it parse against the JSON Schema — right keys, types, enums, required fields?) and **semantic correctness** (is `amount=500` the *right* value given the task?). Schema validity is cheap and mechanical; semantic correctness needs ground truth.
 - **Chaining** introduces **data-dependency ordering**: call B consumes an output of call A, so B must follow A *and* use A's actual returned value, not a hallucinated one. This is where "the id it booked doesn't match any id search returned" bugs live.
 - **Safety** covers **non-idempotent / destructive** operations (writes, deletes, payments, sends) where a spurious or duplicated call causes irreversible harm — a stricter bar than read-only tools.
+For destructive tools this taxonomy needs a fourth safety sub-case beyond irrelevance, over-call, and under-call: **duplication under retry.** When a `charge_card` or `send_email` call times out, the *result* is unknown but the *effect* may already have happened. A correct agent either uses an idempotency key so a retry is a no-op, or reads state (`get_recent_charges`) before re-issuing. An evaluation that only checks "did the final charge exist" will pass an agent that charged twice; you must count **effect multiplicity** — how many times the side effect actually fired — not just whether it fired at least once.
+
 
 ---
 
@@ -60,6 +64,8 @@ Instead of matching the call *text*, you **run** it and check the *effect*. Two 
 - **State-based evaluation** (BFCL V3 multi-turn, τ-bench): after the episode, compare the **final backend state** (database rows, object fields) to an annotated golden end-state. This is the gold standard for write/delete operations: it does not care *how* the agent got there, only that the world ended up correct. τ-bench computes reward by diffing the database against the expected state *and* checking that required information appears in the agent's reply.
 
 State-based checks elegantly solve the **"any valid path" problem** (§3.4) for writes — but they say nothing about *efficiency* or *read-only* correctness, so you pair them with trajectory checks.
+Multi-turn state deserves special emphasis because it is where 2025–2026 benchmarks moved the goalposts. In single-turn evaluation the world is stateless: you score one call against one reference and reset. In multi-turn evaluation (BFCL V3, τ-bench, τ²-bench) the backend is a *persistent database* that the agent mutates across many turns, and the reference is the **end-state of that database plus the set of facts the agent must have surfaced to the user.** Scoring becomes: run the whole episode against a sandboxed backend seeded to a known initial state, then diff the final state against the golden end-state with a canonicalizing comparator (sort collections, ignore auto-generated timestamps/ids, normalize money to minor units). Two things make this hard in practice — **hidden coupling** (a write in turn 3 invalidates an assumption the agent made in turn 1) and **user-simulator noise** (the LLM playing the user may volunteer or withhold information inconsistently, so you must run many seeds and report variance, not a point estimate).
+
 
 ### 3.3 Golden trajectories
 
@@ -428,20 +434,681 @@ Leaderboard scores are single-turn, static-snapshot, and contamination-prone; pr
 
 ---
 
-## 10. Further reading
+## 10. The 2025–2026 landscape
 
-- Berkeley Function-Calling Leaderboard (BFCL), Gorilla / UC Berkeley — leaderboard and category docs: <https://gorilla.cs.berkeley.edu/leaderboard.html>
+The benchmark tour in §7 is the map; this section is the *territory as it stands in 2025–2026*. Tool-use evaluation moved fast in this window along three axes: (1) from single-turn call matching to **multi-turn, stateful, agentic** evaluation; (2) from bespoke per-vendor function-calling schemas to a **standard tool interface (MCP)**; and (3) from "did it call the right function" to "did it behave reliably and safely across a whole *session* with a *real user in the loop*." Know these by name and date — an interviewer will expect it.
+
+### 10.1 BFCL: V3 (multi-turn) → V4 (agentic)
+
+The **Berkeley Function-Calling Leaderboard** (Gorilla group, UC Berkeley) is the most-cited call-level benchmark, and it is a moving target.
+
+- **BFCL V1 (early 2024)** established **AST accuracy** and **executable accuracy** over *simple / multiple / parallel / parallel-multiple* single-turn calls, plus a **relevance/irrelevance** split for should-not-call behavior.
+- **BFCL V2 · "Live" (Aug 2024)** replaced synthetic prompts with **live, user-contributed** function-calling data to fight contamination and better reflect real distributions.
+- **BFCL V3 (Sep 2024)** introduced **multi-turn and multi-step** evaluation with **state-based checking**: the agent operates across turns against a stateful backend (file system, trading, travel-booking APIs), and scoring diffs the **final backend state** against a golden end-state. V3 added the categories that matter most for agents: **missing-parameter** (the agent must ask, not guess), **missing-function** (the needed tool isn't provided, so the agent must recognize it can't proceed), **long-context**, and **composite**. Blog: <https://gorilla.cs.berkeley.edu/blogs/13_bfcl_v3_multi_turn.html>.
+- **BFCL V4 · "Agentic" (July 2025 onward)** is the current frontier and adds three agentic tracks:
+  - **Web search (released 2025-07-17):** ~100 multi-hop questions where the agent must issue real search queries (DuckDuckGo API) and fetch/parse web pages, scored by exact-match on normalized answers. Blog: <https://gorilla.cs.berkeley.edu/blogs/15_bfcl_v4_web_search.html>.
+  - **Memory (released 2025-07-17):** the agent must read/write persistent memory through tool calls across five domains (advising, support, productivity, healthcare, finance), tested against three backends — **key-value (BM25+)**, **vector store (all-MiniLM-L6-v2 embeddings)**, and **recursive summarization (a bounded text buffer the model must compress)**. This directly evaluates whether an agent can *use a memory tool correctly*, a capability MCP servers increasingly expose. Blog: <https://gorilla.cs.berkeley.edu/blogs/16_bfcl_v4_memory.html>.
+  - **Format sensitivity (2025):** the same tasks under 26 perturbations of return format, function-doc style, and prompt formatting — measuring how brittle selection/argument accuracy is to cosmetic changes. Blog: <https://gorilla.cs.berkeley.edu/blogs/17_bfcl_v4_prompt_variation.html>.
+
+  V4's headline score is a weighted blend (Agentic ~40%, Multi-Turn ~30%, Live ~10%, Non-Live ~10%, Hallucination ~10%), and the project was written up at **ICML 2025** ("The Berkeley Function-Calling Leaderboard: From Tool Use to Agentic Evaluation," <https://openreview.net/forum?id=2GmDdhBdDk>). The trajectory — V1 call-matching → V3 state-based → V4 agentic web/memory — is itself the story of where the field went. Leaderboard: <https://gorilla.cs.berkeley.edu/leaderboard.html>.
+
+**Evaluation implication.** If you cite "we hit X% on BFCL," an interviewer will ask *which version and which split*. V4 web/memory is a different animal from V1 AST accuracy; a model can top V1 and be mediocre at V3 multi-turn state.
+
+### 10.2 τ-bench → τ²-bench: tool-agent-user, reliability, and dual control
+
+**τ-bench** (Sierra, June 2024; "A Benchmark for Tool-Agent-User Interaction in Real-World Domains," arXiv:2406.12045) evaluates agents in **realistic multi-turn dialogue** in *retail* and *airline* domains. Its two enduring contributions:
+
+1. **State-based reward with an info check.** An episode passes only if (a) the backend database's final state matches the golden end-state **and** (b) the agent surfaced the required information to the user. This kills "right words, wrong action" and "right action, silent about it" simultaneously.
+2. **pass^k reliability.** τ-bench popularized reporting **pass^k** (probability *all* k i.i.d. trials succeed) alongside pass@k, exposing that agents strong on a single try are often inconsistent. Frontier models showed pass^8 collapsing well below pass^1 in retail — the single most quoted "agents aren't reliable yet" datapoint. Repo: <https://github.com/sierra-research/tau-bench>.
+
+**τ²-bench** (Sierra, June 2025; "τ²-Bench: Evaluating Conversational Agents in a Dual-Control Environment," arXiv:2506.07982, submitted 2025-06-09) raises the bar to **dual control**: in a **telecom** troubleshooting domain, *both the agent and the user* can act on the shared environment with tools (the user can reboot their own router, toggle a setting), modeled as a **Dec-POMDP**. The agent must not just call tools but *guide the user to call theirs* — coordinating, instructing, and verifying. Key finding: agents that do fine in the "no-user-action" setting **drop sharply** when the user is also an actor, isolating *communication/coordination* failure from *reasoning* failure. τ²-bench also ships a **compositional task generator** (verifiable tasks from atomic components) and a tightly-coupled user simulator. Repo: <https://github.com/sierra-research/tau2-bench>; paper: <https://arxiv.org/abs/2506.07982>. Note the community follow-ups: **τ²-bench-verified** (Amazon AGI) corrects task/policy/DB misalignments in the original set (<https://github.com/amazon-agi/tau2-bench-verified>) — a reminder that even flagship benchmarks carry annotation bugs you should audit before trusting a number.
+
+**Why this matters for building.** τ-bench/τ²-bench are the reference design for a *product-grade* tool-use eval: sandboxed stateful backend, LLM user-simulator, state-diff reward, reliability over many seeds, and policy-adherence checks. When you design your own harness (§11, §12), you are essentially building a domain-specific τ-bench.
+
+### 10.3 ToolBench / StableToolBench and API-Bank: breadth and graded ability
+
+- **ToolLLM / ToolBench** (OpenBMB, ICLR 2024; arXiv:2307.16789) covers **16k+ real RapidAPI tools** with single- and multi-tool instructions, solved with a DFSDT search and scored by **ToolEval** (**pass rate** + LLM-judge **win rate** vs. a reference). Its weakness is *reproducibility*: live third-party APIs go down or change, so runs aren't comparable over time. Repo: <https://github.com/OpenBMB/ToolBench>.
+- **StableToolBench** (2024; arXiv:2403.07714) fixes that by replacing live APIs with a **cached, LLM-simulated API server**, trading a little realism for reproducible, always-on evaluation — the pattern you should copy for your own CI (a recorded/mock tool sandbox, not live prod APIs). Repo/paper: <https://arxiv.org/abs/2403.07714>.
+- **API-Bank** (EMNLP 2023; arXiv:2304.08244) cleanly separates the **decision to call** from the **ability to call** with graded levels — **Call**, **Retrieve+Call**, **Plan+Retrieve+Call** — and remains the crispest framework for diagnosing *which* sub-skill an agent lacks (knowing *when*, knowing *which*, knowing *how*). Older/smaller API set, but conceptually clarifying.
+
+### 10.4 MCP: the tool interface is standardizing — and it changes what you evaluate
+
+The **Model Context Protocol (MCP)** — introduced by Anthropic in **November 2024**, open-specced at <https://modelcontextprotocol.io/> and <https://spec.modelcontextprotocol.io/> — is not a benchmark. It is a **standard JSON-RPC interface** for exposing **tools, resources, and prompts** to a model, the "USB-C port for AI tools." By late 2025 it is the de-facto standard: the **November 25, 2025 spec revision (`2025-11-25`)** added **task-based/async workflows** (SEP-1686: states `working / input_required / completed / failed / cancelled` with polling), **simplified OAuth** via Client ID Metadata Documents (SEP-991), an **extensions framework**, **sampling-with-tools** so a server can run its own agentic loop (SEP-1577), and standardized tool naming (SEP-986). Adoption spans **OpenAI, Google, Microsoft, AWS, GitHub, Hugging Face, Block, Okta**, and the **MCP Registry** grew ~407% since September 2025 to roughly 2,000 servers (anniversary post, 2025-11-25: <https://blog.modelcontextprotocol.io/posts/2025-11-25-first-mcp-anniversary/>).
+
+Why an evaluation chapter cares about a *plumbing* standard — four concrete shifts:
+
+1. **The tool schema becomes the object under test.** MCP tools ship a structured name, JSON-Schema input, and a **natural-language description** the model reads to decide *whether and how* to call. Empirically, **tool-description quality dominates selection accuracy** — the same underlying function with a vague description gets mis-selected far more often. So your eval must treat the *description text* as a variable, not a constant: A/B test descriptions, and include BFCL-V4-style *format-sensitivity* perturbations. When selection regresses after someone "cleaned up" a tool doc, this is why.
+2. **Server-side tools you don't control become part of your trust boundary.** With MCP, an agent may load tools from a third-party server at runtime. Evaluation must now cover **tool-poisoning / prompt-injection via tool descriptions and results** (a malicious server can embed instructions in a description or return field), **name collisions** across servers (two servers both expose `search`), and **over-broad scopes**. "Does the agent refuse a tool whose description tries to redirect it" is a first-class safety eval in an MCP world.
+3. **Async / long-running tools break turn-synchronous scoring.** The 2025-11 task model means a tool call may return `input_required` or stay `working` across turns. Your scorer can no longer assume one call → one immediate result; it must model pending tasks, polling, and cancellation, and evaluate whether the agent *waits, polls, and handles `failed`/`cancelled`* correctly.
+4. **Standardized schemas make harnesses portable.** Because MCP normalizes the tool contract, an evaluation harness that ingests MCP tool definitions natively can point at *any* MCP server — your scorer, your golden traces, and your sandbox all speak one schema. This is the practical reason to build your §11 scorer around the MCP tool shape (`name`, `inputSchema`, `description`) rather than a vendor-specific one.
+
+**One-line summary for an interview:** *"BFCL is the call-level microscope, τ-bench/τ²-bench is the multi-turn reliability and dual-control microscope, ToolBench/StableToolBench is breadth-with-reproducibility, API-Bank separates when/which/how, and MCP is the interface layer that turns tool descriptions and async task-handling into things you must evaluate — not just plumbing."*
+
+---
+
+## 11. Build it in practice: a runnable tool-call scorer
+
+The §5 scorer teaches the idea. This section is the *thing you would actually ship in CI* — it ingests real provider payloads (OpenAI `tool_calls` **and** MCP/generic shapes), does AST-style structured comparison with value sets, handles **order-insensitive parallel calls** as a partial order, runs a **data-flow (chain) check** that an argument traces to a prior call's output, flags **hallucinated tools and args**, scores **irrelevance / should-not-call** tasks, folds in an **execution log** for exec-success and **error-recovery**, and aggregates a dataset with **pass@k vs pass^k**. It is dependency-free (Python 3.10+ stdlib) and the `__main__` block runs four illustrative tasks.
+
+Design decisions worth defending in an interview:
+
+- **Parse first, compare second.** `parse_tool_calls` normalizes provider quirks (arguments arriving as a JSON *string*, MCP `arguments` vs. legacy `args`) into a uniform `ToolCall`. Malformed JSON is *recorded* (`__unparsable__`), never silently dropped — a call the model emitted but you couldn't parse is a finding, not a non-event.
+- **Value sets + three matchers.** Each reference argument may specify `allowed` (a set of acceptable values), `from_call` (must trace to a prior output — the data-flow/chain check), and/or `predicate` (an arbitrary callable, e.g. "is a valid ISO date"). This spans exact-match, semantic, and structural checks in one grammar.
+- **Partial order, not a single golden path.** Calls carry a `group`; same-group calls are order-insensitive (parallel), and a matched call in a later group that appears *before* an earlier group's calls is an `order_violation`. This is how you avoid punishing `weather(Tokyo), weather(Paris)`.
+- **Consequence-aware accounting.** Hallucinated tools (name not in the registry) and destructive over-calls are surfaced as their own counters, not blended into arg accuracy — because §2's blast-radius point demands it.
+- **Reliability is first-class.** `pass_at_k` rewards luck; `pass_pow_k` measures consistency. The demo prints both for a task that succeeded 5 of 8 runs, and you can see pass@3 (0.98) look great while pass^3 (0.18) tells the deployable truth.
+
+```python
+"""
+tool_eval.py -- production-shaped tool-call scorer.
+
+Ingests an agent's emitted tool calls (OpenAI-style or MCP-style), compares
+them structurally (AST-style) against a per-task reference spec, and reports
+selection / argument / execution / chain / recovery metrics. Handles:
+  * order-insensitive parallel calls (partial order via `group`)
+  * value-set + optional + predicate argument matching
+  * data-flow (chain) checks: an arg must trace to a prior call's output
+  * hallucinated tools (name not in registry) and hallucinated args
+  * irrelevance / should-not-call tasks (empty reference == must not call)
+  * execution success and error-recovery from an execution log
+"""
+from __future__ import annotations
+import json
+from dataclasses import dataclass, field
+from typing import Any, Callable, Optional
+
+
+# --------------------------------------------------------------------------- #
+# 1. Parsing: normalize provider payloads into ToolCall objects.
+# --------------------------------------------------------------------------- #
+@dataclass
+class ToolCall:
+    name: Optional[str]
+    args: dict
+    call_id: Optional[str] = None
+
+
+def parse_tool_calls(raw: list[dict]) -> list[ToolCall]:
+    """Accept OpenAI-style ({'function':{'name','arguments'}}) or MCP/generic
+    ({'name','arguments'|'args'}). Arguments may be a JSON string or a dict."""
+    out: list[ToolCall] = []
+    for item in raw:
+        if "function" in item:                       # OpenAI tool_call shape
+            fn = item["function"]
+            name = fn.get("name")
+            a = fn.get("arguments", {})
+            cid = item.get("id")
+        else:                                        # MCP / generic shape
+            name = item.get("name")
+            a = item.get("arguments", item.get("args", {}))
+            cid = item.get("id") or item.get("call_id")
+        if isinstance(a, str):                       # arguments came as JSON text
+            try:
+                a = json.loads(a) if a.strip() else {}
+            except json.JSONDecodeError:
+                a = {"__unparsable__": a}            # malformed args are recorded
+        out.append(ToolCall(name=name, args=a or {}, call_id=cid))
+    return out
+
+
+# --------------------------------------------------------------------------- #
+# 2. Argument matching (AST-style, tolerant normalization + value sets).
+# --------------------------------------------------------------------------- #
+def _norm(v: Any) -> Any:
+    if isinstance(v, str):
+        return v.strip().lower()
+    if isinstance(v, bool):
+        return v
+    if isinstance(v, float) and v.is_integer():
+        return int(v)
+    return v
+
+
+def _arg_matches(pred_val: Any, spec: dict, produced: set) -> bool:
+    """A reference arg-spec supports three matchers (any present => must pass):
+       allowed:   value must be in a set of acceptable values
+       from_call: value must trace to an earlier call's output (data flow)
+       predicate: a callable returning bool."""
+    if "allowed" in spec:
+        if _norm(pred_val) not in {_norm(a) for a in spec["allowed"]}:
+            return False
+    if "from_call" in spec:
+        if _norm(pred_val) not in produced:          # hallucinated / broken chain
+            return False
+    if "predicate" in spec:
+        if not spec["predicate"](pred_val):
+            return False
+    return True
+
+
+def score_call(pred: ToolCall, ref: dict, produced: set) -> dict:
+    name_ok = pred.name == ref["name"]
+    ref_args: dict = ref.get("args", {})
+    pred_args: dict = pred.args
+    graded = correct = 0
+    missing_required, wrong_value, chain_broken = [], [], []
+    for key, spec in ref_args.items():
+        if key not in pred_args:
+            if not spec.get("optional", False):
+                graded += 1
+                missing_required.append(key)
+            continue
+        graded += 1
+        if _arg_matches(pred_args[key], spec, produced):
+            correct += 1
+        else:
+            wrong_value.append(key)
+            if "from_call" in spec and _norm(pred_args[key]) not in produced:
+                chain_broken.append(key)
+    hallucinated_arg = [k for k in pred_args if k not in ref_args]
+    per_arg = correct / graded if graded else 1.0
+    exact = name_ok and per_arg == 1.0 and not hallucinated_arg
+    return dict(name_ok=name_ok, per_arg=per_arg, exact=exact,
+                missing_required=missing_required, wrong_value=wrong_value,
+                hallucinated_arg=hallucinated_arg, chain_broken=chain_broken)
+
+
+# --------------------------------------------------------------------------- #
+# 3. Order-insensitive matching within a partial order (`group`).
+# --------------------------------------------------------------------------- #
+def _match(preds: list[ToolCall], refs: list[dict], produced: set):
+    """Greedy best-match assignment (name-match first, then arg accuracy).
+    Returns matched pairs (ref, pred|None, score, pred_index) and spurious preds."""
+    used = [False] * len(preds)
+    pairs = []
+    for ref in refs:
+        best = (-1, -1.0)   # (name_ok, per_arg)
+        best_i = None
+        for i, p in enumerate(preds):
+            if used[i]:
+                continue
+            s = score_call(p, ref, produced)
+            key = (int(s["name_ok"]), s["per_arg"])
+            if key > best:
+                best, best_i, best_s = key, i, s
+        if best_i is not None and best_s["name_ok"]:
+            used[best_i] = True
+            pairs.append((ref, preds[best_i], best_s, best_i))
+        else:
+            miss = score_call(ToolCall(None, {}), ref, produced)
+            pairs.append((ref, None, miss, None))
+    spurious = [(i, preds[i]) for i in range(len(preds)) if not used[i]]
+    return pairs, spurious
+
+
+# --------------------------------------------------------------------------- #
+# 4. Full-trace report.
+# --------------------------------------------------------------------------- #
+@dataclass
+class TraceReport:
+    task_id: str
+    should_not_call: bool = False
+    over_called: bool = False              # irrelevance task but agent called
+    n_ref: int = 0
+    selection_hits: int = 0
+    arg_acc_sum: float = 0.0
+    exact_calls: int = 0
+    missed: int = 0
+    spurious: int = 0
+    hallucinated_tools: int = 0
+    hallucinated_args: int = 0
+    order_violations: int = 0
+    chain_ok: bool = True
+    exec_calls: int = 0
+    exec_ok: int = 0
+    hit_error: bool = False
+    recovered: bool = False
+
+    @property
+    def selection_acc(self): return self.selection_hits / self.n_ref if self.n_ref else 1.0
+    @property
+    def arg_acc(self):       return self.arg_acc_sum / self.n_ref if self.n_ref else 1.0
+    @property
+    def exact_call_acc(self): return self.exact_calls / self.n_ref if self.n_ref else 1.0
+    @property
+    def exec_success(self):  return self.exec_ok / self.exec_calls if self.exec_calls else 1.0
+
+
+def collect_produced(exec_log: list[dict]) -> set:
+    """Flatten every scalar reachable in tool outputs into a set of normalized
+    values -- the pool a later argument may legitimately have come from."""
+    produced: set = set()
+    def walk(x):
+        if isinstance(x, dict):
+            for v in x.values(): walk(v)
+        elif isinstance(x, (list, tuple)):
+            for v in x: walk(v)
+        else:
+            produced.add(_norm(x))
+    for e in exec_log:
+        walk(e.get("output"))
+    return produced
+
+
+def score_trace(task_id, pred_raw, spec_calls, registry, exec_log=None) -> TraceReport:
+    exec_log = exec_log or []
+    preds = parse_tool_calls(pred_raw)
+    produced = collect_produced(exec_log)
+    rep = TraceReport(task_id=task_id, n_ref=len(spec_calls))
+
+    # --- irrelevance / should-not-call task: reference is empty ---
+    if not spec_calls:
+        rep.should_not_call = True
+        rep.over_called = len(preds) > 0
+        rep.spurious = len(preds)
+        rep.hallucinated_tools = sum(1 for p in preds if p.name not in registry)
+        # execution/recovery still computed below
+    else:
+        groups = sorted({c.get("group", i) for i, c in enumerate(spec_calls)})
+        cursor = 0
+        last_max_idx = -1
+        for gid in groups:
+            refs = [c for i, c in enumerate(spec_calls) if c.get("group", i) == gid]
+            window = preds[cursor: cursor + len(refs)]
+            pairs, spurious = _match(window, refs, produced)
+            group_pred_idxs = []
+            for ref, pred, s, local_i in pairs:
+                if pred is None:
+                    rep.missed += 1
+                    rep.chain_ok = False if ref.get("args") else rep.chain_ok
+                else:
+                    rep.selection_hits += int(s["name_ok"])
+                    rep.exact_calls += int(s["exact"])
+                    rep.arg_acc_sum += s["per_arg"]
+                    rep.hallucinated_args += len(s["hallucinated_arg"])
+                    if s["chain_broken"]:
+                        rep.chain_ok = False
+                    group_pred_idxs.append(cursor + local_i)
+            # ordering: every matched call in this group must come after the
+            # last call of all earlier groups.
+            for gi in group_pred_idxs:
+                if gi < last_max_idx:
+                    rep.order_violations += 1
+            if group_pred_idxs:
+                last_max_idx = max(last_max_idx, max(group_pred_idxs))
+            for _, p in spurious:
+                rep.spurious += 1
+                if p.name not in registry:
+                    rep.hallucinated_tools += 1
+            cursor += len(refs)
+        for p in preds[cursor:]:
+            rep.spurious += 1
+            if p.name not in registry:
+                rep.hallucinated_tools += 1
+
+    # --- execution + recovery ---
+    rep.exec_calls = len(exec_log)
+    rep.exec_ok = sum(1 for e in exec_log if e.get("ok"))
+    err_seen = False
+    for e in exec_log:
+        if not e.get("ok"):
+            rep.hit_error = True
+            err_seen = True
+        elif err_seen:
+            rep.recovered = True            # a success followed a prior error
+    return rep
+
+
+# --------------------------------------------------------------------------- #
+# 5. Dataset aggregation + pass^k / pass@k over repeated trials.
+# --------------------------------------------------------------------------- #
+from math import comb
+
+def pass_at_k(n, c, k):
+    if n - c < k: return 1.0
+    return 1.0 - comb(n - c, k) / comb(n, k)
+
+def pass_pow_k(n, c, k):
+    if c < k: return 0.0
+    return comb(c, k) / comb(n, k)
+
+
+def aggregate(reports: list[TraceReport]) -> dict:
+    rel = [r for r in reports if not r.should_not_call]
+    irr = [r for r in reports if r.should_not_call]
+    errd = [r for r in reports if r.hit_error]
+    def mean(xs): return sum(xs) / len(xs) if xs else 1.0
+    return {
+        "selection_acc":   mean([r.selection_acc for r in rel]),
+        "arg_acc":         mean([r.arg_acc for r in rel]),
+        "exact_call_acc":  mean([r.exact_call_acc for r in rel]),
+        "chain_completion": mean([1.0 if (r.chain_ok and r.missed == 0
+                                          and r.order_violations == 0) else 0.0
+                                  for r in rel]),
+        "exec_success":    mean([r.exec_success for r in reports]),
+        "recovery_rate":   (mean([1.0 if r.recovered else 0.0 for r in errd])
+                            if errd else float("nan")),
+        "irrelevance_acc": (mean([0.0 if r.over_called else 1.0 for r in irr])
+                            if irr else float("nan")),
+        "hallucinated_tools": sum(r.hallucinated_tools for r in reports),
+        "spurious_calls":     sum(r.spurious for r in reports),
+    }
+
+
+# --------------------------------------------------------------------------- #
+# 6. Demo: four tasks -- parallel-correct, wrong-arg, chain+recovery, irrelevance.
+# --------------------------------------------------------------------------- #
+if __name__ == "__main__":
+    registry = {"search_flights", "book_flight", "get_weather", "send_email"}
+
+    # Task A: order-insensitive parallel reads, both correct (OpenAI shape).
+    specA = [
+        {"name": "get_weather", "args": {"city": {"allowed": ["Paris"]}}, "group": 0},
+        {"name": "get_weather", "args": {"city": {"allowed": ["Tokyo"]}}, "group": 0},
+    ]
+    predA = [
+        {"id": "1", "function": {"name": "get_weather",
+                                 "arguments": '{"city": "tokyo"}'}},
+        {"id": "2", "function": {"name": "get_weather",
+                                 "arguments": '{"city": "PARIS"}'}},
+    ]
+    rA = score_trace("A_parallel", predA, specA, registry)
+
+    # Task B: right tool, wrong argument value, plus an invented tool call.
+    specB = [
+        {"name": "book_flight",
+         "args": {"flight_id": {"allowed": ["F100"]}, "seats": {"allowed": [1, 2]}},
+         "group": 0},
+    ]
+    predB = [
+        {"name": "book_flight", "args": {"flight_id": "F100", "seats": 3}},
+        {"name": "delete_booking", "args": {"id": "F100"}},   # hallucinated tool
+    ]
+    rB = score_trace("B_wrong_arg", predB, specB, registry)
+
+    # Task C: chained search->book with a data-flow check, and error+recovery.
+    specC = [
+        {"name": "search_flights",
+         "args": {"origin": {"allowed": ["SFO"]}, "dest": {"allowed": ["JFK"]}},
+         "group": 0},
+        {"name": "book_flight",
+         "args": {"flight_id": {"from_call": "search_flights"},
+                  "seats": {"allowed": [1]}},
+         "group": 1},
+    ]
+    predC = [
+        {"name": "search_flights", "args": {"origin": "SFO", "dest": "JFK"}},
+        {"name": "book_flight",    "args": {"flight_id": "F777", "seats": 1}},
+    ]
+    execC = [
+        {"ok": False, "error": "503 upstream", "output": None},          # first try fails
+        {"ok": True, "output": {"results": [{"id": "F777"}, {"id": "F778"}]}},  # retry ok
+        {"ok": True, "output": {"confirmation": "OK"}},
+    ]
+    rC = score_trace("C_chain_recovery", predC, specC, registry, execC)
+
+    # Task D: irrelevance -- no tool applies, correct behavior is to NOT call.
+    predD = [{"name": "get_weather", "args": {"city": "Paris"}}]  # over-called!
+    rD = score_trace("D_irrelevance", predD, [], registry)
+
+    reports = [rA, rB, rC, rD]
+    for r in reports:
+        print(f"[{r.task_id:>16}] sel={r.selection_acc:.2f} arg={r.arg_acc:.2f} "
+              f"exact={r.exact_call_acc:.2f} chain_ok={r.chain_ok} "
+              f"order_viol={r.order_violations} halluc_tool={r.hallucinated_tools} "
+              f"over_called={r.over_called} recovered={r.recovered}")
+
+    print("\n--- aggregate ---")
+    agg = aggregate(reports)
+    for k, v in agg.items():
+        print(f"{k:>20}: {v}")
+
+    # reliability over repeated trials of one task: 8 runs, 5 successes
+    print("\n--- reliability (n=8, c=5) ---")
+    print("pass@1 =", round(pass_at_k(8, 5, 1), 3),
+          " pass@3 =", round(pass_at_k(8, 5, 3), 3))
+    print("pass^1 =", round(pass_pow_k(8, 5, 1), 3),
+          " pass^3 =", round(pass_pow_k(8, 5, 3), 3))
+```
+
+Running it produces (verified output):
+
+```text
+[      A_parallel] sel=1.00 arg=1.00 exact=1.00 chain_ok=True order_viol=0 halluc_tool=0 over_called=False recovered=False
+[     B_wrong_arg] sel=1.00 arg=0.50 exact=0.00 chain_ok=True order_viol=0 halluc_tool=1 over_called=False recovered=False
+[C_chain_recovery] sel=1.00 arg=1.00 exact=1.00 chain_ok=True order_viol=0 halluc_tool=0 over_called=False recovered=True
+[   D_irrelevance] sel=1.00 arg=1.00 exact=1.00 chain_ok=True order_viol=0 halluc_tool=0 over_called=True recovered=False
+
+--- aggregate ---
+       selection_acc: 1.0
+             arg_acc: 0.8333333333333334
+      exact_call_acc: 0.6666666666666666
+    chain_completion: 1.0
+        exec_success: 0.9166666666666666
+       recovery_rate: 1.0
+     irrelevance_acc: 0.0
+  hallucinated_tools: 1
+      spurious_calls: 2
+
+--- reliability (n=8, c=5) ---
+pass@1 = 0.625  pass@3 = 0.982
+pass^1 = 0.625  pass^3 = 0.179
+```
+
+Read the numbers the way you would in a review. `B_wrong_arg` has `selection=1.00` but `arg=0.50` and `exact=0.00` — the agent picked the right tool and confidently passed the wrong `seats`, exactly the wrong-but-plausible failure of §6; the invented `delete_booking` shows up as `halluc_tool=1`, not as a silent efficiency ding. `C_chain_recovery` passes its data-flow check because the booked `flight_id` (`F777`) actually appeared in the `search_flights` output, and `recovered=True` because a success followed the injected `503`. `D_irrelevance` scores `over_called=True` and drives aggregate `irrelevance_acc` to `0.0` — the suite refuses to let a tool-happy agent hide. And the reliability block is the punchline: **pass@3 = 0.98 vs pass^3 = 0.18** for the same 5-of-8 task. In production you would swap the in-memory `execC` for a real **sandbox** (§12): seed a database, let the agent act, and diff final state instead of trusting the reference call text.
+
+---
+
+## 12. Production case studies & war stories
+
+Benchmarks tell you where a model sits on a leaderboard. They do not tell you how a *team* keeps a shipping agent from writing the wrong row at 3 a.m. This section is the practitioner layer: how real agent products actually evaluate tool use, and a couple of concrete failure incidents (composited from common, widely-reported patterns) with the lesson each burned in.
+
+### 12.1 How real agent products evaluate tool use
+
+The teams that run tool-using agents in production converge on a small set of practices, regardless of vertical:
+
+- **Golden trajectories mined from production, not hand-written.** The cheapest source of realistic tasks is your own logs. Pick sessions a human confirmed as successful, freeze the `(user_request → tool calls → final state)` triple as a **golden trajectory**, and scrub PII. Over time you accumulate a regression suite that reflects *your* traffic distribution, not a benchmark's. Hand-authored tasks fill the gaps (rare tools, dangerous edge cases) but the backbone is mined.
+- **State-based checks against a sandbox, not string-matching the calls.** The dominant production pattern (and the one τ-bench formalized) is a **hermetic sandbox**: a copy of the backend — order DB, ledger, CRM — seeded to a known initial state. Run the agent against it, then **diff the final state** against the golden end-state with a canonicalizing comparator. This is robust to the "any valid path" problem and is the only honest way to grade writes. Crucially the sandbox must be *hermetic and reset per run* — a test that mutates shared state poisons the next test.
+- **A tiered eval pyramid.** (1) **Unit-level**: schema validation and AST checks on single calls, run on every commit, milliseconds each. (2) **Trajectory-level**: golden-trajectory + state-diff on a few hundred tasks, run pre-merge, minutes. (3) **Reliability**: pass^k over many seeds on a smaller, high-stakes subset (anything that writes/charges/sends), run nightly. (4) **Online**: shadow/canary in production with live monitoring of the call trace. Each tier catches what the tier below cannot, at increasing cost.
+- **LLM-as-judge only where structure runs out — and calibrated.** For genuinely open steps (was this clarifying question reasonable?), a rubric-driven judge is used, but *gated*: teams measure the judge's agreement with human labels on a holdout, report it, and re-check it when the judge model changes. A judge whose agreement isn't measured is a random-number generator with good manners.
+- **Read/write asymmetry baked into scoring.** Read tools get partial credit and semantic tolerance. Write/charge/delete tools get **binary, strict, and heavily weighted** scoring plus a **safety gate** that can fail the whole episode on a single spurious destructive call regardless of task success.
+- **Injected-failure suites.** A dedicated set where the sandbox is rigged to return 5xx, timeouts, empty results, and malformed payloads, purely to measure recovery and maladaptive-retry — because you cannot wait for prod to supply enough failures to characterize the behavior.
+
+### 12.2 War story #1: the wrong-but-plausible argument that shipped a bad write
+
+*The incident.* A customer-support agent handled "I was double-charged for order 8842, please refund the duplicate." The catalog had two orders that day, **8842** and **8842-R** (a return-shipping fee). The agent called:
+
+```text
+issue_refund(order_id="8842-R", amount=payment.total, reason="duplicate charge")
+```
+
+Every layer said green. The tool was **correct** (`issue_refund`). The arguments were **schema-valid** (a real order id, a valid amount, a non-empty reason). Execution returned **`200 OK`**. The final summary to the user read fluently: *"I've refunded your duplicate charge of $128.40."* The offline eval — which scored the *final answer* for helpfulness — **passed it**. Only three days later did reconciliation flag that the *wrong order* was refunded for the *wrong amount* (the full payment, not the duplicate line).
+
+*Why every guardrail missed it.* This is the canonical §6 failure: **right tool, schema-valid args, wrong value.** Nothing textual or structural was off. Execution success was actively misleading — the disaster *succeeded* at the HTTP layer. And because the eval scored prose, the confident, wrong summary sailed through.
+
+*What caught it in the postmortem — and became permanent eval.* Three changes:
+1. **State-diff ground truth.** The golden reference became the *ledger end-state* (`refund on order 8842 for the duplicate line amount`), not the call text or the summary. Under a state-diff comparator, `8842-R` for `total` fails instantly — the world ended up wrong.
+2. **A value-provenance check.** `amount` must trace (via `from_call`, as in §11) to a *specific line item* returned by a prior `get_order` call, not to `payment.total`. A refund amount that doesn't match any retrieved line is a hard fail.
+3. **Confirm-before-write on ambiguity.** With two orders matching "8842", the *correct* behavior was to ask "Do you mean order 8842 or the 8842-R return fee?" The reference for underspecified writes was rewritten to reward the clarifying question and **penalize a confident write on a guess** — you cannot express that unless your reference format can say "the right action here is to ask, not act" (§6).
+
+*The lesson, in one line:* **a `200 OK` on a schema-valid call is not a success signal; it is the absence of a syntax error.** Grade the *effect on the world*, and make ambiguous writes ask.
+
+### 12.3 War story #2: the timeout that charged the customer twice
+
+*The incident.* A billing agent called `charge_card(customer, amount=4999)`. The payment processor was slow; the call **timed out** at the agent's HTTP layer *after* the charge had actually posted. The agent, seeing a timeout (which reads like a failure), did the "sensible" thing: **retried the identical call.** The customer was charged **twice**. Worse, the offline eval had a *recovery* test that *rewarded* retry-after-error — so it had actively trained the team to think this agent's retry behavior was good.
+
+*Why it slipped through.* The recovery metric (§4.5) as first written measured "did a success follow an error" — and a double-charge *does* produce a trailing success. The eval conflated **retry** with **safe retry**. For a non-idempotent tool, a blind retry on an *ambiguous* outcome (timeout ≠ known failure) is precisely the wrong move.
+
+*The fix that became eval policy.*
+1. **Effect-multiplicity scoring.** The sandbox counts *how many times the side effect fired*, not whether it fired ≥1 time. Two `charge` effects for a one-charge task is a **critical failure**, overriding task success (§2's destructive sub-case).
+2. **Idempotency-key checks.** The reference now requires that a retry of a write carry the *same idempotency key* as the original, so the backend collapses duplicates. An agent that retries without one fails the safety gate.
+3. **Read-before-retry on ambiguous outcomes.** On a timeout (unknown result), the golden trajectory is `get_recent_charges → decide`, not `charge again`. The injected-failure suite specifically distinguishes *timeout* (unknown) from *explicit 5xx with a body confirming no-op* (safe to retry).
+
+*The lesson:* **"recovered" is not a virtue for destructive tools unless it is *safe* recovery.** Measure the number of real side effects, require idempotency, and treat *unknown* outcomes differently from *known failures*.
+
+### 12.4 War story #3: the tool-description edit that quietly tanked selection
+
+*The incident.* Selection accuracy on a subset of tasks dropped ~9 points overnight with **no model change**. The cause: someone "tidied" an MCP tool's description, shortening `search_orders` — *"Find orders by customer, date range, status, or SKU; use this before any refund or cancellation"* — to a terse *"Search orders."* The model stopped reaching for it before refunds and started guessing order ids.
+
+*Why it matters.* In an MCP world (§10.4) the **tool description is part of the prompt the model reasons over**, and its quality dominates selection. A "cosmetic" doc edit is a *behavioral* change. The team had no eval gate on tool-description edits because they thought of descriptions as documentation, not as model inputs.
+
+*The fix.* Tool descriptions were put **under version control with a selection-eval gate**: any change to a tool's `description` or `inputSchema` triggers the §11 selection/irrelevance suite in CI, and a regression blocks the merge. They also added **format-sensitivity** runs (BFCL-V4 style, §10.1) so they'd know how brittle each tool's selection was to wording before it bit them in prod.
+
+*The lesson:* **treat tool descriptions and schemas as code.** In an MCP ecosystem they are load-bearing model inputs; gate them with the same eval you gate the model with.
+
+### 12.5 The composite takeaway from the war stories
+
+Every incident above shares a shape: **a layer reported success while the world was wrong.** HTTP said OK; the summary read fine; the retry "recovered"; the description "looked cleaner." Production tool-use evaluation is the discipline of *not trusting local green signals* — grading the end-state, counting real side effects, gating the inputs (descriptions/schemas) as well as the outputs, and weighting everything by blast radius.
+
+---
+
+## 13. Interview mastery
+
+§9 covered eight probes an interviewer will open with. This section is the rest of the kit: a crisp 60-second answer to the field's signature question, a full system-design walkthrough, decision tables you can draw on a whiteboard, a longer Q&A bank, and the red-flag/green-flag heuristics that let a reviewer smell a weak eval in thirty seconds.
+
+### 13.1 "Explain in 60 seconds why tool use is where agents silently fail"
+
+> Tool use is the moment the model stops producing *text a human can doubt* and starts producing *a structured call a machine executes without doubt*. Three things make it fail silently. First, the errors are **structured, not prose**: a wrong `account_id` is a valid-looking token in valid JSON, invisible to any text-quality metric. Second, the success signals **lie**: tools return status codes, so `refund(wrong_order, wrong_amount)` comes back `200 OK` and execution success gets mistaken for correctness. Third, the damage **compounds and gets narrated away**: one wrong id early in a chain poisons every downstream step, and the model then writes a fluent, confident summary of a wrong result. So you cannot evaluate tool use by reading transcripts or scoring final answers — you have to inspect the structured call trace and grade the *effect on the world*, weighted by how much damage each tool can do. That's the whole game: reads are cheap to get wrong, writes are not, and the eval has to know the difference.
+
+That is deliberately memorizable: *structured-not-prose, signals-lie, damage-compounds → grade the trace and the end-state, weighted by blast radius.*
+
+### 13.2 System-design prompt: "Design tool-use evaluation for a payments agent"
+
+A payments agent can `get_balance`, `list_transactions`, `get_payee`, `create_payee`, `send_payment`, and `cancel_payment`. Design its evaluation. A strong answer moves through five layers; here is the sketch.
+
+**1. Threat-model the tools first (blast radius).** Split the tool set by consequence before writing a single metric:
+- **Read** (`get_balance`, `list_transactions`, `get_payee`): wrong = wasted tokens. Partial credit, semantic tolerance.
+- **Non-idempotent write** (`send_payment`, `create_payee`): wrong or duplicated = irreversible money movement. Binary, strict, safety-gated.
+- **Compensating** (`cancel_payment`): matters for recovery paths and must itself be evaluated for correctness.
+
+**2. Ground truth = sandbox end-state, not call text.** Stand up a hermetic ledger sandbox seeded per task. The reference for each task is the **final ledger state** (balances, a payment row with exact payee + minor-unit amount + idempotency key) plus **required facts surfaced to the user** (confirmation number, new balance). Diff with a canonicalizing comparator (money in minor units, ignore auto ids/timestamps). This is the τ-bench pattern applied to money.
+
+**3. Metrics, per dimension, consequence-weighted.**
+- Selection accuracy + **irrelevance** (must *not* pay on "what's my balance?").
+- Argument accuracy with a hard **value-provenance** rule: `payee` and `amount` must trace to a prior `get_payee` / `list_transactions` output — never fabricated.
+- **Effect multiplicity** on `send_payment`: exactly-once. Two payments for a one-payment task = critical fail, overrides everything.
+- Chain completion (get_payee → send_payment) and order violations.
+- Recovery vs. **safe** recovery: on a `send_payment` timeout, the golden path is `list_transactions`/status-check → decide, *not* re-send; retries must carry the same idempotency key.
+
+**4. Safety gates and confirmation policy.** Any spurious/duplicated `send_payment`, any payment to a payee not confirmed by the user, or any write on an ambiguous request ("pay John" with two Johns) **fails the episode** regardless of task-level success. Underspecified payments must ask a clarifying question — the reference rewards the no-op-plus-question.
+
+**5. Reliability + online.** Report **pass^k (k≥5)** on the payment subset — "usually pays correctly" is not deployable when the tail double-pays. Add an injected-failure suite (processor 5xx/timeouts) for recovery, and in production, **shadow-mode** the agent with live call-trace monitoring and an amount-threshold human-in-the-loop before real money moves.
+
+ASCII sketch of the harness:
+
+```text
+  task (seed) ──► [ hermetic ledger sandbox ] ◄── agent tool calls
+                          │
+        ┌─────────────────┼──────────────────────────┐
+        ▼                 ▼                           ▼
+  state-diff vs      call-trace scorer          injected-failure
+  golden end-state   (§11: sel/arg/chain/        rig (5xx/timeout)
+  + required facts    provenance/halluc)               │
+        │                 │                            ▼
+        └───────► safety gate (effect-multiplicity,  recovery /
+                  provenance, confirm-on-ambiguity)   safe-retry
+                          │
+                          ▼
+                 per-dim metrics + pass^k(k≥5)  ──►  ship / block
+```
+
+The single most important sentence to say out loud: *"For a payments agent I grade the ledger end-state and count real side effects, not the call text or the summary — and a single spurious payment fails the run no matter how good the rest looks."*
+
+### 13.3 Tradeoff tables
+
+**Ground-truth strategy: exact-match vs. semantic vs. state-based**
+
+| | Exact/AST match on calls | Semantic (value-set / judge) | State-based (end-state diff) |
+|---|---|---|---|
+| **What it grades** | The call text, structurally | Whether values *mean* the right thing | The effect on the world |
+| **"Any valid path" robustness** | Poor (one golden path) | Medium | Excellent (path-agnostic) |
+| **Catches wrong-but-plausible args** | Only if value in reference set | Yes | Yes (world ends up wrong) |
+| **Cost to author/maintain** | Low | Medium (judge calibration) | High (sandbox + seeds) |
+| **Reproducible in CI** | Yes | Judge-dependent | Yes, if sandbox is hermetic |
+| **Best for** | Single-turn call correctness, fast unit gates | Open steps, phrasing-tolerant reads | Writes/deletes/payments, multi-turn |
+| **Blind spot** | Alternate valid calls; efficiency | Judge noise/bias | Read-only correctness; efficiency |
+
+*Rule of thumb:* AST for the unit tier, state-based for anything that writes, semantic/judge only for the open residual — and never rely on one alone.
+
+**Single-turn vs. multi-turn evaluation**
+
+| | Single-turn | Multi-turn (stateful) |
+|---|---|---|
+| **World model** | Stateless; one call, reset | Persistent backend mutated across turns |
+| **Reference** | Expected call(s) | End-state + required-info + policy adherence |
+| **Failures exposed** | Selection, arg construction | + coordination, memory, recovery, drift, coupling |
+| **Reliability** | pass@1 often fine | pass^k essential (variance explodes) |
+| **Representative of** | Wrapped-API calls | Real agents / assistants |
+| **Cost & flakiness** | Low | High (user-simulator noise, seeds) |
+| **Benchmarks** | BFCL V1/V2 (Live), API-Bank (Call) | BFCL V3, τ-bench, τ²-bench |
+
+### 13.4 Q&A bank (interview-ready)
+
+**Q9. When would you *prefer* AST/exact-match over state-based eval?** For fast unit gates on single calls where standing up a sandbox is overkill, and where the space of correct calls is genuinely narrow (a well-specified read with one right shape). It runs in milliseconds on every commit and localizes arg/selection bugs precisely. You just never let it be your *only* gate for writes.
+
+**Q10. How do you catch a hallucinated tool vs. a hallucinated argument?** A hallucinated *tool* is a name not in the declared registry — validate every emitted `name` against the tool set; nonzero count is a hard fail. A hallucinated *argument* is a key not in the tool's schema, or a value with no provenance (a `flight_id` that appears in no prior tool output). The §11 scorer surfaces both as separate counters; they have different fixes (tighter tool-listing prompt vs. provenance checks).
+
+**Q11. An agent asks a clarifying question instead of acting. Right or wrong?** It depends on whether the request was underspecified. For an ambiguous *write* ("cancel my order" with three orders), asking is the *correct* action and a confident guess-write is a failure — your reference must be able to reward the no-op-plus-question. For a fully-specified request, asking is an unnecessary turn and a mild efficiency ding. So this is not a bug or a virtue in the abstract; it's graded against whether ground truth says the request was answerable.
+
+**Q12. How do you evaluate an agent that uses tools you don't control (third-party MCP servers)?** Add a trust-boundary layer: test resistance to **tool-poisoning** (a malicious description or return field trying to redirect the agent), **name collisions** across servers, and **over-broad scope** use. Grade "does it refuse a tool whose description contains injected instructions" as a first-class safety task, and pin/version the server's tool manifest so a silent upstream change to a description can't move behavior unnoticed.
+
+**Q13. How do async / long-running tools change your scorer?** They break one-call-one-result. Under the MCP 2025-11 task model a call may return `input_required` or stay `working` across turns, so the scorer must model pending tasks, polling, cancellation, and terminal `failed`/`completed`. You evaluate whether the agent *waits and polls* rather than assuming instant completion, handles `cancelled`, and doesn't fire a duplicate side effect while a task is still `working`.
+
+**Q14. Your judge and your state-diff disagree on a task. Who wins?** State-diff, for anything with an observable end-state — it's deterministic and grades reality. The judge is for open steps the state can't capture (tone, whether a clarifying question was reasonable). If they disagree on a *write*, the judge is wrong or the task is mis-specified; investigate rather than average them.
+
+**Q15. How do you keep an eval suite from going stale or getting contaminated?** Rotate a **private held-out** set that never ships to a leaderboard or training corpus; refresh golden trajectories from recent production traffic; prefer **state-based** references (harder to memorize than fixed call strings); and periodically re-audit that "passing" tasks still exercise the tool (a schema change can turn a real test into a no-op).
+
+**Q16. What's the single number you'd put on a dashboard for a destructive-tool agent, and why?** **pass^k (k≈5–8) on the write subset**, with a hard **safety-gate failure rate** next to it. Averages and pass@1 hide the tail, and the tail is where a customer gets double-charged. If forced to one number, it's the reliability of the dangerous subset, not the mean over everything.
+
+**Q17. How do you measure efficiency without punishing legitimate exploration?** Compare against the golden call count for *necessary* calls only (dedupe identical calls with unchanged state), and report `call_efficiency = n_golden / m` capped at 1 alongside dollars- and latency-per-task. Exploration that changes state or gathers required info counts as necessary; a re-fetch of unchanged data or a duplicate write does not.
+
+**Q18. How would you detect that an agent read a tool's error but ignored it?** Pair the error-injection suite with a check that the *next* action changed in response: after an `error: not_found`, did the agent adjust the call / escalate / stop, or did it proceed as if success (or repeat the identical failing call)? Track **maladaptive-retry rate** (identical name+args after an error) as the tell for "ignored the error message."
+
+**Q19. Interviewer says "we just use an LLM to grade the whole trajectory." What's your pushback?** Convenient but under-specified: LLM judges are noisy, biased toward fluent narration (the exact failure mode of a wrong-but-plausible call), and drift when the judge model changes. I'd keep the judge only for open residual steps, gate it on measured agreement with human labels, and put deterministic state-diff + provenance checks under everything that writes. A judge you haven't calibrated is not a metric.
+
+**Q20. How do you evaluate memory/tool use over a long session?** Treat the memory backend as a tool and score read/write correctness through it (BFCL V4 memory pattern): can the agent *store* the right fact, *retrieve* it later against a rephrased query, and not *hallucinate* a memory that was never written? Run multi-session tasks where a fact set early must resurface turns later, and report accuracy per backend (key-value vs. vector vs. summarization) since the failure profiles differ.
+
+### 13.5 Red flags vs. green flags
+
+An interviewer (or a code reviewer) reads the *shape* of your eval, not just the score. Signals they weigh:
+
+| Red flag (weak eval) | Green flag (strong eval) |
+|---|---|
+| Scores only the final answer / summary | Grades the structured call trace **and** the end-state |
+| String-matches function calls | AST/structured comparison with value sets |
+| `200 OK` treated as success | Exec-success reported *next to* arg accuracy and state-diff |
+| One golden path per task | Partial orders, value sets, or outcome-based checks |
+| No should-not-call / irrelevance tasks | Explicit irrelevance suite scored as a confusion matrix |
+| All tools weighted equally | Consequence-weighted; writes strict + safety-gated |
+| Single run / pass@1 headline | pass^k over many seeds on the high-stakes subset |
+| Retry-after-error rewarded blindly | *Safe* recovery: effect-multiplicity, idempotency keys |
+| Tool descriptions treated as docs | Descriptions/schemas version-controlled + eval-gated |
+| Live third-party APIs in CI | Hermetic, reset-per-run sandbox (StableToolBench pattern) |
+| Uncalibrated LLM judge as the metric | Judge gated on measured human agreement, open steps only |
+| One leaderboard number cited as "capability" | Version/split named; private held-out set; online monitoring |
+
+---
+
+## 14. Further reading
+
+**Berkeley Function-Calling Leaderboard (BFCL)**
+- Leaderboard (currently V4) and category docs: <https://gorilla.cs.berkeley.edu/leaderboard.html>
 - BFCL V3 multi-turn / multi-step blog (state-based eval, missing params/functions): <https://gorilla.cs.berkeley.edu/blogs/13_bfcl_v3_multi_turn.html>
+- BFCL V4 web-search track (2025-07-17): <https://gorilla.cs.berkeley.edu/blogs/15_bfcl_v4_web_search.html>
+- BFCL V4 memory track (key-value / vector / summarization, 2025-07-17): <https://gorilla.cs.berkeley.edu/blogs/16_bfcl_v4_memory.html>
+- BFCL V4 format-sensitivity track (26 perturbations): <https://gorilla.cs.berkeley.edu/blogs/17_bfcl_v4_prompt_variation.html>
+- BFCL paper, "From Tool Use to Agentic Evaluation" (ICML 2025): <https://openreview.net/forum?id=2GmDdhBdDk>
 - BFCL dataset on Hugging Face: <https://huggingface.co/datasets/gorilla-llm/Berkeley-Function-Calling-Leaderboard>
-- τ-bench paper — "A Benchmark for Tool-Agent-User Interaction in Real-World Domains" (arXiv 2406.12045): <https://arxiv.org/abs/2406.12045>
-- τ²-bench code (Sierra Research): <https://github.com/sierra-research/tau2-bench>
+
+**τ-bench / τ²-bench (Sierra)**
+- τ-bench paper, "A Benchmark for Tool-Agent-User Interaction in Real-World Domains" (arXiv:2406.12045): <https://arxiv.org/abs/2406.12045>
+- τ-bench code: <https://github.com/sierra-research/tau-bench>
+- τ²-bench paper, "Evaluating Conversational Agents in a Dual-Control Environment" (arXiv:2506.07982, 2025-06-09): <https://arxiv.org/abs/2506.07982>
+- τ²-bench code: <https://github.com/sierra-research/tau2-bench>
+- τ²-bench-verified (Amazon AGI corrected dataset): <https://github.com/amazon-agi/tau2-bench-verified>
 - Sierra blog — τ-bench overview and pass^k motivation: <https://sierra.ai/blog/tau-bench-shaping-development-evaluation-agents>
-- ToolLLM / ToolBench (OpenBMB, ICLR'24) — ToolEval pass rate & win rate: <https://arxiv.org/abs/2307.16789> · code: <https://github.com/OpenBMB/ToolBench>
-- StableToolBench — reproducible tool-use benchmarking via API simulator: <https://arxiv.org/abs/2403.07714>
-- API-Bank — "A Comprehensive Benchmark for Tool-Augmented LLMs" (EMNLP'23, arXiv 2304.08244): <https://arxiv.org/abs/2304.08244>
+
+**ToolBench / StableToolBench / API-Bank / NexusRaven**
+- ToolLLM / ToolBench (OpenBMB, ICLR 2024, arXiv:2307.16789): <https://arxiv.org/abs/2307.16789> · code: <https://github.com/OpenBMB/ToolBench>
+- StableToolBench — reproducible tool-use benchmarking via API simulator (arXiv:2403.07714): <https://arxiv.org/abs/2403.07714>
+- API-Bank — "A Comprehensive Benchmark for Tool-Augmented LLMs" (EMNLP 2023, arXiv:2304.08244): <https://arxiv.org/abs/2304.08244>
 - NexusRaven V2 (Nexusflow) — commercially-permissive function-calling model: <https://openreview.net/pdf?id=5lcPe6DqfI>
-- Model Context Protocol (MCP) specification and docs: <https://modelcontextprotocol.io/> · spec: <https://spec.modelcontextprotocol.io/>
+
+**Model Context Protocol (MCP)**
+- MCP spec and docs: <https://modelcontextprotocol.io/> · versioned spec: <https://spec.modelcontextprotocol.io/>
+- MCP first-anniversary / November 2025 spec release (`2025-11-25`: async tasks, OAuth, extensions, sampling-with-tools): <https://blog.modelcontextprotocol.io/posts/2025-11-25-first-mcp-anniversary/>
 - Anthropic — "Code execution with MCP: building more efficient AI agents": <https://www.anthropic.com/engineering/code-execution-with-mcp>
+- Anthropic — introducing MCP (Nov 2024): <https://www.anthropic.com/news/model-context-protocol>
 
 ---
 

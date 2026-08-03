@@ -27,6 +27,17 @@ traces from one vendor to another is a project, not an afternoon. Choosing well
 early — or choosing standards-based components that keep you portable — is one of
 the highest-leverage decisions in an eval program.
 
+A third reason, specific to **agents**: the thing you are evaluating is no longer
+a single prompt/response pair. An agent emits a *trajectory* — a nested tree of
+model calls, tool calls, retries, sub-agents, and state mutations — and most of
+the interesting failures live in that tree, not in the final answer. A "correct
+final answer reached through a broken plan" is still a bug (it will not
+generalize), and you can only see it if your tooling captures and lets you
+inspect the trajectory. This is why, for agents, **evaluation and observability
+have fused**: you cannot grade what you cannot trace, and you cannot debug a
+regression you cannot replay. Half of this chapter is about that fusion and the
+tools that either respect it or fight it.
+
 ---
 
 ## Core intuition: eval tooling is five jobs, not one
@@ -62,6 +73,15 @@ number). "Observability platforms" grew up in the online, streaming, production
 world (watch live traffic, alert on drift). Many products now claim both, but
 almost all of them started on one side and the other side feels bolted on.
 Knowing a tool's *origin* tells you where it will be strong.
+
+One more lens, because it decides more procurement fights than any feature:
+**the five jobs have very different half-lives of value.** A grader encodes your
+definition of quality and is worth writing carefully and owning forever. A
+dashboard is worth exactly as much as the decisions it changes this quarter. A
+tracing backend is plumbing that should be boring, cheap, and swappable. When
+someone proposes spending money, ask *which job* the money buys and *how long*
+that job's value lasts — you will find you want to own the durable jobs (graders,
+data) and rent the perishable ones (dashboards, managed storage).
 
 ---
 
@@ -114,7 +134,9 @@ replay, and monitor it. Origin: streaming/online.
 - **Langfuse** — open-source LLM observability and tracing you can **self-host**
   or use as cloud. Traces, sessions, prompt management, evals, and dashboards.
   Core is open source (MIT); some enterprise features are gated. The default
-  answer when someone wants "open-source LangSmith."
+  answer when someone wants "open-source LangSmith." As of January 2026 the
+  company was **acquired by ClickHouse**, which had long been Langfuse's storage
+  engine; the project stays MIT and Langfuse Cloud continues standalone.
   <https://langfuse.com> · <https://langfuse.com/self-hosting>
 - **Arize Phoenix** — open-source AI observability **and** evaluation, built
   natively on **OpenTelemetry + OpenInference**. Tracing, LLM-based evals,
@@ -192,6 +214,124 @@ proprietary scorer is the reason to lock in — you can carry graders anywhere.
 
 ---
 
+## The 2025–2026 landscape — what actually changed
+
+The taxonomy above is stable; the *market* under it moved fast in 2025 and into
+2026. If you walk into an interview or a build-vs-buy meeting, these are the
+developments you are expected to know are real, not just the product names.
+
+### The macro shifts (why the whole map moved)
+
+1. **Agents replaced chatbots as the thing being evaluated.** Every serious
+   vendor spent 2025 retooling from "log a prompt and a completion" to "capture a
+   nested agent trajectory with tool calls and sub-agents." This is why tracing
+   and eval fused: a flat request/response logger is not enough to debug an agent.
+2. **OpenTelemetry won the tracing-format war.** The GenAI **semantic
+   conventions** matured to the point that instrumentation, not backend, became
+   the portable layer. In 2025 the GenAI conventions were split out into their
+   own repository, **`open-telemetry/semantic-conventions-genai`**, and gained
+   dedicated **agent spans** — `create_agent`, `invoke_agent`, `invoke_workflow`,
+   `plan`, and `execute_tool` — alongside the existing `chat`/`embeddings`
+   operations. They remain at **Development** stability (expect churn), but even
+   moving, they are the thing every backend now agrees to speak. Datadog,
+   Grafana, and the OSS platforms all advertise native ingestion of `gen_ai.*`
+   spans. <https://github.com/open-telemetry/semantic-conventions-genai>
+3. **LLM-as-judge went from novelty to default — and then got audited.** By 2026
+   "we use an LLM judge" is table stakes; the sophistication is in *validating*
+   the judge against human labels, controlling for its biases, and pinning its
+   version. Tools now ship judge-calibration and human-review workflows as
+   first-class features, because unvalidated judges burned enough teams.
+4. **Consolidation and capital arrived.** Observability startups raised real
+   money and got acquired; the space is no longer a dozen indie repos. Langfuse
+   raised a Series B and was then **acquired by ClickHouse (announced January 16,
+   2026)** — a signal that "LLM observability is a database problem" is now the
+   consensus. Expect more of the category to be absorbed into data-platform and
+   APM vendors.
+
+### The tooling map, tool by tool (eval-vs-tracing · OSS-vs-hosted · what changed)
+
+- **LangSmith** — *center of gravity: tracing + all-in-one; hosted SaaS with
+  enterprise self-host.* Rebranded around "agent engineering," deepened
+  LangGraph integration, and pushed annotation queues and online evaluators
+  (judges that run on live production traces, not just offline datasets). It is
+  the smoothest end-to-end UX and the easiest to over-buy. Watch the pricing on
+  trace volume. <https://www.langchain.com/langsmith>
+- **Braintrust** — *center of gravity: offline eval/experiments; hosted with
+  self-host.* Stayed eval-first and leaned into CI-native workflows, the `Eval()`
+  loop, and a strong playground for prompt iteration with side-by-side scoring.
+  The natural pick when the primary job is "systematically compare candidate
+  prompts/models on a dataset," not "watch production." Its Autoevals library is
+  usable standalone. <https://www.braintrust.dev>
+- **W&B Weave** — *center of gravity: tracing + eval; OSS SDK, hosted backend.*
+  Rode the W&B install base: if your ML org already lives in Weights & Biases,
+  `@weave.op` tracing and the `Evaluation` API are the path of least resistance.
+  The SDK is Apache-2.0; the durable data lives in the hosted platform.
+  <https://docs.wandb.ai/weave>
+- **Arize Phoenix** — *center of gravity: OTel-native tracing + eval; OSS with
+  Arize cloud.* The standards-forward OSS choice. Built on OpenTelemetry +
+  **OpenInference**, so its traces are portable by construction; ships LLM
+  evaluators, datasets, and experiments. If "no lock-in" is a hard requirement
+  and you still want a real UI, this is usually the answer.
+  <https://arize.com/phoenix/>
+- **Langfuse** — *center of gravity: tracing/observability + prompt mgmt; OSS
+  (MIT) + hosted.* The default "open-source LangSmith": self-host the whole thing,
+  get traces, sessions, prompt management, datasets, and evals. The v3 SDK is
+  OpenTelemetry-based, so instrumentation is now standards-aligned. The ClickHouse
+  acquisition (Jan 2026) reinforces its data-at-scale story while keeping the core
+  MIT-licensed. <https://langfuse.com>
+- **Inspect (UK AISI)** — *center of gravity: rigorous offline eval; OSS (MIT).*
+  Became the credible standard for capability and safety evals. Its
+  dataset→solver→scorer model, sandboxed tool execution, and the `inspect_evals`
+  library (200+ benchmarks) make it the tool you reach for when a *number has to
+  survive scrutiny*. Not an observability product; pair it with a tracer.
+  <https://inspect.aisi.org.uk/>
+- **DeepEval** — *center of gravity: offline eval/judges; OSS + Confident AI
+  hosted.* The "Pytest for LLMs" experience matured with a broad metric library
+  (G-Eval, faithfulness, task completion, conversational metrics) and tighter
+  agent/component-level testing. Great DX for teams that want evals to feel like
+  unit tests. <https://deepeval.com>
+- **Ragas** — *center of gravity: RAG grader library; OSS.* Still the reference
+  for RAG-specific metrics (faithfulness, context precision/recall) and synthetic
+  test-set generation, and increasingly used as a metric provider *inside* other
+  harnesses rather than as a standalone runner. <https://www.ragas.io>
+- **promptfoo** — *center of gravity: local-first offline eval + red-team; OSS
+  (MIT).* Doubled down on being the fastest path from zero to a comparison table,
+  and on **security/red-teaming** — its vulnerability scanner and adversarial
+  probes made it a common pick for the "is this safe to ship?" gate.
+  <https://www.promptfoo.dev>
+- **Helicone** — *center of gravity: proxy-based tracing/cost; OSS + hosted.*
+  Still the one-line way to get logging, caching, rate-limit handling, and cost
+  attribution by routing calls through a gateway. The gateway is the feature and
+  the caveat: it is a hop in your request path. <https://www.helicone.ai>
+- **MLflow GenAI eval** — *center of gravity: eval + tracing inside MLflow; OSS
+  (Apache-2.0).* Became the sane default for shops already running MLflow for
+  classical ML: `mlflow.evaluate()`, GenAI judge scorers, dataset management, and
+  tracing all in one self-hostable stack, no new vendor.
+  <https://mlflow.org/docs/latest/genai/eval-monitor/>
+- **OpenLLMetry / OpenTelemetry GenAI** — *center of gravity: instrumentation
+  standard, not a platform.* The connective tissue of the whole map. Emit
+  `gen_ai.*` spans once; send them anywhere. This is the single most important
+  thing to adopt early, because it makes every other choice reversible.
+  <https://github.com/traceloop/openllmetry>
+
+### What changed table (2025 → 2026)
+
+| Area | 2024 posture | 2025–2026 posture |
+|---|---|---|
+| Unit of evaluation | prompt/response pair | agent trajectory (nested tool calls, sub-agents) |
+| Tracing format | per-vendor proprietary schema | OpenTelemetry `gen_ai.*` + OpenInference, portable |
+| OTel GenAI spec | a few `gen_ai.*` attributes in main semconv | dedicated **semantic-conventions-genai** repo with agent spans (Development) |
+| LLM-as-judge | "we tried a judge" | default grader, now *validated* against human labels + version-pinned |
+| Online vs offline eval | separate worlds | online evaluators run judges on live prod traces |
+| Market structure | indie OSS repos | funded startups + acquisitions (ClickHouse → Langfuse, Jan 2026) |
+| Red-teaming | manual, ad hoc | built-in scanners (promptfoo) as a ship gate |
+
+The practical takeaway: **standardize on OTel now, keep your graders and data in
+open formats, and treat every hosted UI as rentable.** The market will keep
+consolidating; the only durable protection is portability you built in yourself.
+
+---
+
 ## How to choose — a decision guide
 
 Do not start from tools. Start from **which of the five jobs is your bottleneck
@@ -234,6 +374,25 @@ today**, then pick the smallest thing that unblocks it.
   results weekly.
 - **Match the tool's origin to your problem.** Batch-origin tools (promptfoo,
   Inspect) for CI; stream-origin tools (Langfuse, Helicone) for production.
+- **Count the integration surface, not the feature list.** The real cost of a
+  tool is the code you write to feed it and the code you write to get data out.
+  A tool with 200 features and a proprietary ingest is more expensive than a
+  tool with 20 features that speaks OTel, every time.
+
+### A scoring rubric for tool selection
+
+When two tools look equivalent on the landing page, score them on these axes and
+the tie breaks itself. Rate each 1–5.
+
+| Axis | Question | Why it matters |
+|---|---|---|
+| Portability | Can I export *all* data in an open format? Does it speak OTel? | Determines your cost to leave; the single biggest long-term risk. |
+| Job coverage | How many of the five jobs does it actually do well (not "checkbox")? | Fewer tools = less sprawl, but beware the all-in-one that does none deeply. |
+| Self-host | Can I run it in my VPC with no data egress? | Gates regulated/enterprise use entirely. |
+| Integration cost | Lines of code + concepts to instrument and to read results out. | The hidden recurring tax. |
+| Trace fidelity | Does it capture nested agent trajectories, not just flat calls? | For agents, a flat logger is nearly useless. |
+| Judge tooling | Judge caching, version pinning, human-label calibration? | Decides whether your eval numbers are trustworthy. |
+| Cost model | Priced on traces? seats? spans? What happens at 10x volume? | Trace-volume pricing is where hosted bills explode. |
 
 ---
 
@@ -554,6 +713,195 @@ concept with a thin adapter — you do not rewrite your definition of quality.
 
 ---
 
+## Build it in practice — wiring the runner to real OSS tools
+
+The section above is intentionally self-contained. Now let us make it *real*:
+take the exact `Result`/`Score` objects the runner already produces and push
+them into an actual OSS backend, so a bad score becomes a clickable trace. We
+show two genuinely different API shapes — **Langfuse** (tracing/observability,
+you push traces + scores to it) and **Inspect** (an eval framework, you declare
+a task and it runs the loop for you) — because seeing both teaches you what
+"integration cost" really means.
+
+### Adapter 1 — log every run and score to Langfuse
+
+Langfuse's model is: create a **trace** per unit of work, optionally nest
+**spans/generations** inside it, and attach **scores** (numeric or categorical)
+to the trace. Our `EvalRunner` already produces exactly the right objects; we
+just add a reporter. The snippet below uses the low-level Langfuse Python SDK
+(v2 style, which is stable and explicit); a note after it shows the v3
+OpenTelemetry-decorator equivalent.
+
+```python
+"""
+langfuse_reporter.py — push mini_eval Results into Langfuse as traces + scores.
+
+Run against Langfuse Cloud or a self-hosted instance. Configure via env:
+  LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY, LANGFUSE_HOST
+Install:  pip install langfuse
+"""
+from __future__ import annotations
+
+import statistics
+from langfuse import Langfuse           # pip install langfuse
+from mini_eval import Case, Result, EvalRunner, ExactMatch, LLMJudge
+
+
+def report_to_langfuse(results: list[Result],
+                       dataset: list[Case],
+                       run_name: str) -> dict:
+    """
+    Create one Langfuse trace per case and attach every grader Score to it.
+    The trace's `id` is our own trace_id, so a score in Langfuse links straight
+    back to the JSONL row and (if you also instrument the agent) its call tree.
+    """
+    lf = Langfuse()  # reads keys/host from environment
+    by_id = {c.id: c for c in dataset}
+
+    for r in results:
+        case = by_id[r.case_id]
+        # One trace == one evaluated case. Reuse OUR trace_id as the join key.
+        trace = lf.trace(
+            id=r.trace_id,
+            name=f"{run_name}:{r.case_id}",
+            input=case.input,
+            output=r.output,
+            metadata={"run": run_name, "latency_s": r.latency_s,
+                      "error": r.error, **case.metadata},
+            tags=[run_name],
+        )
+        # Attach each grader's verdict as a Langfuse score on the trace.
+        for s in r.scores:
+            lf.score(
+                trace_id=trace.id,
+                name=s.name,
+                value=s.value,          # numeric score in [0, 1]
+                comment=s.detail or None,
+            )
+        # Record a hard failure as a distinct signal, not a silent gap.
+        if r.error:
+            lf.score(trace_id=trace.id, name="ran_ok", value=0.0,
+                     comment=r.error)
+
+    lf.flush()  # IMPORTANT: SDK batches; flush before the process exits.
+
+    # Emit the same machine-readable summary the local runner does.
+    by_grader: dict[str, list[float]] = {}
+    for r in results:
+        for s in r.scores:
+            by_grader.setdefault(s.name, []).append(s.value)
+    summary = {
+        "run": run_name,
+        "n_cases": len(results),
+        "n_errors": sum(1 for r in results if r.error),
+        "graders": {name: {"n": len(v), "mean_score": statistics.mean(v)}
+                    for name, v in sorted(by_grader.items())},
+    }
+    print(f"[langfuse] logged {len(results)} traces for run {run_name!r}")
+    return summary
+
+
+if __name__ == "__main__":
+    def my_agent(q: str) -> str:
+        return {"capital of france": "Paris", "2+2": "4"}.get(q.lower().strip(),
+                                                              "I don't know")
+
+    def fake_judge(prompt: str) -> str:
+        return '{"score": 0.9, "reason": "looks correct"}'
+
+    dataset = [
+        Case(id="q1", input="Capital of France", expected="Paris"),
+        Case(id="q2", input="2+2", expected="4"),
+    ]
+    runner = EvalRunner(my_agent, graders=[
+        ExactMatch(),
+        LLMJudge(fake_judge, rubric="Correctly answers the question."),
+    ])
+    results = runner.run(dataset, run_id="langfuse-demo")
+    print(report_to_langfuse(results, dataset, run_name="langfuse-demo"))
+```
+
+Three things this makes concrete:
+
+- **The join key is yours.** Because we pass `id=r.trace_id` into `lf.trace(...)`,
+  the very same ID keys your JSONL row, your Langfuse trace, and — if you also
+  instrument `my_agent` with `@observe` or OTel spans — the nested call tree.
+  One click from "score 0.0" to "here's the exact tool call that failed."
+- **`lf.flush()` is not optional.** The SDK batches network writes for
+  throughput; a script that exits without flushing silently drops its last
+  batch. This is the single most common "why are my traces missing?" bug.
+- **The graders never changed.** `ExactMatch` and `LLMJudge` are byte-for-byte
+  the ones from `mini_eval.py`. That is the payoff of keeping graders as pure
+  functions: the backend is a swappable reporter, not a rewrite.
+
+> **v3 SDK note.** Langfuse's newer SDK is OpenTelemetry-based: instead of
+> `lf.trace(...)` you wrap work in `with langfuse.start_as_current_span(...)` or
+> decorate the agent with `@observe`, and attach scores with
+> `langfuse.score_current_trace(name=..., value=...)`. The *mental model* — trace
+> per unit of work, scores attached to it — is identical; only the surface API
+> changed. Pin the SDK major version and read the current docs before wiring
+> production. <https://langfuse.com/docs>
+
+### Adapter 2 — the same eval as an Inspect task
+
+Inspect inverts control: you do not write the loop, you *declare* a `Task`
+(dataset + solver + scorer) and Inspect runs it, handling concurrency, retries,
+logging, and a rich viewer for free. This is the "buy the harness" path, and for
+high-stakes evals it is usually the right one.
+
+```python
+"""
+capital_task.py — the same quiz as an Inspect eval.
+Install:  pip install inspect-ai
+Run:      inspect eval capital_task.py --model openai/gpt-4o
+View:     inspect view
+"""
+from inspect_ai import Task, task
+from inspect_ai.dataset import Sample
+from inspect_ai.scorer import match, model_graded_qa
+from inspect_ai.solver import generate, system_message
+
+
+@task
+def capital_quiz() -> Task:
+    return Task(
+        dataset=[
+            Sample(input="What is the capital of France?", target="Paris"),
+            Sample(input="What is 2 + 2?", target="4"),
+            Sample(input="What is the capital of Mars?", target="unknown"),
+        ],
+        solver=[
+            system_message("Answer in as few words as possible."),
+            generate(),
+        ],
+        # Two scorers: a cheap exact-ish match AND a model-graded judge.
+        scorer=[
+            match(location="any"),   # heuristic: target string appears in output
+            model_graded_qa(),       # LLM judge: is the answer correct vs target?
+        ],
+    )
+```
+
+What the two adapters teach, side by side:
+
+- **Langfuse = push model.** You own the loop and the graders; the tool stores
+  and visualizes. Maximum control, minimum magic, and your existing runner drops
+  in with a ~40-line reporter.
+- **Inspect = declarative model.** You give it a dataset, a solver, and scorers;
+  it owns concurrency, sandboxing, logging, and the viewer. Far less code, at the
+  cost of expressing your eval in *its* vocabulary. The moment your grader is
+  "trajectory matches a ground-truth plan," you either find an Inspect scorer
+  that fits or write a custom one in its scorer API.
+- **Both emit a report.** Langfuse via the returned summary dict + its dashboard;
+  Inspect via `inspect view` and its `.eval` log files. Neither leaves you at a
+  bare number.
+
+The lesson is the recurring one: **own the graders, rent the harness or the
+backend.** Whichever adapter you pick, the definition of quality stayed in your
+code and stayed portable.
+
+---
+
 ## OpenTelemetry & standardization
 
 The most important recent development in this space is that **tracing is
@@ -572,19 +920,200 @@ tool invocations — with standardized attributes such as:
 - `gen_ai.input.messages` / `gen_ai.output.messages` / `gen_ai.system_instructions`
   — the actual content, captured only when you opt in
 
+As of 2025–2026, the GenAI conventions were **split out of the main
+semantic-conventions repo into their own repository**,
+`open-telemetry/semantic-conventions-genai`, and grew a dedicated set of **agent
+spans** aimed squarely at the trajectory problem:
+
+- `create_agent` — instantiating an agent (name, id, version, model)
+- `invoke_agent` — a full agent invocation (the top of the trajectory tree)
+- `invoke_workflow` — orchestrated multi-step workflows
+- `plan` — an explicit planning/reasoning phase
+- `execute_tool` — a single tool call, nested under the agent
+
+with shared attributes like `gen_ai.operation.name`, `gen_ai.provider.name`,
+and `error.type`. This is exactly the nested shape an agent produces, which is
+why it matters more for agents than for chatbots.
+
 Why you should care: if your agent emits **standard `gen_ai.*` spans**, you can
 point them at Phoenix today, Langfuse tomorrow, and Datadog next year without
 re-instrumenting your code. That is the single strongest antidote to lock-in in
 the whole chapter. Tools like **OpenLLMetry** (Traceloop) exist precisely to
 emit these standard spans from your app, and OTel-native platforms like
-**Phoenix** consume them directly.
+**Phoenix** consume them directly. By 2026, mainstream APM and data vendors
+(Datadog among them) advertise native ingestion of the OTel GenAI conventions,
+so "standard spans" is not an OSS-only story — it is how you keep the enterprise
+backends portable too.
 
-The honest caveat: the GenAI conventions are **still evolving** — actively
-developed, already useful, but not fully frozen, and some attribute names have
+The honest caveat: the GenAI conventions are **still at Development stability** —
+actively developed, already useful, but not frozen, and some attribute names have
 already been renamed/deprecated between versions. Adopt them, but pin versions
 and expect churn. Even a moving standard is more portable than a proprietary
 schema. See the OpenTelemetry GenAI SIG for current status.
-<https://opentelemetry.io/blog/2026/genai-observability/>
+<https://opentelemetry.io/blog/2026/genai-observability/> ·
+<https://github.com/open-telemetry/semantic-conventions-genai>
+
+### A tiny OTel instrumentation sketch
+
+You do not need OpenLLMetry to emit standard spans — you can set the attributes
+yourself, which is worth doing once so you understand what the auto-instrumentors
+are doing under the hood.
+
+```python
+from opentelemetry import trace
+tracer = trace.get_tracer("my.agent")
+
+def call_model(messages, model="gpt-4o"):
+    with tracer.start_as_current_span("chat") as span:
+        span.set_attribute("gen_ai.operation.name", "chat")
+        span.set_attribute("gen_ai.request.model", model)
+        resp = client.chat.completions.create(model=model, messages=messages)
+        u = resp.usage
+        span.set_attribute("gen_ai.usage.input_tokens", u.prompt_tokens)
+        span.set_attribute("gen_ai.usage.output_tokens", u.completion_tokens)
+        span.set_attribute("gen_ai.response.finish_reasons",
+                           [resp.choices[0].finish_reason])
+        return resp
+```
+
+Any OTel-compatible backend — Phoenix, Langfuse v3, Datadog — will render this
+span correctly and join it into the agent's trajectory, because the attribute
+names are the agreed vocabulary, not a vendor's.
+
+---
+
+## Production case studies & war stories
+
+Patterns are easier to trust with concrete stacks and scars attached. The
+following are composite but realistic — the kind of decisions and incidents that
+recur across teams building agents in 2025–2026.
+
+### Case study 1 — Solo builder / prototype (1 engineer)
+
+**Context.** One engineer shipping a RAG assistant side project, no budget, needs
+to know "did my last prompt change help?"
+
+**Stack.** promptfoo for offline evals (a single YAML, `promptfoo eval`,
+`promptfoo view`), local JSONL for results, no tracing tool at all — just print
+statements and the promptfoo web view.
+
+**Decision.** Build-vs-buy is moot at this size; the answer is "one OSS tool, zero
+dollars." The trap here is the opposite: reaching for a hosted platform's free
+tier and immediately coupling to its schema. Staying local kept everything
+portable.
+
+**Lesson.** At n=1, your bottleneck is *iteration speed*, not collaboration.
+Anything with a login screen is overhead.
+
+### Case study 2 — Seed startup shipping a customer-facing agent (5 engineers)
+
+**Context.** A support agent with tool use (search, ticket API). Real users, real
+incidents, a founding team that argues about quality weekly.
+
+**Stack.** Self-hosted **Langfuse** for tracing (instrumented via OTel so spans
+are portable), **promptfoo** in CI as the ship gate, **Ragas** metrics on the
+retrieval step, graders written in-repo with an injected judge model. Results in
+Postgres; a notebook for run-vs-run diffs.
+
+**Build-vs-buy.** They deliberately *did not* buy an all-in-one. The reasoning:
+at five people the collaboration features of LangSmith/Braintrust weren't worth
+the trace-volume bill or the lock-in, and self-hosted Langfuse gave them 90% of
+the tracing value for the cost of a small VM.
+
+**Lesson.** The right first stack is "one OSS tracer + one OSS eval framework +
+your own graders." Keep them decoupled; you can add a hosted UI later if pain is
+real.
+
+### Case study 3 — Scale-up with an eval team (40+ engineers, dedicated eval owners)
+
+**Context.** Multiple agent products, a platform team, regulated-adjacent data,
+weekly release train, and executives who ask for a "quality number."
+
+**Stack.** OTel/OpenInference instrumentation everywhere (portability mandated by
+architecture review), **Phoenix** self-hosted for tracing + online evals, a
+**hosted platform (Braintrust)** bought specifically for the experiment/dataset
+collaboration UX that a 40-person org actually fights over, **Inspect** for the
+high-stakes capability/safety evals whose numbers go in front of leadership, and
+a shared in-repo grader library owned by the platform team.
+
+**Build-vs-buy.** Here buying *did* pay off — but narrowly, for the one job
+(collaborative experiments) where the org had genuine multi-human pain. Tracing
+stayed OSS and standards-based on purpose, so the bought platform is replaceable.
+
+**Lesson.** Buy the perishable job (collaboration UI) once the pain is proven;
+keep the durable jobs (instrumentation, graders, data) OSS and portable so the
+purchase never becomes a hostage situation.
+
+### Case study 4 — Enterprise / regulated (bank, health, gov)
+
+**Context.** Data legally cannot leave the VPC; auditors want reproducible
+evidence that the agent was evaluated before each release.
+
+**Stack.** Fully self-hosted: **Langfuse or Phoenix** in-VPC for tracing,
+**Inspect** with sandboxed execution for the audited capability evals, results
+in the org's own warehouse, OTel spans so nothing is trapped in a vendor. Hosted
+SaaS considered only where an on-prem/BYOC option and a signed DPA exist.
+
+**Lesson.** In regulated settings, "self-hostable" and "open data format" are not
+nice-to-haves; they are the gate. A tool that can only send data to someone
+else's cloud is disqualified before you evaluate its features.
+
+### Stacks-by-team-size summary
+
+| Team size | Tracing | Offline eval | Platform bought? | Graders |
+|---|---|---|---|---|
+| Solo | none / prints | promptfoo | No | in-repo |
+| Seed (≈5) | self-host Langfuse (OTel) | promptfoo + Ragas | No | in-repo, injected judge |
+| Scale-up (40+) | Phoenix (OTel) | Inspect (high-stakes) | Yes — Braintrust for collab | shared in-repo library |
+| Enterprise/regulated | self-host in-VPC (OTel) | Inspect + sandbox | Only with on-prem/BYOC + DPA | in-repo, audited |
+
+### War story A — the tracing-overhead incident
+
+**What happened.** A team turned on full prompt/response content capture on every
+span, in production, at a few hundred QPS, sampling 100%. Within a day: p95
+latency up double digits of milliseconds per request from serialization + egress,
+a surprise storage bill, and a trace backend struggling to keep up. The content
+capture — the *most useful* part in dev — was the killer in prod.
+
+**Root cause.** Treating dev-grade observability settings as production settings.
+Capturing every token of every message, unsampled, is a dev luxury.
+
+**Fix and lesson.** Sample in production (100% in dev, a small fraction in prod),
+make content capture **opt-in per span** (metadata always, payloads only when a
+flag is set or a case is flagged interesting), and set retention. Observability
+is not free; budget it like any other production dependency and *measure its
+overhead* before it measures you.
+
+### War story B — the lock-in trap
+
+**What happened.** A team went all-in on a single hosted platform's proprietary
+tracing + eval schema. Eighteen months later, price and data-residency pressure
+made them want to leave — and discovered that "leaving" meant re-instrumenting
+every service and abandoning a year and a half of trace history that only existed
+in the vendor's schema. The migration was quoted in engineer-quarters.
+
+**Root cause.** No portability layer. Instrumentation spoke the vendor's dialect,
+not OTel, and results lived only in the vendor's store.
+
+**Fix and lesson.** Had they emitted **OTel `gen_ai.*` spans** and mirrored
+results to their own store from day one, switching backends would have been a
+config change plus a backfill, not a re-write. Ask every vendor "how do I export
+*all* my data, in what format?" *before* you sign — and build the export even if
+you never plan to leave.
+
+### War story C — the judge that drifted
+
+**What happened.** A team's headline quality metric quietly jumped one week with
+no code change. Celebration turned to suspicion: the LLM-judge model had been
+transparently updated by the provider, and the *new* judge scored more leniently.
+Weeks of "improvement" were an artifact of the grader moving, not the agent.
+
+**Root cause.** An unpinned, unvalidated judge — a non-stationary measuring stick.
+
+**Fix and lesson.** Pin the judge model version, cache judge verdicts on
+`(rubric, input, output)` so identical cases are stable, and keep a small
+human-labeled **gold set** you re-score on every judge change to detect drift.
+Your grader is an instrument; calibrate it or your numbers are fiction.
 
 ---
 
@@ -628,6 +1157,11 @@ does, and retire duplicates.
 harness that scores fluency when you needed factuality just makes a wrong answer
 arrive faster and prettier. Tooling is downstream of a correct eval design.
 
+**Flushing and sampling bugs.** Two silent data-loss classes worth their own
+line: SDKs that batch writes and drop the last batch if you never call `flush()`,
+and sampling configs that quietly discard the exact rare trace you needed. If
+traces are "sometimes missing," suspect these before you suspect the backend.
+
 ---
 
 ## Starter stack recommendation
@@ -654,7 +1188,145 @@ expensive platforms while keeping you free to leave any of them.
 
 ---
 
-## Interviewer Q&A
+## Interview mastery
+
+This section is engineered for the interview room and the design review. It has
+five parts: a 60-second framework answer, a system-design prompt with a sketch,
+tradeoff tables you can reproduce on a whiteboard, red/green flags, and a bank of
+Q&A.
+
+### Explain how you'd choose an eval/observability stack in 60 seconds
+
+> "I don't start from tools, I start from which of five jobs is my bottleneck:
+> harness, graders, storage, tracing, or reporting. For most agent teams the
+> answer is 'I can't see what the agent did and I can't tell if a change helped,'
+> so I stand up one OSS tracer — Langfuse or Phoenix — instrumented with
+> OpenTelemetry `gen_ai.*` spans so I'm never locked to a backend, and one OSS
+> eval framework — promptfoo to start, Inspect when the numbers have to survive
+> scrutiny. I write the graders myself, in the repo, with the judge model
+> injected, because graders *are* my definition of quality and the one thing I
+> refuse to outsource. Storage is append-only JSONL until multiple humans are
+> arguing about results weekly; only then do I buy a hosted platform, and only
+> for that collaboration job. The whole philosophy is: buy the perishable
+> plumbing, keep it standards-based, own the durable parts — graders and data."
+
+That answer hits: the five-jobs model, OTel portability, buy-vs-build split,
+maturity-gating the purchase, and a stated philosophy. It is complete in a
+minute.
+
+### System-design prompt: "Design the eval + observability platform for an agent org"
+
+**Prompt.** A 100-engineer org ships several agent products. Design their
+evaluation + observability platform: offline evals in CI, production tracing,
+online quality monitoring, and a way for PMs and engineers to collaborate on
+quality. Cover data flow, portability, cost control, and governance.
+
+**A strong answer sketches this:**
+
+```
+  Dev / CI                              Production
+  ────────                              ──────────
+  code push                             live agent traffic
+      │                                     │
+      ▼                                     ▼  OTel gen_ai.* spans (sampled)
+  ┌──────────────┐                    ┌───────────────────┐
+  │ Eval harness │  dataset+graders   │ OTel Collector    │  central pipeline:
+  │ (Inspect /   │───────────────┐    │ (sample, redact,  │  routing, PII redaction,
+  │  promptfoo)  │               │    │  fan-out)         │  sampling policy
+  └──────┬───────┘               │    └─────────┬─────────┘
+         │ scores + trace_ids    │              │
+         ▼                       ▼              ▼
+  ┌──────────────────────────────────────────────────────┐
+  │  Trace + result store (Phoenix/Langfuse self-host)    │  ← single source of truth,
+  │  joined on trace_id; also mirrored to the warehouse   │    open format, in-VPC
+  └───────┬───────────────────────────────┬──────────────┘
+          │ online evaluators (judges)     │ offline experiment history
+          ▼                                ▼
+  ┌───────────────┐                 ┌────────────────────┐
+  │ Alerting      │  metric drop →  │ Collaboration UI   │  ← the ONE bought SaaS:
+  │ (drift, cost) │  page on-call   │ (Braintrust/       │    datasets, experiment
+  └───────────────┘                 │  LangSmith)        │    diffs, human review
+                                    └────────────────────┘
+  Governance layer (cross-cutting): grader library in a shared repo (owned,
+  versioned, code-reviewed) · judge model registry (pinned versions + gold-set
+  calibration) · dataset versioning · retention & PII policy in the Collector.
+```
+
+**Talking points that score:**
+
+- **One instrumentation standard (OTel `gen_ai.*`) everywhere**, so every backend
+  is swappable — the platform survives a vendor change.
+- **A central OTel Collector** as the choke point for sampling, PII redaction, and
+  routing: cost and governance controls live in one place, not scattered per app.
+- **trace_id as the universal join key** linking a CI eval score, a production
+  trace, and an online-judge verdict to the same unit of work.
+- **Buy exactly one job** (collaboration UI) where a 100-person org has real
+  multi-human pain; keep tracing, graders, and data OSS/open so the purchase is
+  never load-bearing.
+- **Governance is a first-class layer**: a shared, versioned grader library; a
+  judge registry with pinned versions and gold-set calibration; dataset
+  versioning; retention/PII policy enforced at the Collector.
+- **Online + offline share the store**, so a production regression can be turned
+  into a CI regression test by promoting the failing trace into a dataset.
+
+### Tradeoff tables
+
+**OSS vs hosted:**
+
+| | OSS (self-host) | Hosted SaaS |
+|---|---|---|
+| Cost shape | infra + your ops time | subscription, often per-trace/seat |
+| Data residency | in your VPC | vendor cloud (unless BYOC/on-prem) |
+| Time to value | slower (you run it) | fast (sign up) |
+| Lock-in | low (you hold the data) | higher (proprietary schema risk) |
+| Best when | regulated, cost-sensitive, portability-first | small team, want UX now, budget exists |
+
+**Build vs buy:**
+
+| | Build | Buy |
+|---|---|---|
+| What you build | thin harness glue + domain graders | integration + configuration |
+| Cost | eng time, ongoing maintenance | license + integration + lock-in risk |
+| Justified when | weird SUT, un-shippable data, novel grading, eval-is-the-product | common case; you want the five jobs solved |
+| Danger | reinventing a worse Langfuse | over-buying; sprawl; lock-in |
+| Rule of thumb | build the thin layer, buy/borrow the thick ones | buy the perishable job once pain is proven |
+
+**Eval (offline) vs tracing (online):**
+
+| | Eval framework | Observability platform |
+|---|---|---|
+| Origin | batch / offline / CI | streaming / online / prod |
+| Question answered | "did this change make it better?" | "what did the agent do, and is it healthy?" |
+| Data | curated dataset + ground truth | live traffic, no labels |
+| Examples | promptfoo, Inspect, DeepEval | Langfuse, Phoenix, Helicone |
+| Failure if missing | you ship regressions blind | you can't debug or monitor prod |
+| For agents | both are mandatory, joined on trace_id | |
+
+### Red flags vs green flags
+
+**Red flags (in a tool, a vendor, or a team's answer):**
+
+- "How do I export everything?" has no clean answer, or the export is a lossy CSV.
+- Instrumentation speaks only the vendor's schema, not OTel.
+- The team's quality metric is a single number with no baseline and no diff.
+- The LLM judge is unpinned and unvalidated against human labels.
+- Content capture is on, 100%, unsampled, in production.
+- Paying for three overlapping platforms because each was adopted for one feature.
+- "We built our own" and it turns out to be a worse, unmaintained Langfuse.
+- A regression does not block any deploy — evals exist but change nothing.
+
+**Green flags:**
+
+- Traces are OTel `gen_ai.*`; the backend is admittedly swappable.
+- Graders live in the repo, are code-reviewed, and the judge model is version-pinned.
+- Results are append-only in an open format and mirrored to the org's own store.
+- Every dashboard tile maps to a decision and shows a baseline + diff.
+- There is a small human-labeled gold set used to calibrate the judge.
+- The team can state, per tool, which of the five jobs it does — and has retired
+  duplicates.
+- A production failure can be promoted into a CI regression test.
+
+### Q&A bank
 
 **Q1. A team says "we have LangSmith, so we're covered on evals." What's your
 follow-up?**
@@ -712,8 +1384,8 @@ and OTel's GenAI conventions standardize exactly that hierarchy —
 `invoke_agent`/`chat`/`execute_tool` spans with `gen_ai.*` attributes for model,
 tokens, finish reasons, and content. Standard spans mean portable traces: same
 instrumentation feeds Phoenix, Langfuse, or Datadog. The caveat is that the
-conventions are still evolving, so pin versions — but even a moving standard beats
-a proprietary schema.
+conventions are still at Development stability, so pin versions — but even a
+moving standard beats a proprietary schema.
 
 **Q8. Design a minimal eval stack for a five-person startup shipping a RAG
 agent.**
@@ -724,6 +1396,91 @@ model, store results as JSONL, and read them in a notebook. Buy nothing until
 multiple people are arguing about results weekly. Total cost: near zero, fully
 portable, and every piece is replaceable.
 
+**Q9. Walk me through the five jobs of an eval tool.**
+Harness (runs the system over a dataset, with concurrency/retries/timeouts),
+graders (turn an output into a score — heuristic, LLM-judge, or human), storage
+(persist inputs/outputs/scores/metadata, versioned, so you can diff runs),
+tracing (capture the nested execution inside one run), and reporting (dashboards,
+diffs, alerts that drive decisions). Every product on the market is some subset;
+the skill is naming which subset a tool does and what you still need to bolt on.
+
+**Q10. Buy tracing but build graders — defend that split.**
+Tracing is undifferentiated plumbing: capturing spans, storing them, drawing call
+trees. Nobody's competitive advantage is a nicer span store, and it's expensive
+to maintain, so rent it — but rent it standards-based (OTel) so it's swappable.
+Graders are the opposite: they encode *your* definition of quality, they're small
+(~30 lines each), and they must evolve with your product. Outsourcing them means
+outsourcing your standard of correctness. So: rent the commodity, own the IP.
+
+**Q11. Your headline quality metric jumped 5 points with no code change. What do
+you check first?**
+The grader before the agent. First suspect a non-stationary LLM judge — did the
+provider update the judge model, or did someone change the rubric or threshold?
+Re-score a fixed human-labeled gold set with the pinned judge to see if the
+instrument moved. Also check dataset drift (did the test set change?) and
+sampling. Only after ruling out measurement changes do I believe the agent
+actually improved.
+
+**Q12. How do you evaluate an agent trajectory, not just its final answer?**
+Capture the full trajectory as nested spans (OTel `invoke_agent` → `plan` →
+`execute_tool` → `chat`) so it's inspectable, then grade at multiple levels: final
+answer correctness, plus trajectory-level graders like "did it call the right
+tools in a sensible order," "did it avoid unnecessary/looping calls," and "did it
+recover from a tool error." A correct answer via a broken plan is still a bug
+because it won't generalize; only trajectory-aware grading catches it.
+
+**Q13. What's your sampling and retention strategy for production tracing?**
+Sample 100% in dev and a small, tunable fraction in production, with the ability
+to force-capture flagged cases (errors, low scores, specific users). Capture
+metadata always but full prompt/response payloads only opt-in, because content
+capture is the expensive part. Set retention by tier — short for raw high-volume
+traces, longer for sampled + flagged ones promoted into datasets. All of this
+lives in a central OTel Collector so the policy is one place, not per service.
+
+**Q14. When is a proxy-based tracer (Helicone) the right call, and what's the
+cost?**
+It's the right call when you want "see every LLM call" with essentially zero code
+change and you value speed of integration over control — route calls through the
+gateway and get logging, caching, and cost tracking immediately. The cost is that
+the gateway sits in your request path: a hop that adds latency and a dependency on
+its availability. For high-QPS or latency-sensitive paths, an in-process SDK/OTel
+approach avoids the extra hop.
+
+**Q15. How would you turn a production incident into a permanent regression test?**
+Because the failing production trace and my eval results share a `trace_id` and
+live in the same store, I promote the failing case's input (and the correct
+expected output, once known) into a versioned eval dataset, add or reuse a grader
+that would have caught it, and wire that dataset into CI so a future deploy that
+regresses it is blocked. Production failures should ratchet the offline suite
+upward; that loop is how eval coverage compounds.
+
+**Q16. Two tools look identical on the landing page. How do you break the tie?**
+I score them on a rubric: portability (can I export everything; does it speak
+OTel?), how many of the five jobs it does deeply vs checkbox, self-host/data
+residency, integration cost (lines of code in and out), trace fidelity for nested
+agents, judge tooling (caching, version pinning, calibration), and cost model at
+10x volume. Portability and integration cost usually break the tie, because
+they're the durable, recurring costs the landing page hides.
+
+**Q17. What changed in the eval-tooling landscape in 2025–2026 that you'd want a
+team to know?**
+Four things: agents (not chatbots) became the unit of evaluation, fusing tracing
+and eval; OpenTelemetry's GenAI conventions matured — split into their own repo
+with dedicated agent spans — and became the portable layer; LLM-as-judge went from
+novelty to default *and* got audited (validation, pinning, calibration are now
+expected); and the market consolidated with real capital, e.g. ClickHouse
+acquiring Langfuse in January 2026. The strategic response to all of it is the
+same: standardize on OTel, own your graders and data, rent the UI.
+
+**Q18. A stakeholder wants "one tool for everything." How do you respond?**
+I explain that all-in-one platforms do all five jobs but rarely all deeply, and
+buying one to solve a problem you haven't hit yet trades money and lock-in for
+features you won't use. I'd rather adopt the minimum that unblocks today's
+bottleneck, keep tracing standards-based so consolidation is possible later, and
+buy the all-in-one only for the specific job — usually multi-human collaboration —
+where the pain is proven and recurring. One tool for everything is fine as an
+outcome, dangerous as a starting assumption.
+
 ---
 
 ## Further reading
@@ -731,8 +1488,8 @@ portable, and every piece is replaceable.
 - LangSmith — <https://www.langchain.com/langsmith> · docs <https://docs.langchain.com/langsmith/>
 - Braintrust — <https://www.braintrust.dev> · Autoevals <https://github.com/braintrustdata/autoevals>
 - W&B Weave — <https://docs.wandb.ai/weave> · <https://github.com/wandb/weave>
-- Arize Phoenix — <https://arize.com/phoenix/> · <https://github.com/Arize-ai/phoenix>
-- Langfuse — <https://langfuse.com> · self-hosting <https://langfuse.com/self-hosting>
+- Arize Phoenix — <https://arize.com/phoenix/> · <https://github.com/Arize-ai/phoenix> · OpenInference <https://github.com/Arize-ai/openinference>
+- Langfuse — <https://langfuse.com> · self-hosting <https://langfuse.com/self-hosting> · docs <https://langfuse.com/docs> · ClickHouse acquisition (Jan 16 2026) <https://clickhouse.com/blog/clickhouse-acquires-langfuse-open-source-llm-observability>
 - Inspect (UK AISI) — <https://inspect.aisi.org.uk/> · <https://github.com/UKGovernmentBEIS/inspect_ai> · Inspect Evals <https://www.aisi.gov.uk/blog/inspect-evals>
 - DeepEval — <https://deepeval.com> · <https://github.com/confident-ai/deepeval>
 - Ragas — <https://www.ragas.io> · <https://github.com/explodinggradients/ragas>
@@ -741,4 +1498,5 @@ portable, and every piece is replaceable.
 - Helicone — <https://www.helicone.ai> · <https://github.com/helicone/helicone>
 - MLflow GenAI evaluation — <https://mlflow.org/docs/latest/genai/eval-monitor/>
 - OpenLLMetry (Traceloop) — <https://github.com/traceloop/openllmetry>
-- OpenTelemetry GenAI semantic conventions — <https://opentelemetry.io/blog/2026/genai-observability/> · <https://opentelemetry.io/docs/specs/semconv/gen-ai/>
+- OpenTelemetry GenAI semantic conventions — <https://opentelemetry.io/blog/2026/genai-observability/> · main spec <https://opentelemetry.io/docs/specs/semconv/gen-ai/> · dedicated repo <https://github.com/open-telemetry/semantic-conventions-genai>
+- Datadog native OTel GenAI support — <https://www.datadoghq.com/blog/llm-otel-semantic-convention/>

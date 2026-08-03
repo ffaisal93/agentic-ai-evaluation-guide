@@ -68,3 +68,6 @@ Thumbs.db
 
 # mdBook build output
 book/
+
+# scratch quarantine (bridge cannot delete)
+_trash/
