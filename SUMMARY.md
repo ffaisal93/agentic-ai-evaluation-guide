@@ -5,7 +5,8 @@
 - [Start Here](START_HERE.md)
 - [How To Start](HOW_TO_START.md)
 - [Learning Path](LEARNING_PATH.md)
-- [Interview Qa](INTERVIEW_QA.md)
+- [Agent Engineering Foundations](AGENT_ENGINEERING_FOUNDATIONS.md)
+- [Interview Q&A](INTERVIEW_QA.md)
 
 
 # 1 Agentic Ai Fundamentals

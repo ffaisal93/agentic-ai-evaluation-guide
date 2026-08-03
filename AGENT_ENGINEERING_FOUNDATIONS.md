@@ -545,3 +545,782 @@ Guardrails are checks that run *around* the agent, independent of the model's ow
 The general principle across all of §8: **the model is nondeterministic; your harness must be deterministic where it matters.** Budgets, timeouts, retries, schemas, and guardrails are how you wrap a probabilistic core in a predictable shell.
 
 ---
+## 9. Build a production agent — full worked walkthrough
+
+This section builds one real agent end to end: an **Order Support Agent** that can look up orders, search a knowledge base, and issue refunds — the last one gated behind human approval. It reuses the exact tool (§5.4) and RAG (§6.1) building blocks from earlier in this chapter so you can see them assembled into a working system, not just described in isolation.
+
+**Framework choice:** **LangGraph 1.x** (per the recommendation in §3.3 — "default for a controllable production agent"). The reasons that matter here specifically: durable checkpointing gives us free conversation memory across turns, the built-in interrupt mechanism gives us human-in-the-loop approval for the refund tool without hand-rolled plumbing, and the graph makes the ReAct loop (§4.1) and its guardrails (§8) explicit and testable nodes rather than buried control flow. Everything below is standard LangGraph 1.x API as of early 2026 — pin your `langgraph` version and diff against the docs before shipping, per the running theme of this chapter.
+
+> This is Python. The same shape (state machine + typed tools + checkpointer + interrupts) exists in the OpenAI Agents SDK (`Agent`/`Runner`/`guardrails`) and the Claude Agent SDK (hooks + permissions); pick whichever matches your provider lock-in per §3.3. The *concepts* — tool contracts, memory, step caps, tracing — port directly.
+
+### 9.0 What we're building
+
+- **Tools:** `get_order_status`, `search_customer_orders`, `search_knowledge_base` (RAG over a policy corpus), `issue_refund` (irreversible — gated).
+- **Memory:** short-term (the conversation, via checkpointing) + long-term (durable per-user facts, via a store).
+- **Guardrails:** a hard step cap, per-tool timeouts, retries with backoff on transient failures, and an approval gate on the refund tool.
+- **Observability:** a structured span around every node and tool call.
+- **Control flow:** ReAct (§4.1) — model reasons, calls a tool, observes, repeats — wrapped in a graph that also tracks budget.
+
+### 9.1 Project layout
+
+```
+order_support_agent/
+├── agent.py          # graph definition — the file this section builds
+├── tools.py          # tool functions + schemas
+├── prompts.py        # system prompt (kept out of agent.py per §7 — stable prefix, cacheable)
+├── tracing.py         # OpenTelemetry span helpers
+└── run.py            # driver / CLI
+```
+
+### 9.2 State schema
+
+The state is the typed object that flows through every node. `messages` uses LangGraph's built-in reducer so returned messages *append* rather than overwrite; everything else defaults to overwrite-on-return, which is exactly what we want for a simple counter.
+
+```python
+# agent.py
+from typing import Annotated
+from typing_extensions import TypedDict
+from langgraph.graph.message import add_messages
+
+class AgentState(TypedDict):
+    messages: Annotated[list, add_messages]   # conversation, append-only
+    user_id: str                              # for scoping long-term memory
+    step_count: int                           # incremented once per model call
+```
+
+### 9.3 Tools with schemas and error contracts
+
+Same discipline as §5.4 for every tool: a description that *tells the model when (not) to use it*, typed args, a hard timeout, retries for transient failures, and a structured `{"ok": ...}` result whether it succeeds or fails. `issue_refund` additionally calls `interrupt()` before doing anything irreversible.
+
+```python
+# tools.py
+from typing import Literal
+import httpx
+from langchain_core.tools import tool
+from langgraph.types import interrupt
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+
+TIMEOUT_S = 5.0
+
+def _retryable(exc_types):
+    """Retry only transient failures — never retry a 4xx or a business-logic error."""
+    return retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=0.5, max=4),
+        retry=retry_if_exception_type(exc_types),
+        reraise=True,
+    )
+
+@tool
+@_retryable((httpx.TimeoutException, httpx.ConnectError))
+def get_order_status(order_id: str) -> dict:
+    """Look up the CURRENT status of a single order by its ID (format 'A-123').
+    Use when the user asks where an order is or whether it shipped.
+    Do NOT use to modify orders or issue refunds — use issue_refund for that.
+    Returns status, carrier, and ETA, or a structured error."""
+    try:
+        r = httpx.get(f"https://api.internal/orders/{order_id}", timeout=TIMEOUT_S)
+        if r.status_code == 404:
+            return {"ok": False, "error_code": "ORDER_NOT_FOUND",
+                    "message": f"No order '{order_id}'. Verify the ID or call "
+                               f"search_customer_orders.", "retryable": False}
+        r.raise_for_status()
+        d = r.json()
+        return {"ok": True, "status": d["status"], "carrier": d.get("carrier"),
+                 "eta": d.get("eta")}
+    except httpx.TimeoutException:
+        return {"ok": False, "error_code": "UPSTREAM_TIMEOUT",
+                "message": "Order service timed out after retries.", "retryable": True}
+
+@tool
+def search_customer_orders(user_id: str, query: str = "") -> dict:
+    """Search a customer's orders by free-text query (product name, date range, etc).
+    Use this FIRST when the user doesn't know an order ID.
+    Returns up to 5 matching orders with their IDs, or an empty list."""
+    r = httpx.get("https://api.internal/orders/search",
+                  params={"user_id": user_id, "q": query}, timeout=TIMEOUT_S)
+    r.raise_for_status()
+    orders = r.json().get("orders", [])[:5]
+    return {"ok": True, "orders": orders, "count": len(orders)}
+
+@tool
+def search_knowledge_base(query: str) -> dict:
+    """Search company policy docs (returns, shipping, warranty) for grounding.
+    Use before answering ANY policy question — never answer refund/return
+    policy from memory. Returns top-3 chunks with source IDs for citation."""
+    # Hybrid search + rerank pipeline from §6.1, abbreviated:
+    hits = _hybrid_search_and_rerank(query, top_k=3)
+    if not hits:
+        return {"ok": True, "chunks": [], "message": "No relevant policy found."}
+    return {"ok": True, "chunks": [
+        {"source_id": h.id, "text": h.text[:800]} for h in hits
+    ]}
+
+@tool
+def issue_refund(order_id: str, amount_usd: float, reason: str) -> dict:
+    """Issue a refund for an order. IRREVERSIBLE — requires human approval.
+    Only call this after confirming eligibility via search_knowledge_base and
+    confirming the order exists via get_order_status. Do NOT call speculatively."""
+    approved = interrupt({
+        "action": "issue_refund", "order_id": order_id, "amount_usd": amount_usd,
+        "reason": reason,
+        "prompt": f"Approve ${amount_usd:.2f} refund for order {order_id}? Reason: {reason}",
+    })
+    if not approved:
+        return {"ok": False, "error_code": "REFUND_NOT_APPROVED",
+                "message": "A human reviewer declined this refund.", "retryable": False}
+    r = httpx.post(f"https://api.internal/orders/{order_id}/refund",
+                   json={"amount_usd": amount_usd, "reason": reason,
+                         "idempotency_key": f"refund-{order_id}-{amount_usd}"},
+                   timeout=TIMEOUT_S)
+    r.raise_for_status()
+    return {"ok": True, "refund_id": r.json()["refund_id"], "amount_usd": amount_usd}
+
+TOOLS = [get_order_status, search_customer_orders, search_knowledge_base, issue_refund]
+```
+
+Two things worth pointing at directly: the `idempotency_key` on the refund POST (§8.3 — a retried request must not double-refund), and the fact that `interrupt()` is called *inside the tool itself*, not in some separate approval layer — LangGraph pauses the whole graph run at that exact point and persists it via the checkpointer, so "approve or reject" is a first-class pause/resume, not a side-channel.
+
+### 9.4 Long-term memory
+
+Short-term memory (the running transcript) is handled for free by the checkpointer in §9.6. Long-term memory — durable facts about a user across *sessions* — needs its own store, keyed by namespace, per the recipe in §6.2.
+
+```python
+# agent.py (continued)
+from langgraph.store.memory import InMemoryStore   # swap for a Postgres-backed store in prod
+from langgraph.store.base import BaseStore
+from langchain_core.messages import SystemMessage
+
+from prompts import SYSTEM_PROMPT
+
+def load_memory(state: AgentState, *, store: BaseStore) -> dict:
+    """Entry node: pull durable facts about this user and seed the system prompt."""
+    namespace = ("users", state["user_id"], "facts")
+    memories = store.search(namespace, limit=5)
+    facts = "\n".join(f"- {m.value['fact']}" for m in memories) or "None on file."
+    system = SystemMessage(
+        content=f"{SYSTEM_PROMPT}\n\nKnown facts about this user:\n{facts}"
+    )
+    return {"messages": [system], "step_count": 0}
+
+def remember_fact(store: BaseStore, user_id: str, fact: str) -> None:
+    """Call this after a session (or from a dedicated tool) to persist a durable fact —
+    e.g. 'prefers store credit over refunds'. Kept out of the hot loop on purpose."""
+    namespace = ("users", user_id, "facts")
+    store.put(namespace, key=fact[:40], value={"fact": fact})
+```
+
+`store` is injected by LangGraph automatically: any node whose signature declares a keyword-only `store: BaseStore` parameter receives the store the graph was compiled with (§9.6). This is the same pattern the framework uses for `config`. Note the deliberate asymmetry: we *read* memory on every turn (cheap, top-k, like RAG) but *write* it out-of-band rather than on every step — per the memory recipe in §6.2, decide what's worth remembering once, not on every loop iteration.
+
+### 9.5 Tracing and observability
+
+Every node and every tool call gets a structured span: name, key attributes, duration, and outcome. This is vendor-neutral OpenTelemetry so it plugs into whatever your `12_production_monitoring` stack already ingests (Honeycomb, Datadog, an OTel collector) — or into LangSmith/Langfuse if you'd rather use a purpose-built LLM trace store; the shape of the span is what matters, not the backend.
+
+```python
+# tracing.py
+import time
+from contextlib import contextmanager
+from opentelemetry import trace
+from opentelemetry.trace import Status, StatusCode
+
+tracer = trace.get_tracer("order_support_agent")
+
+@contextmanager
+def traced_step(name: str, **attrs):
+    with tracer.start_as_current_span(name) as span:
+        for k, v in attrs.items():
+            span.set_attribute(k, v)
+        start = time.monotonic()
+        try:
+            yield span
+        except Exception as exc:
+            span.record_exception(exc)
+            span.set_status(Status(StatusCode.ERROR, str(exc)))
+            raise
+        finally:
+            span.set_attribute("duration_ms", round((time.monotonic() - start) * 1000, 1))
+```
+
+Wired into the model-call node:
+
+```python
+# agent.py (continued)
+from tracing import traced_step
+
+def call_model(state: AgentState, *, store: BaseStore) -> dict:
+    with traced_step("agent.call_model", step=state["step_count"],
+                      thread_messages=len(state["messages"])) as span:
+        response = llm_with_tools.invoke(state["messages"])
+        usage = getattr(response, "usage_metadata", None) or {}
+        span.set_attribute("input_tokens", usage.get("input_tokens", 0))
+        span.set_attribute("output_tokens", usage.get("output_tokens", 0))
+        span.set_attribute("stop_reason", getattr(response, "response_metadata", {})
+                                                   .get("stop_reason", "unknown"))
+    return {"messages": [response], "step_count": state["step_count"] + 1}
+```
+
+Every span carries enough to reconstruct, offline, exactly the trajectory the tool-use and reasoning evaluators (§9.10) need: which tools were called, with what args, how long each took, and what each turn cost. This is the same trace shape `12_production_monitoring` expects for dashboards and alerting — build the span once, consume it in both places.
+
+### 9.6 The graph — control loop, budget, and the refund approval gate
+
+This is the whole agent: a `load_memory` entry, a `call_model` reasoning step, a `ToolNode` that executes whatever the model asked for, and a routing function that adds a hard budget check *on top of* the standard "does the last message have tool calls" check.
+
+```python
+# agent.py (continued)
+from typing import Literal
+from langgraph.graph import StateGraph, START, END
+from langgraph.prebuilt import ToolNode, tools_condition
+from langgraph.checkpoint.memory import InMemorySaver   # swap for Postgres/Redis in prod
+from langchain_anthropic import ChatAnthropic
+
+from tools import TOOLS
+
+MAX_STEPS = 12   # hard cap — see §8.3. Tune per task; log every time you hit it.
+
+llm = ChatAnthropic(model="claude-sonnet-4-6")   # workhorse tier, per §2.1 — verify current model ID
+llm_with_tools = llm.bind_tools(TOOLS)
+
+def route_after_agent(state: AgentState) -> Literal["tools", "budget_exceeded", "__end__"]:
+    if state["step_count"] >= MAX_STEPS:
+        return "budget_exceeded"
+    return tools_condition(state)   # returns "tools" or "__end__"
+
+def budget_exceeded(state: AgentState) -> dict:
+    from langchain_core.messages import AIMessage
+    return {"messages": [AIMessage(content=(
+        "I've hit my step budget on this request. Here's what I found so far — "
+        "please follow up if you need more, and I'll start a fresh attempt."
+    ))]}
+
+builder = StateGraph(AgentState)
+builder.add_node("load_memory", load_memory)
+builder.add_node("agent", call_model)
+builder.add_node("tools", ToolNode(TOOLS))
+builder.add_node("budget_exceeded", budget_exceeded)
+
+builder.add_edge(START, "load_memory")
+builder.add_edge("load_memory", "agent")
+builder.add_conditional_edges("agent", route_after_agent, {
+    "tools": "tools",
+    "budget_exceeded": "budget_exceeded",
+    "__end__": END,
+})
+builder.add_edge("tools", "agent")     # observe → back to reasoning: this IS the ReAct loop (§4.1)
+builder.add_edge("budget_exceeded", END)
+
+graph = builder.compile(checkpointer=InMemorySaver(), store=InMemoryStore())
+```
+
+Trace the loop for a refund request: `load_memory` seeds facts → `agent` reasons and calls `search_knowledge_base` → `tools` executes it → back to `agent`, which now calls `issue_refund` → `tools` executes `issue_refund`, which hits `interrupt()` and the *entire graph run pauses*, checkpointed exactly where it stopped → your application surfaces the approval prompt to a human → on approval, you resume with `Command(resume=True)` and the same tool call finishes as if it had never paused. No custom "pending approval" state machine required — that's what the checkpointer buys you.
+
+### 9.7 Running it
+
+```python
+# run.py
+from langchain_core.messages import HumanMessage
+from langgraph.types import Command
+from agent import graph
+
+config = {"configurable": {"thread_id": "conv-42"}}
+
+def turn(user_text: str):
+    for event in graph.stream(
+        {"messages": [HumanMessage(user_text)], "user_id": "u_882", "step_count": 0},
+        config=config, stream_mode="values",
+    ):
+        pass  # in production: stream tokens/tool events to the UI here
+    return graph.get_state(config)
+
+state = turn("Where's order A-118, and can I get a $30 refund — it arrived damaged?")
+
+if state.next:   # graph is paused at an interrupt()
+    payload = state.tasks[0].interrupts[0].value
+    print("APPROVAL NEEDED:", payload["prompt"])
+    approved = input("approve? [y/n] ").lower().startswith("y")
+    final = graph.invoke(Command(resume=approved), config=config)
+    print(final["messages"][-1].content)
+else:
+    print(state.values["messages"][-1].content)
+```
+
+`thread_id` is what makes this durable: call `turn()` again with the same `thread_id` next week and the model still has the conversation, because the checkpointer persisted it. Swap `InMemorySaver`/`InMemoryStore` for `PostgresSaver`/a Postgres-backed store and nothing else in this file changes — that swap *is* most of "productionizing" the memory layer (§10).
+
+### 9.8 Guardrails recap — where each §8 principle actually lives in the code
+
+| Guardrail (§8) | Where it lives above |
+|---|---|
+| Timeouts on every call | `TIMEOUT_S` passed to every `httpx` call in `tools.py` |
+| Retries with backoff, transient-only | `_retryable()` (`tenacity`) wraps `get_order_status`; never wraps `issue_refund` |
+| Step cap / budget | `MAX_STEPS` + `route_after_agent` + the `budget_exceeded` node |
+| Idempotency for side effects | `idempotency_key` on the refund POST |
+| Confirmation gate for irreversible actions | `interrupt()` inside `issue_refund`, resumed via `Command(resume=...)` |
+| Structured error contract | `{"ok", "error_code", "message", "retryable"}` on every tool return |
+| Tracing / structured spans | `traced_step()` around `call_model`; extend the same wrapper around `ToolNode` calls |
+
+One guardrail from §8.3 is *not* shown in code above and is worth calling out explicitly: **loop/no-progress detection** — if the model calls `get_order_status` with the same `order_id` three turns in a row, that's a signal to break, not to keep paying for identical calls. The simplest implementation is a check in `call_model` comparing the new tool call against the last two in `state["messages"]` and short-circuiting to a "I seem to be stuck, here's what I know" response if they match — a few lines, easy to skip when you're moving fast, and one of the first things that bites you in production. Add it before you ship, not after the first incident.
+
+### 9.9 How you would evaluate this agent
+
+Building the agent is chapter 0 of a two-chapter story; the rest of this book is chapter 1. Concretely, against *this exact agent*:
+
+- **Tool-use correctness** (`04_tool_use_evaluation`): score whether `search_customer_orders` is called before `get_order_status` when the user doesn't supply an order ID, whether `issue_refund` args match the conversation (right order, right amount), and whether the agent ever calls a tool it shouldn't (e.g., refunding without checking `search_knowledge_base` first). The structured tool-call spans from §9.5 are the input to this scorer.
+- **Reasoning/trajectory quality** (`05_reasoning_evaluation`): does the agent's plan across steps make sense given the observations it gets back — does it re-check `get_order_status` after a `search_customer_orders` hit, does it stop looping when the knowledge base returns nothing? Trajectory eval reads the `messages` list this graph produces directly.
+- **Safety** (`06_safety_evaluation`): red-team the refund path specifically — can a crafted user message get `issue_refund` called without the approval gate firing (it can't, structurally, since `interrupt()` is inside the tool), can a poisoned `search_knowledge_base` chunk (§5.5's "untrusted data" warning, §7.4) talk the agent into a policy violation, does the agent ever leak one user's `("users", user_id, "facts")` memory to another thread.
+- **Multi-agent evaluation** (`07_multi_agent_evaluation`): not applicable to this single-agent build — noted here only to flag that if you later split this into a router + specialist agents (§4.7), that chapter is where its coordination failure modes get tested.
+- **Automated evaluation** (`09_automated_evaluation`): wire an LLM-as-judge harness that replays a fixed set of transcripts against this graph (mock the `httpx` calls, keep `interrupt()` auto-approving in test mode) and scores final answers against a rubric — this is how you regression-test the agent in CI on every prompt or tool-schema change.
+- **Benchmark datasets** (`10_benchmark_datasets`): build a small, versioned set of order-support tasks (found order, missing order, eligible refund, ineligible refund, ambiguous multi-order query) with expected tool trajectories — this is your project-specific benchmark, built the way that chapter describes public ones being built.
+- **Production monitoring** (`12_production_monitoring`): the OTel spans from §9.5 are exactly the online signal that chapter wants — tool-call latency and error rate per tool, refund-approval rate, budget-exceeded rate, cost per resolved conversation. Alert on the same `retryable`/error-code fields your tools already emit.
+
+The point of building the agent this carefully is that every guardrail and every span above is also an evaluation *hook* — you are not bolting evaluation on afterward, you built it in.
+
+---
+## 10. Deploy & operate
+
+Shipping the graph from §9 is the easy part; keeping it healthy under real traffic is where most agent projects actually fail. This section is deliberately tight — serving infrastructure and monitoring depth live in the sibling **llm-serving-inference-guide** and in `12_production_monitoring`; treat what follows as the agent-specific essentials, not a full ops manual.
+
+### 10.1 Serving the agent
+
+An agent server is a thin, stateful wrapper around the graph:
+
+- **API shape.** One endpoint to start/continue a conversation (`POST /threads/{thread_id}/messages`), one to fetch pending state (`GET /threads/{thread_id}`) for surfacing an interrupt like the refund approval in §9.7, and one to resume it (`POST /threads/{thread_id}/resume`). Keep `thread_id` opaque and owned by your app, not the client.
+- **Streaming.** Stream both token deltas (for the final answer) and *step events* (tool started, tool finished, interrupt raised) so the UI can show "checking order status…" rather than a silent spinner for 8 seconds. LangGraph's `stream_mode="values"`/`"updates"` and most provider SDKs support this natively.
+- **Statelessness at the process level.** The graph process itself should be stateless — all durable state lives in the checkpointer/store (Postgres, Redis). That's what lets you run N identical replicas behind a load balancer and lets any replica pick up any `thread_id`.
+- **Concurrency.** Each in-flight conversation is one graph execution; size your worker pool by expected concurrent conversations × average tool-call fan-out, not by request count alone — a single chat turn can spawn several outbound HTTP calls.
+- **Deeper serving concerns** — autoscaling policy, GPU vs API-based model serving, load testing, canary rollouts of a new model version — are covered in depth in the `llm-serving-inference-guide` (see its `04_load_testing`, `06_autoscaling`, `07_canary_deployments`). Don't re-derive that here; go read it before you set SLOs.
+
+### 10.2 Versioning — prompts, tools, and graphs together
+
+The single most common agent-ops mistake is versioning the *model* carefully and the *prompt/tool surface* not at all. An agent's behavior is a function of (model version, system prompt, tool schemas, graph topology) as a unit — changing any one without tracking it makes regressions untraceable.
+
+- **Pin and hash the bundle.** Compute a hash over `(system_prompt_text, [tool.schema for tool in TOOLS], graph_topology_id)` and stamp it into every trace (§9.5) as `agent_version`. When quality shifts in production, this is the first thing you correlate against.
+- **Prompts live in version control, not a database string field.** Treat `prompts.py` (§9.1) like code: PR review, diff, changelog. A one-word change to a tool description (§5.2) can measurably change tool-selection accuracy — it deserves the same scrutiny as a code change.
+- **Tool schemas are a contract.** Adding a required field or renaming a tool breaks in-flight conversations that were paused (e.g., at an `interrupt()`) referencing the old schema. Treat tool-schema changes like an API version bump: additive changes are safe, breaking changes need a migration path for any checkpointed-but-unresumed threads.
+- **Graph topology changes need a migration story too.** If you add/remove/rename a node, an in-flight checkpoint pointing at a now-missing node will fail to resume. For short-lived conversations this is usually fine (let old threads drain); for long-lived ones, version the graph and route by which version a thread was created against.
+- **A/B and canary the whole bundle, not just the model.** Route a percentage of `thread_id`s to a new (model, prompt, tools) bundle and compare the eval-chapter metrics (§9.9) and the online signals below before a full rollout — this is precisely what `07_canary_deployments` in the serving guide walks through mechanically; the agent-specific twist is that your "version" is the whole bundle hash above, not just a model tag.
+
+### 10.3 What to monitor in production
+
+Beyond generic service health (latency, error rate, uptime — see `12_production_monitoring` for the full treatment), an agent needs metrics generic APM doesn't give you for free:
+
+| Signal | Why it matters | Where it comes from |
+|---|---|---|
+| Tool-call error rate, per tool | A silently-broken upstream (§5.3) degrades the agent long before users complain | The `ok`/`error_code` field on every tool return |
+| Retry rate | Rising retries = an upstream is degrading before it fully fails | The `retryable` flag + your retry wrapper |
+| Steps per conversation (distribution, not average) | A fat right tail means budget/loop guardrails (§8.3) are being hit | `step_count` at conversation end |
+| Budget-exceeded rate | Direct signal the step cap is too low *or* the agent is regressing into loops | The `budget_exceeded` node firing |
+| Interrupt/approval rate + approval outcome | Tracks how often humans are in the loop and whether they're rubber-stamping (a sign the gate is miscalibrated) | The `interrupt()` payload + resume value |
+| Cost and tokens per resolved conversation | The actual unit economics, not per-call cost (§8.1) | Summed `usage_metadata` across all `call_model` spans in a thread |
+| Tool-selection distribution drift | A model/prompt update silently changing *which* tools get called is an early regression signal | Aggregated tool-call spans, compared week over week |
+
+Treat any of these that moves sharply after a deploy as a rollback trigger, the same way you'd treat a latency or error-rate spike for a normal service — the difference is you have to *instrument for it explicitly*, because a standard APM has no concept of "tool call" or "step."
+
+### 10.4 Incident response for agents
+
+Agents fail in agent-shaped ways that a standard runbook doesn't cover:
+
+- **Runaway loop / cost spike:** the step cap (§8.3) is your circuit breaker; if it's firing constantly, that's the incident, not a false alarm — find out what changed (model update, tool description edit, upstream returning malformed data) before raising the cap.
+- **A tool silently degraded** (returns `200` with garbage instead of erroring): your error contract can't catch this — add a lightweight output-shape check on high-risk tools (does `get_order_status` ever return a `status` outside the known enum?) and alert on it.
+- **Approval-gate bypass attempt:** because `interrupt()` is structural (§9.6), a bypass would have to be a code regression, not a prompt-injection success — but verify this in red-teaming (`06_safety_evaluation`) rather than assuming the architecture makes it impossible.
+- **Rollback is a bundle rollback.** Because you versioned (model, prompt, tools, graph) as a unit (§10.2), rolling back means routing new `thread_id`s to the previous bundle hash — don't try to roll back just the model while leaving a prompt written for the new one in place.
+
+For the deeper operational playbook — dashboards, alert thresholds, on-call rotations, postmortem templates — see `12_production_monitoring/PRODUCTION_MONITORING_DEEP_DIVE.md`; this section only covers what's specific to agents.
+
+---
+## 11. Interview mastery
+
+This section is build-focused — it complements `INTERVIEW_QA.md`'s evaluation-focused bank with the questions a senior interviewer asks when they want to know **can this person actually build the agent, not just grade one.** Same method as that bank: read the answer once for shape, then re-answer out loud from memory, and volunteer the trade-off before you're asked.
+
+### 11.1 Build-focused Q&A
+
+**Q1. Why would you reach for LangGraph over CrewAI for a customer-support agent like the one in §9?**
+Intuition: it comes down to how much explicit control you need over state and failure recovery. CrewAI's role/crew abstraction gets you to a demo fastest — define agents with roles and goals, assemble a crew, done. LangGraph makes you model the graph explicitly: nodes, edges, a typed state object. That's more upfront work, but it buys durable checkpointing (§9.6), first-class human-in-the-loop pauses (`interrupt()`), and the ability to unit-test individual nodes. For a support agent that issues refunds and must survive a process restart mid-approval, that durability isn't optional — it's the requirement. For a rapid internal prototype with no side effects, CrewAI would get me to a demo faster and I'd say so. *Follow-up to expect:* "when would CrewAI actually be the better call?" — rapid multi-agent prototyping, hierarchical business-process automations, when time-to-demo beats long-term control.
+
+**Q2. How do you handle a runaway agent loop in production?**
+Mechanism, layered: (1) a hard step cap in the graph itself (§8.3, §9.6) that routes to a graceful "budget exceeded" exit rather than looping forever; (2) loop/no-progress detection — compare the last N tool calls, and if the same call with the same args repeats, break early rather than waiting for the cap; (3) a wall-clock and a dollar budget per conversation, not just a step count, because a single step can be expensive; (4) alerting on the *rate* of budget-exceeded events, because a spike means something upstream regressed (a tool started failing, a prompt edit confused the model), not that the cap is wrong. Trade-off: too tight a cap truncates legitimately long tasks; tune it from observed p95 step counts on real traffic, not a guess.
+
+**Q3. How do you version prompts and tools together?**
+The core insight: an agent's behavior is a function of (model, system prompt, tool schemas, graph topology) as one unit, and versioning only the model is the most common mistake (§10.2). Concretely: prompts live in version control like code, not a database string; hash the (prompt, tool schemas, topology) bundle and stamp that hash into every trace; canary a new bundle on a percentage of traffic and compare eval metrics before full rollout; treat tool-schema changes like API versioning — additive is safe, breaking changes need a migration path for any checkpointed-but-unresumed conversation. Failure mode if you skip this: a "the model got worse" incident that was actually a one-word tool-description edit nobody tracked.
+
+**Q4. When would you NOT use a framework at all?**
+When you don't yet know your own pain points. A provider SDK, a while-loop, and a dict of tools is enough for most first agents, and it forces you to understand exactly what a framework would later automate — the control loop, the tool dispatch, the context assembly. Adopt a framework when you feel a specific, recurring pain: you need durable resumable state, multi-agent orchestration, or standardized tracing across a team of agents. The trap is adopting a heavyweight framework preemptively and paying its learning curve before you've earned the need for its features (§3.1).
+
+**Q5. How do you decide between RAG and long context for a given corpus?**
+Ask three questions: does the corpus fit comfortably in the window with room to spare (if not, RAG); does it change frequently (if yes, RAG — re-embedding is cheaper than re-sending a stale mega-prompt, and you need freshness); does the task need *global* reasoning across the whole corpus at once, or can it be answered from a narrow slice (global reasoning favors long context, narrow lookup favors RAG). In practice the strongest systems are hybrid: retrieve to narrow, then give the model generous context on the narrowed set (§6.1) — that combines RAG's cost control with long-context's ability to reason across what it did retrieve.
+
+**Q6. How do you design a tool that an LLM can use reliably?**
+Two audiences, one artifact (§5.1): the model reads the name/description/schema to decide whether and how to call it; your runtime executes it. Get the description right first — state when to use it *and* when not to, in plain language, because the model chooses tools purely from that text. Make parameters typed and unambiguous (enums over free strings). Return concise, structured results, not raw dumps the model has to parse out of noise. And design the error path with the same care as the success path — a good error tells the model exactly how to recover, because errors are the agent's only feedback signal when something goes wrong.
+
+**Q7. How do you gate an irreversible action like a refund or a delete?**
+Structurally, not by hoping the model behaves. In LangGraph, call `interrupt()` inside the tool itself (§9.3, §9.6) so the entire graph run pauses and checkpoints exactly at that point — there's no window where the side effect can happen without a human resuming with an explicit approval. Add an idempotency key on the actual write so a retried resume can't double-execute it. The key point to say out loud in an interview: this makes the gate a *structural* property of the graph, testable and provable, not a prompt instruction the model might ignore under adversarial input — which is also exactly what you'd verify in red-teaming (`06_safety_evaluation`).
+
+**Q8. How do you keep cost under control in a long, multi-step agent loop?**
+Highest-impact first (§8.1): prompt caching on the stable prefix (system prompt, tool schemas) — often a 5–10x reduction on its own for a looping agent; model cascades, routing cheap/fast models to easy steps (extraction, routing) and reserving the flagship for hard planning; aggressive context compaction so every step carries fewer tokens, not just the first one; structured outputs to eliminate malformed-output retries; and a hard step/token budget as the backstop so a bug can't produce an unbounded bill. I'd instrument cost per *resolved conversation*, not per call, because that's the number that maps to unit economics.
+
+**Q9. How do you decide when to add a second agent instead of scaling a single agent?**
+Default to a single agent with good tools (§4.7) — multi-agent coordination overhead routinely exceeds its benefit. The signal to actually split is when a single context window provably can't hold what's needed (genuinely separable expertise, or the task decomposes into independent, parallelizable pieces of unknown count) — not "this feels like it should have multiple agents." If I do split, I want independent, structured worker outputs and explicit budgets per worker, because the two failure modes that kill multi-agent systems are synthesis loss (orchestrator can't reconcile conflicting outputs) and cost fan-out.
+
+**Q10. What's the difference between memory and RAG, and how do you implement both in one agent?**
+RAG answers "what external knowledge does the model need this turn" — pulled from a corpus you have. Memory answers "what should the agent remember about this task/user over time" — persisted from what the agent itself produced (§6). In the agent from §9: RAG is `search_knowledge_base` over the policy corpus, called as a tool whenever the model decides it needs facts; memory is the `store` — a per-user namespace of durable facts, read at the start of every turn (like RAG, top-k, not everything) and written out-of-band after a session, not on every loop iteration.
+
+**Q11. How do you handle context rot in a long-running agent?**
+Treat the window as a curated workspace, not a junk drawer (§7.1). Concretely: summarize older turns once the transcript passes a threshold, keeping the last few verbatim; prune tool outputs to what's model-legible, not raw dumps; retrieve narrowly rather than stuffing a full corpus in; and order/delimit what's in context so the model can tell instruction from data. The MemGPT-style pattern (§6.2) of giving the agent its own memory tools — let it decide what to page out — scales better than a hand-tuned truncation rule as tasks get longer.
+
+**Q12. How do you test tool error handling without hitting a real production system?**
+Mock the tool's HTTP layer (or the tool function directly) to return each branch of its error contract deliberately — 404, timeout, malformed upstream response — and assert the agent recovers sensibly for each (retries the transient one, doesn't retry the permanent one, surfaces a clear message for the unrecoverable one). This is exactly the harness `04_tool_use_evaluation` describes for testing error handling, and it should run in CI on every prompt or tool-schema change, not just at build time.
+
+**Q13. What's your approach to prompt-injection defense in an agent that reads external content (web pages, retrieved docs, tool output)?**
+Treat everything that flows in through a tool or retrieval call as untrusted *data*, never instructions (§7.4) — that's a system-prompt rule, reinforced by clearly delimiting external content from the actual instructions (XML-ish tags, explicit headers). Pair that with least-privilege tools (the agent can't do anything an injected instruction could actually weaponize if it succeeded), and a human-confirmation gate on anything irreversible regardless of what convinced the model to try it. I'd validate this isn't just a policy but a tested property, via red-teaming (`06_safety_evaluation`) with crafted injection payloads in retrieved content.
+
+**Q14. How do you choose between a reasoning ("thinking") model and a fast model for a given step?**
+Per-step, not per-app (§2.3, §2.7). Thinking pays off where a wrong first step cascades — multi-step planning, ambiguous tool selection, debugging. It doesn't pay off on classification, routing, or simple extraction — burning thinking tokens deciding "which of these three tools" is money and latency lit on fire. My default shape: a cheap non-thinking model as the router and for leaf tool calls, a thinking model reserved for the planning/synthesis step. Most real agents use two or three models, not one.
+
+**Q15. How would you migrate an agent from a hand-rolled loop to a framework like LangGraph?**
+Because the concepts port cleanly (§3.3), the migration is mostly mechanical: your existing tool functions become framework tool objects with the same schemas; your while-loop's state becomes a typed state object; your ad hoc "if error, retry" becomes the framework's retry/error handling; and any manual "save progress to a file" becomes a checkpointer. The part that actually takes judgment is deciding whether your control flow is a straight ReAct loop (maps directly to a two-node graph) or has implicit branching you never noticed until you had to draw it as an explicit graph — that's usually where the migration surfaces bugs that existed all along.
+
+**Q16. How do you instrument an agent for observability from day one, before you have a production incident to react to?**
+Wrap every node and tool call in a structured span (§9.5) that records enough to reconstruct the trajectory offline: tool name and args, duration, tokens in/out, ok/error outcome. Do it in OpenTelemetry or an LLM-trace-specific tool (LangSmith, Langfuse) so it plugs into whatever your monitoring stack already ingests. The test I'd apply: could I take one trace and answer "why did this conversation cost \$0.40 and take 11 steps" without re-running it? If not, the instrumentation is incomplete.
+
+**Q17. What's the single most common mistake you see in agent builds?**
+Two tie for first place: shipping without a step/cost budget (an agent that works in the demo and produces a five-minute, twelve-dollar response on one weird production input), and treating the framework choice as the hard decision when it's actually the *most reversible* one (§3.3) — while under-investing in tool design and error contracts, which are what actually caps agent quality and are expensive to fix later because every downstream eval and guardrail assumes a stable tool surface.
+
+**Q18. How do you handle human-in-the-loop approval without blocking your whole system on a human being available?**
+Structurally pause just that one conversation, not the service (§9.6, §9.7) — a durable interrupt/checkpoint means the graph process is free to serve other conversations while one sits paused waiting for approval; the approval can come minutes or days later without holding a thread or a connection open. Operationally: alert if an approval sits unresolved past an SLA, and track the approval *rate* over time — if humans are approving 99.9% of requests with no changes, that's a signal the gate is theater and either the gate should be tightened or removed with a different guardrail in its place.
+
+### 11.2 The 60-second "how would you build a production agent" answer
+
+Memorize the *shape*, not the words:
+
+> "I'd start with the smallest thing that could work — a provider SDK, a ReAct loop, and a small set of well-described tools — and only reach for a framework like LangGraph once I feel a specific pain: durable state, human-in-the-loop, or multi-agent orchestration. Every tool gets a typed schema, a hard timeout, and a structured ok/error contract, because that error contract is the agent's only feedback signal. I'd add memory in two layers — short-term as the running transcript, long-term as a small per-user fact store retrieved like RAG, not dumped in whole. Then guardrails: a step and dollar budget, retries on transient failures only, and a structural human-approval gate — not a prompt instruction — on anything irreversible. I'd instrument every node and tool call with a structured trace from day one, because that trace is simultaneously my production monitoring signal and the input to the tool-use and trajectory evaluators I'd build next. And I'd pick the model per step — a fast model for routing and leaf calls, a stronger or reasoning model for planning — because most agents are two or three models, not one. Finally, I'd version the model, prompt, tools, and graph as a single bundle, because that's the unit that actually changes agent behavior, and I'd build a small task-specific eval set before I called it done, not after."
+
+That's the whole architecture in one breath: minimal-first, typed tools, layered memory, structural guardrails, tracing baked in, per-step model choice, and versioning-plus-eval as part of "done," not an afterthought.
+
+### 11.3 System design: "Design and build a coding agent that opens PRs"
+
+**The prompt, as an interviewer would give it:** *"Design a coding agent that takes a GitHub issue, makes the code change, runs tests, and opens a pull request. Walk me through the architecture, the tools, the guardrails, and how you'd evaluate it."*
+
+**Worked answer.**
+
+*Clarify scope first (30 seconds):* single repo or many? Can it merge, or only open a PR for human review? What's the blast radius of a bad change — is this touching production infra code or a low-risk internal tool? I'll assume: many repos, opens PRs but never merges, and runs in a sandboxed checkout — the answer changes a lot at each of those knobs, and saying so out loud is itself a signal.
+
+*Architecture (ASCII sketch):*
+
+```
+ GitHub issue/ticket
+        │
+        ▼
+  ┌───────────┐     repo map / codebase index (RAG over the repo, §6.1)
+  │  Intake   │────────────────────────────────────────────┐
+  └─────┬─────┘                                             │
+        ▼                                                   ▼
+  ┌───────────┐   plan: files to touch, approach      ┌────────────┐
+  │  Planner  │──────────────────────────────────────►│  (context)  │
+  └─────┬─────┘                                        └────────────┘
+        ▼
+  ┌─────────────────────────────────────────────────────────────┐
+  │                    Coding loop (ReAct, §4.1)                 │
+  │   tools: read_file, edit_file, bash (sandboxed), grep,       │
+  │          run_tests                                           │
+  │                                                                │
+  │   thought → tool call → observation → repeat, capped at      │
+  │   MAX_STEPS, timeouts per tool, loop detection (§8.3)         │
+  └───────────────────────┬───────────────────────────────────────┘
+                           │ tests fail ──► re-plan (bounded retries)
+                           ▼ tests pass
+                  ┌─────────────────┐
+                  │ Reviewer/critic  │   evaluator–optimizer (§4.6):
+                  │ (separate pass)  │   diff review against style/
+                  └────────┬─────────┘   correctness rubric
+                           │ pass
+                           ▼
+                  ┌─────────────────────────┐
+                  │ Guardrail: diff-size cap │   too large → split into
+                  │ + human review gate      │   smaller PRs or flag for
+                  └────────┬─────────────────┘   manual review
+                           │ approved
+                           ▼
+                  ┌─────────────────┐
+                  │ Open PR + post   │
+                  │ summary comment  │
+                  └─────────────────┘
+```
+
+*Tools, with the same discipline as §5.4/§9.3:* `read_file`/`grep` (read-only, cheap, no gate), `edit_file` (writes only inside a disposable sandboxed checkout — never the real working tree — returns a structured diff, not a raw file dump), `bash` (heavily sandboxed: no network, resource-limited container, timeout, allow-listed commands where possible), `run_tests` (times out generously since test suites are slow, but *does* time out), and `open_pr` (the one genuinely external-effect tool — gated behind the diff-size + review guardrail, exactly like `issue_refund` in §9.3).
+
+*Guardrails specific to this agent:* a maximum diff size (a 4,000-line auto-generated PR is a red flag, not a deliverable — cap it and split or escalate); sandbox isolation for `bash`/`edit_file` so a bad command can't touch anything outside the disposable checkout; a bounded re-plan loop when tests fail (say, 3 attempts) rather than an unbounded "keep trying"; and a human-review gate before `open_pr` fires for anything touching a configurable list of sensitive paths (auth, payments, infra-as-code).
+
+*Memory:* short-term is the coding-loop transcript; long-term is a per-repo fact store — coding conventions learned from past reviews, "this repo's tests are flaky in module X," prior PR feedback patterns — retrieved the same way as §6.2, not reloaded in full every run.
+
+*How I'd evaluate it:* tool-use eval (`04_tool_use_evaluation`) on whether `edit_file` calls stay inside the sandbox and whether `run_tests` is called before `open_pr` every time; reasoning eval (`05_reasoning_evaluation`) on plan quality — did it touch the right files, did it re-plan sensibly on test failure; a benchmark (`10_benchmark_datasets`) built from real closed issues in the target repos with known-good diffs, scored on SWE-bench-style pass rate; safety (`06_safety_evaluation`) on whether it ever tries to touch a sensitive path or exfiltrate a secret it reads while browsing the repo; and production monitoring (`12_production_monitoring`) on PR-acceptance rate and average human-review edit distance once it's live — the single best real-world proxy for "is this agent actually good," because it's measuring exactly what a human reviewer decided.
+
+*The trade-off I'd flag unprompted:* this is exactly the kind of task where a coding-native harness (the Claude Agent SDK, which is Claude Code's own harness — Read/Edit/Bash/Glob built in, permissions and hooks for the sandboxing) gets you most of this scaffolding for free, versus hand-building the same tools in LangGraph. I'd name that trade-off explicitly rather than default to "the framework I already know."
+
+### 11.4 Tradeoff tables
+
+**Framework choice** (interview framing — the question behind the question is usually "do you actually understand the trade-off, or did you just memorize a name"):
+
+| Choice | Pick it when | Walk away when |
+|---|---|---|
+| **No framework** (SDK + loop) | You don't yet know your own pain points; task is simple/short-lived | You need durable resumable state or team-wide standardized tracing |
+| **LangGraph** | You need explicit, testable, resumable state; human-in-the-loop pauses; non-trivial branching | Team has no appetite for the graph mental model; task is a simple one-shot tool call |
+| **OpenAI Agents SDK** | OpenAI-centric stack; want handoffs + guardrails fast | You need deep, provider-agnostic control or heavy custom state |
+| **Claude Agent SDK** | Autonomous coding/ops/computer-use tasks; want Claude Code's harness (permissions, hooks, subagents) for free | Task isn't code/ops-shaped; you need a different provider's frontier model |
+| **CrewAI / AG2** | Rapid multi-agent prototype; role-based decomposition is a natural fit | Production reliability and fine-grained control matter more than time-to-demo |
+| **LlamaIndex** | Retrieval over your data *is* the product | Agent's center of gravity is action/tools, not documents |
+
+**RAG vs. long context** (this is one of the most common "do you actually understand the mechanism" probes):
+
+| Signal | Favors RAG | Favors long context |
+|---|---|---|
+| Corpus size vs. window | Larger than fits comfortably | Fits with room to spare |
+| Update frequency | Changes often — freshness matters | Mostly static |
+| Reasoning scope | Narrow lookup, a few facts | Global reasoning across the whole corpus at once |
+| Cost sensitivity | High — pay only for what's retrieved | Lower priority, or caching absorbs it |
+| Best real answer | Hybrid: retrieve to narrow, then give generous context on the narrowed set | — |
+
+**Single agent vs. multi-agent** (the trap this table exists to name: defaulting to multi-agent because it sounds sophisticated):
+
+| Signal | Favors single agent | Favors multi-agent |
+|---|---|---|
+| Default | **Yes — start here** | Only once single-agent provably can't cope |
+| Context size | Fits in one window with good tools | Genuinely can't fit; each role needs its own focused context |
+| Task shape | Sequential, tool-heavy | Genuinely separable expertise, or parallel variable-count subtasks |
+| Coordination cost | None to manage | Real — synthesis loss, error propagation, cost fan-out are all live risks |
+| Failure signature if you get it wrong | Under-scaffolded for a huge task | Overhead exceeds benefit; harder to eval and debug (`07_multi_agent_evaluation`) |
+
+### 11.5 Build-competence signals: red flags vs. green flags
+
+What a strong interviewer is actually listening for, framed as what you'd hear in a candidate's answer:
+
+| Signal | Red flag | Green flag |
+|---|---|---|
+| Framework talk | Names a framework with no mention of *why*, or treats it as the hard decision | Calls the framework the most reversible choice (§3.3); names the specific pain it solves |
+| Tool design | "The model just calls the API" | Describes the description-as-prompt discipline, typed schemas, and an explicit error contract (§5) |
+| Error handling | No mention of retries/timeouts, or retries everything indiscriminately | Distinguishes transient (retryable) from permanent failures; hard timeouts on every call |
+| Irreversible actions | "The prompt tells it to ask for confirmation" | Describes a *structural* gate (interrupt/approval), not a prompt-level instruction |
+| Cost | Never mentions tokens, caching, or model tiering | Leads with caching and cascades as the highest-leverage cost levers (§8.1) |
+| Memory | Conflates memory and RAG, or "just put everything in context" | Distinguishes short-term/long-term, retrieves memory top-k like RAG, writes it out-of-band |
+| Multi-agent | Reaches for multi-agent by default, "for scale" | Defaults to single agent; names the specific signal that would justify splitting (§4.7) |
+| Observability | "We'd add logging later" | Describes tracing as built in from day one, doubling as the eval-harness input |
+| Versioning | Versions the model only | Versions (model, prompt, tools, graph) as one bundle, hashed into every trace |
+| Evaluation | Treats "it works in the demo" as done | Names a specific eval (tool-use, trajectory, safety) they'd run before shipping, unprompted |
+
+---
+## 12. Further reading
+
+Every link below was checked (mid-2026) before being included. Frameworks and pricing move monthly — treat versions/prices as snapshots and re-check before you cite a number from any of these in a design doc.
+
+### 12.1 Foundational papers (the ideas behind §4 and §6)
+
+- **ReAct: Synergizing Reasoning and Acting in Language Models** — Yao et al., 2022. The paper behind §4.1's core loop. [arxiv.org/abs/2210.03629](https://arxiv.org/abs/2210.03629)
+- **Reflexion: Language Agents with Verbal Reinforcement Learning** — Shinn et al., 2023 (NeurIPS 2023). Verbal self-feedback stored in memory across attempts; the basis of §4.3's reflection pattern. [arxiv.org/abs/2303.11366](https://arxiv.org/abs/2303.11366) · [github.com/noahshinn/reflexion](https://github.com/noahshinn/reflexion)
+- **Self-Refine: Iterative Refinement with Self-Feedback** — Madaan et al., 2023. The other half of §4.3 — draft, critique, revise, without an external reward signal. [arxiv.org/abs/2303.17651](https://arxiv.org/abs/2303.17651)
+- **MemGPT: Towards LLMs as Operating Systems** — Packer et al., 2023. The paging/tiered-memory idea behind §6.2's memory recipe. [arxiv.org/abs/2310.08560](https://arxiv.org/abs/2310.08560) · [research.memgpt.ai](https://research.memgpt.ai/)
+- **τ-bench: A Benchmark for Tool-Agent-User Interaction in Real-World Domains** — Sierra Research, 2024. The benchmark referenced for tool-heavy, multi-turn agent evaluation; a `tau2-bench` successor is active. [arxiv.org/abs/2406.12045](https://arxiv.org/abs/2406.12045) · [github.com/sierra-research/tau-bench](https://github.com/sierra-research/tau-bench)
+
+### 12.2 Anthropic engineering writing (the practical counterpart to the papers above)
+
+- **Building Effective Agents** — the widely-cited practical framework for workflows vs. agents and the architecture patterns in §4. [anthropic.com/engineering/building-effective-agents](https://www.anthropic.com/engineering/building-effective-agents)
+- **How we built our multi-agent research system** — the real-world writeup behind §4.5/§4.7's orchestrator–worker pattern and its failure modes. [anthropic.com/engineering/multi-agent-research-system](https://www.anthropic.com/engineering/multi-agent-research-system)
+- **Anthropic Cookbook — agent patterns** — runnable reference implementations of several §4 patterns. [github.com/anthropics/anthropic-cookbook/tree/main/patterns/agents](https://github.com/anthropics/anthropic-cookbook/tree/main/patterns/agents)
+- **Claude pricing** — for verifying the §2.1 table against current numbers. [platform.claude.com/docs/en/about-claude/pricing](https://platform.claude.com/docs/en/about-claude/pricing)
+
+### 12.3 Framework documentation (§3, §9)
+
+- **LangGraph — overview & docs.** [docs.langchain.com/oss/python/langgraph/overview](https://docs.langchain.com/oss/python/langgraph/overview) · source: [github.com/langchain-ai/langgraph](https://github.com/langchain-ai/langgraph)
+- **LangGraph 1.0 announcement** (LangChain + LangGraph reaching GA together, Oct 2025). [langchain.com/blog/langchain-langgraph-1dot0](https://www.langchain.com/blog/langchain-langgraph-1dot0)
+- **OpenAI Agents SDK** — Python docs and source. [openai.github.io/openai-agents-python](https://openai.github.io/openai-agents-python/) · [github.com/openai/openai-agents-python](https://github.com/openai/openai-agents-python)
+- **OpenAI API pricing** — for verifying the §2.1 table. [developers.openai.com/api/docs/pricing](https://developers.openai.com/api/docs/pricing)
+- **Claude Agent SDK — overview.** [platform.claude.com/docs/en/agent-sdk/overview](https://platform.claude.com/docs/en/agent-sdk/overview)
+- **AG2 (community AutoGen fork) docs.** [docs.ag2.ai](https://docs.ag2.ai/latest/) · source: [github.com/ag2ai/ag2](https://github.com/ag2ai/ag2)
+- **CrewAI docs.** [docs.crewai.com](https://docs.crewai.com/)
+- **LlamaIndex docs.** [docs.llamaindex.ai](https://docs.llamaindex.ai/)
+- **Pydantic AI docs.** [pydantic.dev/docs/ai](https://pydantic.dev/docs/ai/core-concepts/agent/)
+- **smolagents docs.** [huggingface.co/docs/smolagents](https://huggingface.co/docs/smolagents/index) · source: [github.com/huggingface/smolagents](https://github.com/huggingface/smolagents)
+
+### 12.4 Model Context Protocol (§5.5)
+
+- **MCP specification, 2025-11-25 revision** — the current spec version discussed in §5.5 (async tasks, elicitation, extensions, MCP Apps). [modelcontextprotocol.io/specification/2025-11-25](https://modelcontextprotocol.io/specification/2025-11-25)
+- **MCP joins the Agentic AI Foundation** (Dec 2025) — the governance handoff from Anthropic to the Linux Foundation–hosted foundation. [blog.modelcontextprotocol.io/posts/2025-12-09-mcp-joins-agentic-ai-foundation](https://blog.modelcontextprotocol.io/posts/2025-12-09-mcp-joins-agentic-ai-foundation/)
+- **MCP spec & schema source** (for tracking future revisions). [github.com/modelcontextprotocol/modelcontextprotocol](https://github.com/modelcontextprotocol/modelcontextprotocol)
+
+### 12.5 Memory systems (§6.2)
+
+- **Letta docs** (the MemGPT team's production memory platform). [docs.letta.com](https://docs.letta.com/)
+- **Mem0 docs.** [docs.mem0.ai](https://docs.mem0.ai/)
+- **Zep docs** ("agent memory at enterprise scale"). [help.getzep.com](https://help.getzep.com/)
+
+### 12.6 Where the rest of this book picks up
+
+Once you've built the agent in §9, the natural next reading is inside this repository, not outside it: start with `01_agentic_ai_fundamentals` for the vocabulary this chapter assumed, then go straight to `04_tool_use_evaluation` and `06_safety_evaluation` to build the eval harness for exactly the tools and guardrails you just wrote. For the deployment side of §10, the sibling `llm-serving-inference-guide` repository covers load testing, autoscaling, and canary rollout in the depth this chapter deliberately left out.
+
+
+### 12.7 Talks and community resources
+
+- **LangChain Interrupt** — LangChain's annual agent-engineering conference; sessions cover production LangGraph patterns, durable execution, and multi-agent design directly relevant to §9–§10. Check [langchain.com/interrupt](https://www.langchain.com/interrupt) for the current year's talk recordings.
+- **AI Engineer Summit / World's Fair** talks on agent evaluation and production agents — a recurring venue where teams publish real "what broke in production" postmortems that pair well with §10.4's incident-response guidance. [ai.engineer](https://www.ai.engineer/)
+- **MCP Registry** — the public index of MCP servers referenced in §5.5, useful for finding existing servers before writing your own. [github.com/modelcontextprotocol/registry](https://github.com/modelcontextprotocol/registry)
+
+### 12.8 A minimal test suite for the agent in §9
+
+One last practical note before you close this chapter: the agent built in §9 is only as trustworthy as the tests around it. A minimal `pytest` suite — separate from, and a prerequisite to, the full evaluation harness in the rest of this book — should cover at least:
+
+```python
+# test_agent.py
+from unittest.mock import patch
+from langchain_core.messages import HumanMessage
+from langgraph.types import Command
+from agent import graph
+
+def _config(thread_id: str) -> dict:
+    return {"configurable": {"thread_id": thread_id}}
+
+def test_order_not_found_returns_structured_error():
+    with patch("tools.httpx.get") as mock_get:
+        mock_get.return_value.status_code = 404
+        state = graph.invoke(
+            {"messages": [HumanMessage("Where's order Z-999?")],
+             "user_id": "u_test", "step_count": 0},
+            config=_config("t-1"),
+        )
+    assert "Z-999" in state["messages"][-1].content  # model surfaces the not-found clearly
+
+def test_refund_pauses_for_approval_and_resumes():
+    config = _config("t-2")
+    state = graph.invoke(
+        {"messages": [HumanMessage("Refund $10 on order A-1, it never arrived.")],
+         "user_id": "u_test", "step_count": 0},
+        config=config,
+    )
+    assert graph.get_state(config).next            # graph is paused at interrupt()
+    final = graph.invoke(Command(resume=True), config=config)
+    assert not graph.get_state(config).next          # resumed to completion
+
+def test_budget_exceeded_stops_gracefully():
+    # Feed a state already at the cap and confirm the graph exits via budget_exceeded,
+    # not by looping past MAX_STEPS.
+    state = graph.invoke(
+        {"messages": [HumanMessage("Do something open-ended and multi-step.")],
+         "user_id": "u_test", "step_count": 12},
+        config=_config("t-3"),
+    )
+    assert "step budget" in state["messages"][-1].content.lower()
+```
+
+None of this replaces the tool-use, trajectory, and safety evaluation described in §9.9 — it's the layer *underneath* that, the same way unit tests sit underneath integration tests for any other service. Ship the agent with both.
+
+### 12.9 Appendix: what a trace from §9 actually looks like
+
+To make §9.5's "structured span" concrete rather than abstract, here is a trimmed, illustrative export of the spans one real conversation would produce — the refund example from §9.7, flattened to JSON. This is the shape both your offline evaluators (§9.9) and your online dashboards (§10.3) consume.
+
+```json
+{
+  "thread_id": "conv-42",
+  "agent_version": "sha256:9f2a...c71",
+  "spans": [
+    {
+      "name": "agent.call_model",
+      "step": 0,
+      "input_tokens": 1180,
+      "output_tokens": 64,
+      "stop_reason": "tool_use",
+      "duration_ms": 812.4,
+      "tool_calls": [{"name": "search_knowledge_base", "args": {"query": "damaged item refund policy"}}]
+    },
+    {
+      "name": "tool.search_knowledge_base",
+      "step": 0,
+      "duration_ms": 143.2,
+      "ok": true,
+      "chunks_returned": 3
+    },
+    {
+      "name": "agent.call_model",
+      "step": 1,
+      "input_tokens": 1390,
+      "output_tokens": 71,
+      "stop_reason": "tool_use",
+      "duration_ms": 764.9,
+      "tool_calls": [{"name": "get_order_status", "args": {"order_id": "A-118"}}]
+    },
+    {
+      "name": "tool.get_order_status",
+      "step": 1,
+      "duration_ms": 96.7,
+      "ok": true,
+      "retries": 0
+    },
+    {
+      "name": "agent.call_model",
+      "step": 2,
+      "input_tokens": 1520,
+      "output_tokens": 58,
+      "stop_reason": "tool_use",
+      "duration_ms": 701.3,
+      "tool_calls": [{"name": "issue_refund",
+                       "args": {"order_id": "A-118", "amount_usd": 30.0,
+                                "reason": "arrived damaged"}}]
+    },
+    {
+      "name": "tool.issue_refund",
+      "step": 2,
+      "duration_ms": 2.1,
+      "interrupted": true,
+      "interrupt_payload": {"prompt": "Approve $30.00 refund for order A-118? Reason: arrived damaged"}
+    },
+    {
+      "name": "human.approval",
+      "resumed_after_ms": 41200.0,
+      "decision": true
+    },
+    {
+      "name": "tool.issue_refund",
+      "step": 2,
+      "duration_ms": 118.5,
+      "ok": true,
+      "refund_id": "R-A-118"
+    },
+    {
+      "name": "agent.call_model",
+      "step": 3,
+      "input_tokens": 1610,
+      "output_tokens": 46,
+      "stop_reason": "end_turn",
+      "duration_ms": 588.0
+    }
+  ],
+  "totals": {"steps": 4, "input_tokens": 5700, "output_tokens": 239,
+             "wall_clock_ms": 43604.1, "human_wait_ms": 41200.0,
+             "tool_errors": 0, "budget_exceeded": false}
+}
+```
+
+Reading this trace end to end tells you almost everything §10.3's metric table asks for: cost (sum the token fields, apply current pricing from §12.2/§12.3), whether the agent stayed within budget (`totals.steps` vs. `MAX_STEPS`), where wall-clock actually went (`human_wait_ms` dominates here — the model itself took well under 3 seconds of compute; the conversation took 43 seconds because a human had to approve a refund), and whether any tool degraded (`tool_errors`). This is also exactly the shape a trajectory evaluator (`05_reasoning_evaluation`) or a tool-use evaluator (`04_tool_use_evaluation`) would parse to score the run — build the trace once, and both your production dashboards and your offline evals read the same artifact.
+
+### 12.10 Quick-reference: minimum viable production checklist
+
+A last, deliberately compressed artifact — pull this up before you ship anything built the way §9 describes. Every row cross-references the section where the *why* lives.
+
+| # | Check | Section |
+|---|---|---|
+| 1 | Every tool has a typed schema and a description that says when *not* to use it | §5.2 |
+| 2 | Every tool returns a structured `{"ok", "error_code", "message", "retryable"}` result — never a raw exception | §5.3, §9.3 |
+| 3 | Every outbound call (tool, model) has a hard timeout | §8.3, §9.3 |
+| 4 | Transient failures retry with backoff; permanent failures do not | §8.3, §9.3 |
+| 5 | A hard step/token/dollar budget exists, with a graceful (not silent) exit when hit | §8.3, §9.6 |
+| 6 | Loop / no-progress detection is implemented, not just planned | §8.3, §9.8 |
+| 7 | Every irreversible action sits behind a structural approval gate, not a prompt instruction | §8.4, §9.3 |
+| 8 | Side-effecting writes carry an idempotency key | §8.3, §9.3 |
+| 9 | Short-term memory (checkpointer) and long-term memory (store) are both wired, with memory read top-k, not dumped whole | §6.2, §9.4 |
+| 10 | Every node and tool call emits a structured span with enough fields to reconstruct the trajectory offline | §9.5, §12.9 |
+| 11 | The (model, prompt, tools, graph) bundle is hashed and stamped into every trace | §10.2 |
+| 12 | Prompts and tool schemas live in version control with PR review, not a database string | §10.2 |
+| 13 | A small, versioned, task-specific eval set exists and runs in CI on every prompt/tool change | §9.9, §10.2 |
+| 14 | Red-teaming has specifically targeted the approval gate and any content the agent reads from untrusted sources | §7.4, §9.9 |
+| 15 | Dashboards exist for tool error rate, retry rate, step-count distribution, budget-exceeded rate, and cost per resolved conversation — not just generic latency/uptime | §10.3 |
+| 16 | A rollback plan exists and rolls back the *whole bundle*, not just the model | §10.2, §10.4 |
+
+If you can check every row, you have shipped an agent with the guardrails this chapter argued for — not just a demo that happened to work the day you recorded it.
+
+---
+
+*End of Agent Engineering Foundations. Continue to the evaluation chapters — `01_agentic_ai_fundamentals` through `12_production_monitoring` — to learn how to systematically test everything built here.*
