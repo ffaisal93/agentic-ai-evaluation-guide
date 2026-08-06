@@ -1,0 +1,531 @@
+<!DOCTYPE HTML>
+<html lang="en" class="navy sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Part 1 self-quiz: the answer key - Agentic AI Evaluation — A Practical Guide</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="Frameworks, metrics, benchmarks, tool-use and safety evaluation, and production monitoring for agentic AI systems.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../custom-9222a227.css">
+
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "navy";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-96a8b00f.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-4b3c722b.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('navy')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Agentic AI Evaluation — A Practical Guide</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/ffaisal93/agentic-ai-evaluation-guide" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/ffaisal93/agentic-ai-evaluation-guide/edit/main/./agentic-design-pattern/04b-part1-quiz-answers.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="part-1-self-quiz-the-answer-key"><a class="header" href="#part-1-self-quiz-the-answer-key">Part 1 self-quiz: the answer key</a></h1>
+<p>Use this <em>after</em> you’ve tried each question out loud, not before — reading answers you haven’t struggled for feels productive and teaches you almost nothing.
+The goal here is fluency, not word-matching: if your phrasing is different but you hit the same substance, that counts as a win, so grade yourself generously on wording and strictly on whether you actually named the thing.
+Where I’ve added a “red flag” line, it’s because that particular wrong answer is common enough that I’ve heard it in real interviews.</p>
+<hr>
+<h3 id="1-what-are-the-five-beats-of-the-loop-that-makes-a-system-an-agent-rather-than-a-model"><a class="header" href="#1-what-are-the-five-beats-of-the-loop-that-makes-a-system-an-agent-rather-than-a-model">1. What are the five beats of the loop that makes a system an agent rather than a model?</a></h3>
+<p><strong>The short answer, as you’d say it:</strong> Get the mission, gather information, think through a plan, act, and learn from what happened.
+If a system does all five, it’s an agent; if it only answers from what it already knows, it’s just a model.</p>
+<p><strong>Why this is the answer:</strong> This is the five-beat loop Gulli’s book opens with, and it’s the cleanest definition you can carry into a warm-up question.
+The load-bearing beat is <em>act</em> — a chatbot answers questions, but an agent does things: searches the web, updates a calendar, files a ticket, writes and runs code.
+The other beats matter because they’re what makes the acting non-random: a mission gives it a target, gathering gives it grounding, planning gives it sequence, and learning is what closes the loop so the next iteration is informed by the last.
+The playbook pairs this with a four-rung ladder you can offer as a follow-on — Level 0 the bare model, Level 1 the tool user, Level 2 the strategic planner doing multi-step work with deliberate context engineering, Level 3 a coordinated team of specialist agents.</p>
+<p><strong>Red flag if you said:</strong> “An agent is an LLM with tools.” That’s Level 1 only, and it skips the loop entirely — an agent isn’t defined by having tools attached, it’s defined by <em>iterating</em> toward a goal: perceive, plan, act, observe the result, adjust.
+Interviewers use this question as a cheap seniority filter, so give them the loop, not the feature list.</p>
+<hr>
+<h3 id="2-name-the-four-ways-a-single-monolithic-prompt-fails-by-name"><a class="header" href="#2-name-the-four-ways-a-single-monolithic-prompt-fails-by-name">2. Name the four ways a single monolithic prompt fails, by name.</a></h3>
+<p><strong>The short answer, as you’d say it:</strong> Instruction neglect, contextual drift, error propagation, and plain old hallucination.</p>
+<p><strong>Why this is the answer:</strong> These four are worth memorizing <em>by name</em> because they’re free interview vocabulary — saying “instruction neglect” instead of “it forgets stuff” signals that you’ve read the literature rather than just noticed the symptom.
+Instruction neglect is when you give a model six instructions in one prompt and it quietly drops one or two: it summarizes beautifully and simply forgets you asked for an email at the end.
+Contextual drift is the model losing the thread of the original ask over a long generation.
+Error propagation is a small early mistake poisoning everything built on top of it.
+And hallucination — confidently stating something false — gets <em>more</em> likely as the cognitive load of a prompt goes up, which is the important nuance: it isn’t a fixed background rate, it’s a function of how much you’re asking at once.
+Chaining attacks all four at once, because each prompt carries one instruction, each step is short enough that there’s no thread to lose, and the seams between steps let you catch errors before they compound.</p>
+<p><strong>Red flag if you said:</strong> “It runs out of context window.” That’s a real constraint but it’s a different failure — a monolith fails at <em>modest</em> prompt sizes too, long before you hit any token ceiling, because the problem is cognitive load and unverifiability, not capacity.</p>
+<hr>
+<h3 id="3-why-does-structured-output-between-chain-steps-matter-more-than-the-prompts-themselves"><a class="header" href="#3-why-does-structured-output-between-chain-steps-matter-more-than-the-prompts-themselves">3. Why does structured output between chain steps matter more than the prompts themselves?</a></h3>
+<p><strong>The short answer, as you’d say it:</strong> Because a chain is only as reliable as its hand-offs.
+If step one gives step two a chatty paragraph, step two has to <em>interpret</em> it, and interpretation is where ambiguity and error creep in — but if step one hands over JSON with known fields, my orchestrator can parse it with ordinary code and verify it deterministically before anything downstream sees it.</p>
+<p><strong>Why this is the answer:</strong> This is the single most important engineering decision in the whole pattern, and it’s the one candidates skip in favor of talking about prompt wording.
+Structured output means forcing each step to answer in a machine-readable format — almost always JSON, a text format of named fields and values like <code>{"vendor": "Acme", "total": 1050}</code> — and the list of fields you expect with their types is the <em>schema</em>, a contract between the two steps.
+Parsing that text with ordinary code is the beautiful part: it either works or it visibly fails, which gives you a free, deterministic checkpoint after every model call.
+That’s the difference between components that <em>hand off data</em> and components that merely <em>hope the next one understood</em>.
+And notice what the state of your pipeline becomes: not vibes, but a growing, validated bundle of structured data flowing down the line.</p>
+<p><strong>Red flag if you said:</strong> “JSON is just easier to work with in code.” True but shallow — the point isn’t developer convenience, it’s that a parse is a <em>verification event</em>.
+You get a deterministic pass/fail on a probabilistic component’s output for free, which is the only way to stop errors at the seam where they were born.</p>
+<hr>
+<h3 id="4-five-chained-steps-at-95-accuracy-each--roughly-what-end-to-end-accuracy-and-whats-the-fix"><a class="header" href="#4-five-chained-steps-at-95-accuracy-each--roughly-what-end-to-end-accuracy-and-whats-the-fix">4. Five chained steps at 95% accuracy each — roughly what end-to-end accuracy, and what’s the fix?</a></h3>
+<p><strong>The short answer, as you’d say it:</strong> About 77% — that’s \( 0.95^5 \approx 0.77 \), 0.95 multiplied by itself five times.
+The fix is validating at every seam so errors get caught where they’re born instead of compounding, and escalating ambiguity instead of guessing.</p>
+<p><strong>Why this is the answer:</strong> This is error compounding, the chain’s signature disease, and the arithmetic is what makes it visceral.
+Each step looks great in isolation — 95% is a number you’d happily report — but errors multiply down the line, so five polite little steps land you around 77% end-to-end, which is not a system anyone trusts with money.
+The playbook’s refund example runs the same math at four stages and gets roughly 81%.
+The cure is structural, not prompt-level: parse and validate the structured output at every seam, cross-check against ground truth wherever it exists (in the refund example the order database is the anchor of reality), have each step report per-field confidence so low confidence escalates rather than proceeds, and keep per-stage eval metrics so you know <em>which</em> stage is drifting and fix the source rather than the symptom.</p>
+<p><strong>Red flag if you said:</strong> “So don’t chain — use one prompt.” Backwards.
+The monolith has the <em>same</em> underlying error rate with none of the visibility, so you get the bad accuracy and no ability to find out where it came from.
+The chain’s compounding is at least <em>diagnosable</em>, and validation at the seams is what converts diagnosable into fixable.</p>
+<hr>
+<h3 id="5-what-belongs-at-the-seams-of-a-chain-besides-the-next-llm-call"><a class="header" href="#5-what-belongs-at-the-seams-of-a-chain-besides-the-next-llm-call">5. What belongs at the seams of a chain besides the next LLM call?</a></h3>
+<p><strong>The short answer, as you’d say it:</strong> Ordinary deterministic code — parse and validate the JSON, look things up in a real database, call a tool like a calculator, branch on a condition, run a hard guardrail, checkpoint the state, or hand off to a human.
+The seams are where the non-AI half of the system lives, and they’re the whole reason to chain in the first place.</p>
+<p><strong>Why this is the answer:</strong> This is the pattern’s superpower and candidates consistently under-sell it.
+A chain isn’t LLM–LLM–LLM; it’s LLM, <em>check</em>, code, LLM, <em>tool</em>, <em>check</em>, LLM.
+The invoice example makes it concrete: the model extracts text, a second step normalizes “one thousand and fifty” into 1050, and then — because LLMs are famously unreliable at arithmetic — the actual math gets delegated to a calculator tool, with the model only deciding <em>what</em> to compute.
+The refund example adds a hard guardrail in plain code: the amount must not exceed the order total, and anything above a policy threshold routes to human approval no matter how confident the model is.
+Also at the seams: checkpointing each validated step’s output so a crash at step four resumes from step three, and the pause point where a human approval task gets filed and the chain simply stops until the answer lands.
+The unifying principle from the vocabulary section is worth saying out loud — creativity and language on the probabilistic side, verification and consequences on the deterministic side.</p>
+<p><strong>Red flag if you said:</strong> “A validation LLM call.” Sometimes fine, but reaching for a model to check a model when plain code could do it is the expensive, less reliable choice.
+If the check is mechanical — does it parse, are required fields present, is the total a number, is the amount under the cap — that’s an if-statement, and an if-statement can’t hallucinate.</p>
+<hr>
+<h3 id="6-a-step-returns-broken-json--walk-the-recovery-in-one-sentence"><a class="header" href="#6-a-step-returns-broken-json--walk-the-recovery-in-one-sentence">6. A step returns broken JSON — walk the recovery in one sentence.</a></h3>
+<p><strong>The short answer, as you’d say it:</strong> The parser fails, my orchestrator catches it immediately so the garbage never reaches the next step, I retry that one step with the parse error appended to the prompt so the model can self-correct, and after two strikes the request escalates to a human with the full trace attached.</p>
+<p><strong>Why this is the answer:</strong> Notice the four moves packed in there: catch at the seam, contain the blast radius, retry with the error included, and have a bounded give-up.
+Including the parser’s actual error message in the retry prompt is the detail that earns points — you’re not just re-rolling the dice, you’re giving the model the information it needs to fix itself, and that fixes the vast majority of cases.
+Retrying only <em>that step</em> rather than the whole chain matters too, because re-running upstream steps costs money and can re-trigger side effects.
+And the cap is what stops an infinite loop: two strikes and a person gets it, with the trace so they can see what actually happened.
+The principle to state out loud is the one the playbook gives you: fail loudly at the seam where the error was born, never let it compound downstream.</p>
+<p><strong>Red flag if you said:</strong> “Wrap it in a try/except and skip the step.” Silently continuing with a hole in your state is how a chain produces confidently wrong output.
+Skipping is only acceptable if you’ve decided in advance that the field is optional and you label the gap.</p>
+<hr>
+<h3 id="7-what-are-the-four-router-implementations-and-which-needs-no-training-data"><a class="header" href="#7-what-are-the-four-router-implementations-and-which-needs-no-training-data">7. What are the four router implementations, and which needs no training data?</a></h3>
+<p><strong>The short answer, as you’d say it:</strong> Rules in plain code, embedding similarity, a trained classifier, and an LLM prompt.
+The LLM router is the one that needs zero training data and ships on day one — rules need no data either, but they need you to hand-write the patterns, and embeddings need only a description of each route.</p>
+<p><strong>Why this is the answer:</strong> Get the tradeoffs on the tip of your tongue, because this comparison is the single most likely probe in a routing interview.
+Rules are instant and free and perfectly deterministic — same input, same path, forever — but brittle, because real users phrase things sideways.
+LLM routing (“classify this request as booking, refund, baggage, or other; answer with the single word only”) is maximally flexible, handles novel phrasing effortlessly, and needs no data at all — but every decision now costs a model call’s latency and money, and the model can get creative with its answer, so you must validate its output against the allowed label set and treat anything else as <code>unclear</code>.
+Embedding routing converts the request into a list of numbers capturing its meaning and picks the nearest route reference — semantic matching without a full model call, so faster and cheaper than LLM routing and smarter than rules, though you get a similarity score rather than reasoning.
+A trained classifier takes a few thousand labeled examples and is fast, cheap, and consistent at runtime, with the price being labeling effort and a retraining loop whenever categories shift — and there’s a lovely trick worth quoting: use an LLM <em>offline</em> to generate synthetic training examples, so the expensive model does the heavy lifting once at training time instead of on every request.</p>
+<p><strong>Red flag if you said:</strong> Only “LLM or rules.” Missing embeddings and the trained classifier costs you the whole middle of the tradeoff space, and the classifier in particular is the answer to “this is fine but it’s too slow and expensive at our volume.”</p>
+<hr>
+<h3 id="8-why-must-unclear-be-a-first-class-route-rather-than-an-error"><a class="header" href="#8-why-must-unclear-be-a-first-class-route-rather-than-an-error">8. Why must <code>unclear</code> be a first-class route rather than an error?</a></h3>
+<p><strong>The short answer, as you’d say it:</strong> Because if you force the router to pick from only the real categories, it will — confidently and wrongly — and a specialist prompted for baggage will do something confidently useless with a refund request.
+An explicit <code>unclear</code> route turns doubt into a clarifying question or a warm handoff to a human, which is a good outcome instead of a bad one.</p>
+<p><strong>Why this is the answer:</strong> This is the discriminating detail in a routing interview.
+Candidates who have an <code>unclear</code> route and a confidence policy read as people who’ve watched a router be wrong in production; candidates who don’t, don’t.
+Two more reasons to give it real status.
+First, it’s where your confidence threshold cashes out: below the threshold you clarify rather than guess, and the threshold itself should be set per route from the cost asymmetry — for money-touching routes sit conservative and clarify maybe 10% of the time, for flight status be aggressive because a wrong guess is trivially corrected.
+One global number is a smell, because it pretends all mistakes cost the same.
+Second, and this is the line to steal: the <code>unclear</code> pile is literally your product roadmap telling you which new route to build next.
+Review it weekly, and when a new cluster shows up, that’s your signal to build route number six — which is also your defense against category drift, the slow failure where the router’s January worldview stops matching June’s users.</p>
+<p><strong>Red flag if you said:</strong> “The router just picks the closest match.” That’s exactly the failure mode.
+A forced choice among wrong options produces a confidently wrong path, and the user gets a fluent answer to a question they didn’t ask.</p>
+<hr>
+<h3 id="9-whats-the-pragmatic-router-lifecycle-from-day-one-to-month-three"><a class="header" href="#9-whats-the-pragmatic-router-lifecycle-from-day-one-to-month-three">9. What’s the pragmatic router lifecycle from day one to month three?</a></h3>
+<p><strong>The short answer, as you’d say it:</strong> Day one, an LLM router — zero data needed, ships in an hour, great with messy phrasing — and you log every single decision.
+By month two or three those logs are tens of thousands of labeled examples, so you graduate the high-volume head of the distribution to a small trained classifier for speed and cost, add cheap rules to short-circuit the dead-giveaway cases, and keep the LLM as the fallback tier for the weird stuff.</p>
+<p><strong>Why this is the answer:</strong> When an interviewer says “LLM router, embeddings, rules, or a trained classifier — pick one and defend it,” the strong move is to gently refuse the premise: it’s a lifecycle, not a pick.
+The logic is that your constraint on day one is <em>data</em>, and your constraint at scale is <em>cost and latency</em> — different constraints, different right answers, and the logging is the bridge between them.
+At tens of thousands of chats a day, shaving a few hundred milliseconds and most of the routing cost off every single request is real money and real snappiness.
+The mental model to say out loud is the funnel: rules, then classifier, then LLM — cheapest adequate decider wins, with the LLM as the safety net.
+And if they pin you down and force exactly one forever at high volume, take the trained classifier and pay the labeling cost.</p>
+<p><strong>Red flag if you said:</strong> “Start with the trained classifier, it’s the best one.” You don’t have labels on day one, and you don’t yet know what the real categories are — the traffic will teach you, and building a classifier before the traffic speaks means retraining it as soon as you learn anything.</p>
+<hr>
+<h3 id="10-a-message-contains-two-intents--whats-your-policy"><a class="header" href="#10-a-message-contains-two-intents--whats-your-policy">10. A message contains two intents — what’s your policy?</a></h3>
+<p><strong>The short answer, as you’d say it:</strong> Have one, decided in advance.
+Mine is: the router flags multi-intent, the system handles the primary intent — the one with urgency or money attached — and then explicitly says “I see you also asked about X, want me to do that next?” Users forgive sequencing; they don’t forgive being half-ignored.</p>
+<p><strong>Why this is the answer:</strong> “Cancel my flight and also, where’s my bag?” is legitimately two categories, and there are three defensible policies: split it into two requests, handle the primary and acknowledge the secondary, or ask the user to pick.
+Any of them is fine.
+What is <em>not</em> fine is having no policy, because then behavior varies by whatever the classifier happened to latch onto that day.
+Acknowledged sequencing is the simplest and users respond well to it; splitting into two parallel handler runs is also viable and worth considering once the basics are solid.
+The unacceptable option — and this is the one to name explicitly, because naming it shows you know what you’re avoiding — is silently answering half the message, because the user has no way to tell whether the other half was refused, forgotten, or misunderstood.</p>
+<p><strong>Red flag if you said:</strong> “Route to whichever intent scores higher.” That’s a mechanism, not a policy — it says nothing about what happens to the second intent, which is the entire question.</p>
+<hr>
+<h3 id="11-what-single-property-makes-two-steps-safe-to-parallelize-and-what-bug-appears-when-you-violate-it"><a class="header" href="#11-what-single-property-makes-two-steps-safe-to-parallelize-and-what-bug-appears-when-you-violate-it">11. What single property makes two steps safe to parallelize, and what bug appears when you violate it?</a></h3>
+<p><strong>The short answer, as you’d say it:</strong> Independence — and it has two halves: no data dependency, meaning neither step consumes the other’s output, and no write conflict, meaning they don’t mutate the same state or external resource while running.
+Violate the second half and you get race conditions: results that depend on which branch happened to finish first.</p>
+<p><strong>Why this is the answer:</strong> Say the word “independence” explicitly in every parallelization interview — it’s the entry ticket, and if step B genuinely needs step A’s output, they cannot run together, full stop; a dependency is a wall.
+The design skill this tests is dependency analysis: sketch the steps, draw an arrow for every “needs the output of,” and everything not connected by arrows is fair game.
+Race conditions deserve their own beat because they’re the worst bugs to chase — they appear and vanish randomly and they don’t reproduce reliably in tests, which is why you prevent them <em>by construction</em> rather than trying to catch them afterward.
+The discipline is three words long: shared read-only input, each branch owns an exclusive output slot, and only the gather step combines.
+That’s the cubbyhole model — in the ADK example each researcher sub-agent writes to its own dedicated key in session state and the merger reads all the cubbyholes afterward.</p>
+<p><strong>Red flag if you said:</strong> “Just make sure they don’t depend on each other.” Half credit — that’s the data-dependency half.
+The write-conflict half is where the genuinely nasty bugs live, and it’s the half that separates people who’ve read about concurrency from people who’ve been paged by it.</p>
+<hr>
+<h3 id="12-fan-out-fan-in-straggler--define-all-three-in-one-breath"><a class="header" href="#12-fan-out-fan-in-straggler--define-all-three-in-one-breath">12. Fan-out, fan-in, straggler — define all three in one breath.</a></h3>
+<p><strong>The short answer, as you’d say it:</strong> Fan-out is the moment the orchestrator splits one step into many concurrent branches; fan-in — the gather — is where you collect all their results back together; and the straggler is the one slow branch that holds the whole gather hostage, because your parallel block is only ever as fast as its slowest member.</p>
+<p><strong>Why this is the answer:</strong> These three are the vocabulary that makes you sound fluent, and the straggler is where the real engineering insight sits.
+Parallelization trades “the sum of all steps” for “the worst step” — a huge improvement that can still be ruined by one slow API.
+So the mitigations are per-branch timeouts, plus a <em>partial-results policy decided in advance</em>: for a research briefing, four of five sources with a visible note about the missing one beats an error page; for something like a payment-verification fan-out, no — all checks must pass.
+Say which one your product is and why.
+And watch per-branch p95 latency in production so a chronically slow source gets fixed or replaced rather than silently dragging every request.</p>
+<hr>
+<h3 id="13-why-doesnt-parallelization-save-money"><a class="header" href="#13-why-doesnt-parallelization-save-money">13. Why doesn’t parallelization save money?</a></h3>
+<p><strong>The short answer, as you’d say it:</strong> Because it’s the same calls, just rearranged in time.
+Latency drops, the bill doesn’t.
+It can even raise costs indirectly, because it makes it painless to do more — you’ll fan out ten speculative lookups where a sequential design would have done three carefully.</p>
+<p><strong>Why this is the answer:</strong> Saying this crisply is worth points, because it’s a place where people’s intuition quietly assumes “faster equals cheaper.” If cost is the actual pressure, the levers are elsewhere: fewer or smaller calls, caching, or a router that skips work entirely.
+Parallelization buys exactly one thing — time.
+The nice follow-through, straight from the due-diligence answer, is caching: briefings repeat, so if three analysts pull the same company this week, the second and third should hit a per-branch cache with freshness windows matched to how fast each source moves — financials until the API’s next update, news for an hour or two, leadership basically until it changes.
+A cache hit skips the branch entirely, which improves latency <em>and</em> cost, which is the combination parallelization alone can’t deliver.</p>
+<p><strong>Red flag if you said:</strong> “It’s more efficient, so it’s cheaper.” Efficiency of <em>wall-clock time</em> isn’t efficiency of <em>tokens</em>.
+The provider bills you per token regardless of whether the calls were in a row or side by side.</p>
+<hr>
+<h3 id="14-what-three-protections-does-every-fan-out-need-before-production"><a class="header" href="#14-what-three-protections-does-every-fan-out-need-before-production">14. What three protections does every fan-out need before production?</a></h3>
+<p><strong>The short answer, as you’d say it:</strong> Per-branch timeouts, a partial-results policy decided at design time, and a concurrency cap with a queue.
+Those three are what stand between a working demo and a fan-out that survives stragglers, partial failures, and rate limits.</p>
+<p><strong>Why this is the answer:</strong> Each maps to a named failure mode.
+Per-branch timeouts answer the straggler — one slow API can’t hold the gather hostage indefinitely.
+The partial-results policy answers partial failure: one branch errors while four succeed, and you need to have decided <em>in advance</em> whether a labeled partial ships or the request fails, because that’s a product decision, not an engineering one.
+The mechanics that go with it are retrying the failed branch <em>alone</em> — cheap and safe when branches are read-only against the world — rather than re-running the whole fan-out because one branch hiccuped.
+And the concurrency cap answers rate-limit collisions: fan out fifty model calls at once and the provider’s per-minute cap slams the door, failing calls that would have succeeded politely spaced out.
+A governor keeps at most N calls in flight, with backoff on throttle errors and priority in the queue so live users go ahead of batch jobs.
+The insight to voice: beyond the cap, more concurrency adds zero speed, because the provider has become the bottleneck — you’re just converting polite queueing into errors.</p>
+<p><strong>Red flag if you said:</strong> Only “retries.” Retrying into a rate limit makes it worse, and retrying a straggler that’s merely slow rather than broken doubles your load for nothing.
+If you want a fourth protection to mention, make it the logging discipline: a shared request ID plus a branch label on every log line, because five interleaved branches produce five interleaved log streams and debugging fog is a real tax you should budget for rather than discover.</p>
+<hr>
+<h3 id="15-whats-the-difference-between-concurrency-and-parallelism-and-why-is-it-fine-for-io-bound-agents"><a class="header" href="#15-whats-the-difference-between-concurrency-and-parallelism-and-why-is-it-fine-for-io-bound-agents">15. What’s the difference between concurrency and parallelism, and why is it fine for I/O-bound agents?</a></h3>
+<p><strong>The short answer, as you’d say it:</strong> Parallelism is genuinely doing several things at the same instant on different cores; concurrency is one worker juggling many waiting tasks, switching to another whenever one is idle on the network.
+In Python this is usually concurrency, not true parallelism — and that’s exactly what you want for agent work, because the bottleneck is waiting, not computing.</p>
+<p><strong>Why this is the answer:</strong> This is a precision point that costs you nothing and buys real credibility.
+Agentic systems spend most of their lives waiting on the outside world — APIs, searches, database queries — and during a three-second API wait your system is doing <em>nothing</em>; it may as well have five other requests in flight.
+That’s I/O-bound work, and a single async worker handles it beautifully because there’s no CPU contention to speak of.
+It’s also why the framework story lines up: LangChain’s RunnableParallel takes a map of named chains and runs them concurrently, and under the hood it’s async I/O — one worker juggling waiting tasks, which is the right model since the branches are network-bound.</p>
+<p><strong>Red flag if you said:</strong> “Same thing.” They aren’t, and the distinction is precisely what makes the design sound: if your branches were CPU-heavy, one async worker would buy you nothing and you’d need real parallelism.
+The reason you can be relaxed about it is a fact about <em>your</em> workload, and stating that fact is the point.</p>
+<hr>
+<h3 id="16-why-does-a-separate-critic-outperform-double-check-your-own-work"><a class="header" href="#16-why-does-a-separate-critic-outperform-double-check-your-own-work">16. Why does a separate critic outperform “double-check your own work”?</a></h3>
+<p><strong>The short answer, as you’d say it:</strong> Because it avoids the cognitive bias of an agent grading its own homework.
+A producer asked to check itself tends to conclude its work is fine; a critic prompted as “you are a meticulous senior reviewer, your job is to find flaws” is <em>rewarded</em> for finding problems, so it finds them.</p>
+<p><strong>Why this is the answer:</strong> The generator-critic split is the heart of the pattern.
+They can literally be the same underlying LLM wearing two different system prompts — same model is fine, different instructions are the point — and the separation still works for two reasons.
+First, framing: the critic’s instructions reward finding flaws, and it reads the draft without the generation context that would bias it toward defending choices it made.
+Second, and this is the sharper argument, the asymmetry of the two jobs: generation is open-ended while review against a rubric is constrained, and models are better reviewers than generators of the same content.
+You strengthen it further by grounding the critique in objective signals the model can’t sweet-talk — run the tests, execute the query, validate the schema — and optionally by using a different model family as critic for genuinely independent eyes.
+The playbook is blunt that “the model double-checks itself” is the pattern’s cardinal sin: a self-graded exam with the same blind spots on both sides of the desk.</p>
+<p><strong>Red flag if you said:</strong> “Add ‘please verify your answer’ to the prompt.” That’s the exact anti-pattern.
+It costs you tokens, produces a confident “yes, that looks right,” and catches approximately the errors the model was already capable of noticing — which is to say, not the ones you’re worried about.</p>
+<hr>
+<h3 id="17-rank-the-critic-types-from-most-to-least-trustworthy"><a class="header" href="#17-rank-the-critic-types-from-most-to-least-trustworthy">17. Rank the critic types from most to least trustworthy.</a></h3>
+<p><strong>The short answer, as you’d say it:</strong> Execution and tests first — run the code, run the SQL on a replica; reality doesn’t negotiate.
+Then deterministic checks: schema validation, length limits, banned-terms scans, which are ground truth for whatever they happen to cover.
+Then an LLM with a rubric, which is good but foolable.
+Then human review, which is the best judgment available but expensive, slow, and doesn’t scale.</p>
+<p><strong>Why this is the answer:</strong> The ranking is really about <em>objectivity per dollar</em>, which is why human review sits at the bottom of the practical stack despite having the best judgment — it’s rarely fooled but it can’t be your default layer.
+The design instinct that follows is the important part: stack them, cheapest and most objective first, and only let the expensive subjective layers see work that survived the mechanical ones.
+The SQL example shows it in three layers — execute against a read-only replica to catch syntax errors and missing columns for free, then mechanical sanity checks in plain code (did it return zero rows for a question that plainly expects data, did a join explode the row count), then the LLM critic which crucially gets to see the <em>execution results</em>, not just the SQL.
+A reviewer who can see what the query actually did catches semantic wrongness — right syntax, wrong meaning — far better than one reading code cold.
+Two caveats to keep in your pocket: deterministic checks only cover what you wrote, and an LLM critic must be calibrated on planted defects, because otherwise you can’t tell a clean pass rate from a lenient one.</p>
+<p><strong>Red flag if you said:</strong> “LLM-as-judge is the most reliable because it’s the smartest.” Smart isn’t the axis — foolability is.
+An LLM critic has the same probabilistic nature as the producer, which is why you put un-foolable checks in front of it and reserve it for what genuinely can’t be checked mechanically.</p>
+<hr>
+<h3 id="18-name-the-three-exits-every-reflection-loop-needs"><a class="header" href="#18-name-the-three-exits-every-reflection-loop-needs">18. Name the three exits every reflection loop needs.</a></h3>
+<p><strong>The short answer, as you’d say it:</strong> The happy exit — the critic passes the work; the budget exit — a hard cap of two or three iterations; and the stall exit — if the critique isn’t changing or the drafts aren’t improving between laps, stop, because the loop is orbiting rather than converging.</p>
+<p><strong>Why this is the answer:</strong> A loop with only the happy exit is a bug, plain and simple: a too-picky critic against a maxed-out producer will spin forever, and you’ll find out via the bill.
+The budget exit is set empirically — your eval set gives you quality-per-lap curves and they’re always steeply diminishing, so lap one captures most of the gain and lap three is polishing marginalia; the cap belongs where marginal quality drops below marginal cost.
+The stall exit catches the subtler disease, oscillation: the producer “fixes” issue A by reintroducing issue B, and the laps alternate forever between two flawed versions.
+In the SQL design, the stall check is concrete — if the same critique repeats twice, stop early.
+And there’s a fourth thing to say that isn’t an exit but completes the answer: on exhaustion, don’t ship the output as if it were fine.
+The user gets the best draft explicitly flagged “unverified — review before trusting,” with the critic’s outstanding concerns attached.
+Honest failure preserves the trust that silent failure would spend.</p>
+<p><strong>Red flag if you said:</strong> “Loop until the critic is satisfied.” That’s the happy exit alone, and it’s the classic way to build something that hangs in production and looks fine in every test where the critic happened to be agreeable.</p>
+<hr>
+<h3 id="19-when-do-you-choose-best-of-n-over-a-reflection-loop"><a class="header" href="#19-when-do-you-choose-best-of-n-over-a-reflection-loop">19. When do you choose best-of-N over a reflection loop?</a></h3>
+<p><strong>The short answer, as you’d say it:</strong> When the failures are <em>random</em> — flaky phrasing, an occasionally weak draft — because five independent rolls of the dice probably include a good one, and best-of-N is fast: all five drafts arrive in one round-trip, a judge picks, done, with no loop latency.
+Reflection wins when failures are <em>systematic</em>, because if the model reliably misses the same edge case, all five candidates share the flaw and no amount of picking fixes what only feedback can.</p>
+<p><strong>Why this is the answer:</strong> The underlying insight is worth stating in exactly these terms: the critique <em>injects information the producer didn’t have</em>, which resampling never does.
+Best-of-N is parallelization applied to quality — the same fan-out machinery, aimed at a quality goal rather than a speed goal — so it costs N generations plus a judge but only one round-trip of latency.
+Reflection costs at least two calls per lap and stacks latency serially, but it can actually teach the producer something mid-flight.
+And they compose beautifully, which is the senior move to name unprompted: generate three candidates in parallel, have the critic pick the strongest <em>and</em> critique it, then run one revision lap on the winner — roughly the quality of three reflection laps at the latency of one.
+In the room, naming that hybrid along with the diagnosis that picks between them — random flaws versus systematic ones — is a genuinely strong answer.</p>
+<hr>
+<h3 id="20-whats-the-one-metric-that-proves-a-reflection-loop-is-earning-its-cost"><a class="header" href="#20-whats-the-one-metric-that-proves-a-reflection-loop-is-earning-its-cost">20. What’s the one metric that proves a reflection loop is earning its cost?</a></h3>
+<p><strong>The short answer, as you’d say it:</strong> The delta between first-draft pass rate and post-reflection pass rate on your eval set.
+If that gap is small, the loop isn’t earning its cost and I should ship single-pass with just the objective checks.</p>
+<p><strong>Why this is the answer:</strong> This is the metric because reflection is the one pattern whose entire justification is a quality improvement you’re paying real money and latency for — every lap is at least two more LLM calls, so a three-iteration loop can multiply a step’s cost and latency several-fold.
+The delta is the only number that tells you whether that multiplier bought anything.
+It’s also honest in a way most metrics aren’t: it will sometimes tell you to delete the feature you just built, and being willing to say that out loud in an interview reads as maturity.
+Around it, the supporting instrumentation is worth listing quickly — laps per request (creeping up means an unappeasable critic), pass rate per lap, unverified-output rate, p95 latency, cost per request, and the metric that actually matters in production, user corrections: when someone edits or disputes a shipped output, that’s a missed defect logged against the critic, and it feeds back into the planted-bugs suite so the critic learns your org’s real failure patterns.</p>
+<p><strong>Red flag if you said:</strong> “The critic’s pass rate.” A pass rate near 100% is at least as likely to mean a lenient critic as a good producer — in fact a suspiciously high pass rate combined with users still finding errors is the <em>diagnostic signature</em> of the lenient-critic failure mode.</p>
+<hr>
+<h3 id="21-recite-the-seven-moves-of-the-universal-answer-skeleton"><a class="header" href="#21-recite-the-seven-moves-of-the-universal-answer-skeleton">21. Recite the seven moves of the universal answer skeleton.</a></h3>
+<p><strong>The short answer, as you’d say it:</strong> Clarify the requirements.
+State the simplest thing that could work.
+Name the pattern and say why.
+Draw the boxes and walk the data flow.
+Call out the failure modes before the interviewer does.
+Explain how you’d evaluate and monitor it.
+Mention cost, and what you’d cut under pressure.</p>
+<p><strong>Why this is the answer:</strong> Learn the skeleton once and you never face a blank whiteboard again — you face a fill-in-the-blanks exercise.
+It helps to know what each move is <em>scoring</em>, because that changes how you play.
+Clarifying scores seniority: junior engineers solve the problem they imagined, senior engineers solve the problem that exists, and asking buys you two minutes of thinking time while looking proactive.
+The baseline scores resistance to over-engineering, and it sets up a narrative where everything you add afterward is justified by a specific failure of the simple version.
+Naming the pattern scores pattern recognition — just make sure the <em>because</em> clause is there, or it’s buzzword bingo.
+Boxes and data flow score decomposition, and the credit lives in the arrow labels: what data moves, not just that something moves.
+Failure modes are the highest-leverage move in the whole skeleton, because every interviewer keeps a private list of holes in your design and every hole you name first transfers from their column to yours.
+Eval and monitoring is the single most common gap between people who’ve shipped LLM systems and people who’ve only played with them.
+And cost plus cuts signals business maturity and judgment — knowing which parts of your own design are load-bearing and which are polish.
+The final instruction matters as much as the list: don’t recite it like a checklist, <em>inhabit</em> it, so the moves come out as one flowing story.</p>
+<hr>
+<h3 id="22-what-are-the-four-ways-candidates-most-commonly-lose-points"><a class="header" href="#22-what-are-the-four-ways-candidates-most-commonly-lose-points">22. What are the four ways candidates most commonly lose points?</a></h3>
+<p><strong>The short answer, as you’d say it:</strong> Diving straight into architecture without clarifying; complexity worship; the happy-path-only answer; and no numbers anywhere.</p>
+<p><strong>Why this is the answer:</strong> Avoiding a mistake is cheaper than earning a merit, which is why these four are worth memorizing as a list.
+Diving in without clarifying is the single most frequent error and it can sink an otherwise brilliant answer, because the interviewer sits there watching you confidently build the wrong thing.
+Complexity worship — five agents, three loops, and a vector database for a problem one well-validated chain would solve — gets read not as sophistication but as inexperience, because people who’ve carried a pager know every component is a thing that breaks at 2 a.m. The happy-path-only answer, narrated as if models never return garbage, APIs never time out, and users never type nonsense, is close to disqualifying with LLM systems specifically, because the components are <em>guaranteed</em> to misbehave some percent of the time.
+And no numbers anywhere: you don’t need precision, but an answer with zero estimates of latency, volume, or cost floats free of reality, and interviewers notice the weightlessness.</p>
+<p><strong>Red flag if you said:</strong> “Not knowing the patterns.” Honestly the rarest failure of the four.
+People lose these interviews on process and judgment far more often than on knowledge, which is good news, because process is the part you can fix this week.</p>
+<hr>
+<h3 id="23-compose-all-four-patterns-into-one-sentence-describing-a-production-support-system"><a class="header" href="#23-compose-all-four-patterns-into-one-sentence-describing-a-production-support-system">23. Compose all four patterns into one sentence describing a production support system.</a></h3>
+<p><strong>The short answer, as you’d say it:</strong> A router at the front door labels each incoming message and sends it to a specialist chain, that chain fans out into independent lookups in parallel wherever nobody’s output feeds anyone else’s, and a reflection loop wraps the one step whose mistakes are expensive — with an honest <code>unclear</code> lane to a human behind all of it.</p>
+<p><strong>Why this is the answer:</strong> That composite — fork, then road, then wide road, then U-turn — is, in one diagram, most production agentic systems in the wild today, and the book’s own examples keep converging on it.
+The sorting routine that produces it is worth being able to speak, because interviewers push you across pattern borders and this is how you navigate.
+First: does every request need the same steps?
+If yes it’s a chain and your energy goes into the seams; if no, a router goes in front with each kind behind its own door.
+Second: inside whatever path a request takes, which steps actually depend on each other?
+Draw the needs-the-output-of arrows, and everything unconnected is a candidate to fan out — though whether you bother depends entirely on whether anyone feels the wait.
+Third: where does a mistake actually hurt?
+That’s where a reflection loop earns its cost, guarded by the most objective critic you can build and a lap budget, while everything else ships single-pass.
+And the closing discipline: justify each piece by a requirement, because the difference between architecture and decoration is a reason.</p>
+<p><strong>Red flag if you said:</strong> A sentence with all four patterns in it and no <em>reasons</em>.
+Composition isn’t a checklist of names — every element needs a “because” tied to something in the requirements, or you’ve decorated rather than designed.</p>
+<hr>
+<h3 id="24-for-each-pattern-what-does-it-buy-and-what-does-it-cost"><a class="header" href="#24-for-each-pattern-what-does-it-buy-and-what-does-it-cost">24. For each pattern: what does it buy, and what does it cost?</a></h3>
+<p><strong>The short answer, as you’d say it:</strong> Chaining buys reliability and debuggability and costs stacked latency; routing buys specialist quality and costs a decision tax on every request; parallelization buys latency collapse and costs concurrency complexity — notably not money, which it neither saves nor spends; and reflection buys error-catching before shipping and costs multiplied cost and latency.</p>
+<p><strong>Why this is the answer:</strong> This is the card to redraw from memory the morning of the interview.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Pattern</th><th>One-line trigger</th><th>What it buys</th><th>What it costs</th><th>Signature failure</th></tr>
+</thead>
+<tbody>
+<tr><td>Prompt Chaining</td><td>Distinct stages, each feeding the next</td><td>Reliability, debuggability, tool seams</td><td>Stacked latency, more parts</td><td>Error compounding across steps</td></tr>
+<tr><td>Routing</td><td>Different kinds of requests, one front door</td><td>Specialist quality per category</td><td>A decision tax on every request</td><td>Misrouting; category drift</td></tr>
+<tr><td>Parallelization</td><td>Independent steps, someone waiting</td><td>Latency collapse to the slowest branch</td><td>Concurrency complexity, debugging fog</td><td>Stragglers; rate-limit collisions</td></tr>
+<tr><td>Reflection</td><td>Quality bar higher than a first draft</td><td>Error catching before shipping</td><td>Multiplied cost and latency</td><td>Lenient critic; endless loop</td></tr>
+</tbody>
+</table>
+</div>
+<p>The reason this table is the last thing in Part 1 rather than the first is that the <em>costs</em> column is what separates candidates.
+Anyone can list what a pattern is good for; naming the price unprompted — the latency the chain stacked, the tax the router charges every single request, the money parallelism didn’t save, the multiplier reflection put on the bill — is what marks you as someone who can be trusted to run these things rather than merely someone who read about them.
+So when you finish an answer, say the costs out loud without being asked.
+And when you’re stuck mid-answer, return to dependencies and stakes: “what needs what” chooses between chain and parallel, “what varies” chooses whether routing exists, and “what’s expensive to get wrong” chooses where reflection lives.</p>
+<hr>
+<h2 id="what-to-do-with-your-score"><a class="header" href="#what-to-do-with-your-score">What to do with your score</a></h2>
+<p>Twenty or more answered fluently and you’re interview-ready on these four patterns — spend your remaining time on mock interviews rather than rereading, because at this point the bottleneck is your mouth, not your understanding.
+Fifteen to nineteen means solid foundations with specific gaps, and the thing to notice is <em>which</em> patterns your misses cluster in: a cluster means reread that chapter, while scattered misses just mean redo the quiz tomorrow after some sleep.
+Below fifteen is no shame at all, but don’t move on to Part 2 yet — the later patterns assume these four are automatic, and shaky foundations compound exactly the way chain errors do.</p>
+<p>And whatever you scored, retake this quiz forty-eight hours from now.
+The answers you had to <em>reconstruct</em> rather than <em>recall</em> are precisely the ones that will desert you under interview pressure, and two spaced repetitions is usually what it takes to pin them down for good.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../agentic-design-pattern/04a-part1-wrapup.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../agentic-design-pattern/04c-part2-intro.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../agentic-design-pattern/04a-part1-wrapup.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../agentic-design-pattern/04c-part2-intro.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

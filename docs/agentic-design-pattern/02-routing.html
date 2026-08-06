@@ -1,0 +1,434 @@
+<!DOCTYPE HTML>
+<html lang="en" class="navy sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Pattern 2: Routing - Agentic AI Evaluation — A Practical Guide</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="Frameworks, metrics, benchmarks, tool-use and safety evaluation, and production monitoring for agentic AI systems.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../custom-9222a227.css">
+
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "navy";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-96a8b00f.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-4b3c722b.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('navy')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Agentic AI Evaluation — A Practical Guide</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/ffaisal93/agentic-ai-evaluation-guide" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/ffaisal93/agentic-ai-evaluation-guide/edit/main/./agentic-design-pattern/02-routing.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="pattern-2-routing--the-front-desk-that-sends-each-request-to-the-right-specialist"><a class="header" href="#pattern-2-routing--the-front-desk-that-sends-each-request-to-the-right-specialist">Pattern 2: Routing — the front desk that sends each request to the right specialist</a></h1>
+<h2 id="the-interview-scenario"><a class="header" href="#the-interview-scenario">The interview scenario</a></h2>
+<p>Routing questions sound like these:</p>
+<p>“Design a customer-support assistant for an airline. Users ask about bookings, refunds, baggage rules, flight status — everything. How do you handle that variety?”</p>
+<p>“We’re building an internal AI helper for employees. It should answer HR questions, IT questions, and finance questions, each backed by different systems. Design it.”</p>
+<p>“Design an AI coding assistant that can debug code, explain code, or translate it between languages, depending on what the user pastes in.”</p>
+<p>The tell is <em>heterogeneous input</em>: requests arrive in one front door but belong to genuinely different categories, each needing different tools, different data, or different handling.
+The moment you catch yourself thinking “well, it depends what kind of request it is” — that’s the routing bell ringing.</p>
+<p>What’s being tested here is classification thinking plus honesty about uncertainty.
+The interviewer wants to see whether you’ll decompose the traffic before decomposing the task, whether you can compare decision mechanisms with real tradeoffs instead of defaulting to “the LLM decides,” and — the discriminating detail — what you do when the classifier <em>isn’t sure</em>, because candidates who have an <code>unclear</code> route and a confidence policy read as people who’ve watched a router be wrong in production, and candidates who don’t, don’t.</p>
+<h2 id="what-this-pattern-is-in-plain-words"><a class="header" href="#what-this-pattern-is-in-plain-words">What this pattern is, in plain words</a></h2>
+<p>Routing means putting a decision-maker at the front of your system that looks at each incoming request, figures out what <em>kind</em> of request it is, and sends it down the right specialized path.
+One sentence: it’s a classify-then-dispatch step that turns one rigid pipeline into a small family of specialist pipelines behind a single front door.</p>
+<p>The everyday analogy is a hospital triage nurse.
+Everyone walks into the same emergency room, but the nurse takes one look and directs you: broken arm to X-ray, chest pain straight to cardiology, sniffles to the waiting room.
+The nurse doesn’t treat anyone — the nurse’s entire job is the <em>decision</em> — and the whole hospital works better because each patient reaches someone equipped for their specific problem.</p>
+<p>The problem routing solves is that chaining alone is rigid.
+A chain is one fixed road: great when every input needs the same treatment, hopeless when inputs genuinely differ.
+You <em>could</em> build one mega-pipeline that handles bookings and refunds and baggage in a single flow, but you’d be back to the giant-prompt disease — a jack-of-all-trades that’s mediocre at each, with a prompt that grows more contradictory with every category you bolt on.
+Routing lets each downstream path stay small, focused, and independently testable, and it adds the thing chains lack: <em>conditional</em> behavior — the system reacts to what actually arrived instead of marching through a predetermined sequence.</p>
+<p>And like chaining, this shape is everywhere once you have eyes for it.
+The book’s catalog: virtual assistants and AI tutors interpreting intent before choosing a response strategy — the tutor even routes on <em>performance</em>, picking the next lesson module based on how you did; document and data pipelines classifying incoming emails, tickets, and payloads into the right downstream workflow; multi-tool research systems dispatching each sub-task to the agent best suited for it; and coding assistants detecting language and intent before choosing the debug, explain, or translate path.
+The common thread is a system that stops being a single script and starts being a <em>dispatcher</em> — which, incidentally, is why routing is the gateway to the multi-agent patterns later in the book: a coordinator delegating to specialist agents is routing wearing an organizational chart.</p>
+<h2 id="how-the-design-actually-works"><a class="header" href="#how-the-design-actually-works">How the design actually works</a></h2>
+<p>The anatomy has three parts: a <strong>router</strong> that makes the decision, a set of <strong>handlers</strong> — the specialist paths, each of which might be a single prompt, a whole chain, a tool, or even another agent — and a <strong>default route</strong> for everything the router can’t confidently place.
+The flow: a request lands at the router; the router emits a decision — essentially a label like <code>booking</code>, <code>refund</code>, <code>baggage</code>, or <code>unclear</code>; the orchestrator reads that label and forwards the <em>original request</em>, plus any useful context, to the matching handler; the handler produces the answer.
+The state passed along is simple but worth naming in an interview: the raw request, the router’s decision (with a confidence score if you have one), and any entities extracted along the way — keeping that bundle intact means the specialist never starts from zero and the trace tells you later why the request went where it went.</p>
+<p>Now the design decision interviewers actually probe: <em>how does the router decide?</em>
+The book lays out four options, and you should be able to rattle them off with tradeoffs.</p>
+<p><strong>Rule-based routing</strong>: plain code — if the text contains a booking reference pattern, go to bookings; if the subject line says “invoice,” go to finance.
+Instant, free, perfectly predictable — deterministic, meaning the same input always takes the same path.
+But brittle: rules can’t read nuance, and real users phrase things sideways.</p>
+<p><strong>LLM-based routing</strong>: ask a model directly — “classify this request as booking, refund, baggage, or other; answer with the single word only.”
+Maximally flexible, handles novel phrasing effortlessly, needs zero training data — but every routing decision now costs a model call’s latency and money, and the model can occasionally get creative with its answer, so you must validate its output against the allowed labels and treat anything else as <code>unclear</code>.</p>
+<p><strong>Embedding-based routing</strong>: convert the request into an embedding — a list of numbers that captures the text’s <em>meaning</em>, such that similar meanings produce nearby numbers — and compare it against reference embeddings for each route, picking the closest.
+This is semantic matching without a full model call: faster and cheaper than LLM routing, smarter than rules, though it gives you a similarity score rather than reasoning, and borderline cases need a confidence threshold below which you fall back to something smarter.</p>
+<p><strong>Trained-classifier routing</strong>: collect a few thousand labeled examples — this request was a refund, that one was baggage — and train a small dedicated classification model.
+At runtime it’s fast, cheap, and consistent, with the decision baked into learned weights rather than a prompt; the price is the labeling effort and a retraining loop whenever categories shift.
+A nice detail from the book worth quoting: you can use an LLM <em>offline</em> to generate synthetic training examples for this classifier, so the expensive model does the heavy lifting once, at training time, instead of on every request.</p>
+<p>Side by side, since this comparison is the single most likely probe in a routing interview:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Router type</th><th>Speed / cost</th><th>Handles messy phrasing</th><th>Needs training data</th><th>Best moment to use it</th></tr>
+</thead>
+<tbody>
+<tr><td>Rules (code)</td><td>Instant, free</td><td>Poorly</td><td>No</td><td>Dead-giveaway patterns; day-one short-circuits</td></tr>
+<tr><td>Embedding similarity</td><td>Fast, cheap</td><td>Well</td><td>Just route descriptions</td><td>Many routes, semantic matching, moderate stakes</td></tr>
+<tr><td>Trained classifier</td><td>Fast, cheap at runtime</td><td>Well, within its training</td><td>Yes — thousands of labels</td><td>High volume, stable categories, month two onward</td></tr>
+<tr><td>LLM prompt</td><td>Slowest, priciest per call</td><td>Best</td><td>No</td><td>Day one, long-tail inputs, and as everyone’s fallback</td></tr>
+</tbody>
+</table>
+</div>
+<p>One more structural idea before the failure modes: routing <em>nests</em>.
+A big system rarely has one flat router with twenty labels — accuracy degrades as the label list grows, and the prompt becomes a wall of definitions.
+Instead you route hierarchically, like a phone tree that actually works: a top-level router picks among three or four broad domains — support, sales, account — and each domain has its own small router picking among its handlers.
+Each decision stays easy, each router’s prompt stays short, and adding a new leaf route only retests one small router instead of the whole tree.
+The cost is an extra decision hop on some paths, which is why the top level is the first candidate for graduating to a trained classifier.</p>
+<p>The pragmatic senior-sounding synthesis: start with an LLM router because it ships in an hour with no data, log every routing decision, and once traffic reveals the true distribution, graduate the high-volume routes to a trained classifier or rules, keeping the LLM as the fallback for the weird stuff.
+And note — the book makes this point — routing isn’t only a front-door concern: it can sit mid-chain (“did extraction succeed? if not, branch to the recovery path”) or inside a tool-selection step.
+Anywhere your workflow needs an if-statement powered by understanding, that’s routing.
+Framework-wise: LangGraph models this naturally as a state graph — nodes with conditional edges, which is literally a routing diagram in code — while Google’s ADK does it by <em>delegation</em>: you give a coordinator agent a set of described sub-agents, and the framework’s Auto-Flow matches each request to the right one based on those descriptions.</p>
+<p>Where it breaks — three failure modes to volunteer.
+<strong>Misrouting</strong>: the router sends a refund request to the baggage handler; the specialist, prompted only for baggage, does something confidently useless.
+Mitigations: a confidence threshold below which you ask a clarifying question instead of guessing; an explicit <code>unclear</code> route — never force the router to pick from only “real” categories; and letting a handler <em>bounce</em> a request back when it recognizes a stranger, rather than soldiering on.
+<strong>Ambiguous or multi-intent input</strong>: “cancel my flight and also, where’s my bag?” is legitimately two categories.
+Decide the policy up front: split into two requests, handle the primary and acknowledge the secondary, or ask the user to pick — any is defensible; having no policy is not.
+<strong>Category drift</strong>: the router’s world was designed in January; by June users ask about things no route covers, and they’re all being crammed into <code>other</code> or misrouted.
+Mitigation: monitor the route distribution over time and review a sample of the <code>unclear</code> bucket weekly — the <code>unclear</code> pile is literally your product roadmap telling you which new route to build next.</p>
+<p>When to use routing: the book’s rule of thumb is whenever the agent must choose among multiple distinct workflows, tools, or sub-agents based on the input — triage is the canonical case.
+When not: if 95% of traffic is one category, you don’t need a router; you need one good pipeline and an escape hatch.
+Versus its neighbors: chaining is a fixed sequence, routing is a fork — <em>choose one path of several</em>; parallelization is <em>take several paths at once</em>; and a router picks between different kinds of work, whereas reflection loops back over the same work to improve it.
+Routing plus chaining is the bread-and-butter combo: a router at the front door, a specialist chain behind each door.</p>
+<h2 id="the-complete-interview-answer-spoken"><a class="header" href="#the-complete-interview-answer-spoken">The complete interview answer, spoken</a></h2>
+<p>Here’s the full spoken answer for: <em>“Design a customer-support assistant for an airline — bookings, refunds, baggage, flight status, all of it.”</em></p>
+<p>“Let me scope this first.
+Channel and latency: is this a live chat where someone’s waiting?
+I’ll assume yes — live chat, so responses within a few seconds, which will push me toward cheap fast routing.
+Volume: I’ll assume tens of thousands of chats a day — real scale, so cost per request matters.
+Action surface: can the assistant actually <em>do</em> things — rebook, refund — or only answer questions?
+I’ll assume it can act on bookings and low-value refunds but anything above a threshold escalates to a human, because money plus autonomy is where these systems get dangerous.
+And I’ll assume we have existing systems to integrate: a booking API, a refund API, a policy knowledge base, and a human-agent queue.</p>
+<p>Simplest thing that could work: one prompt — ‘you are a helpful airline assistant’ — with every tool attached and the whole policy manual stuffed into context.
+For a demo, fine.
+At scale it fails predictably: the prompt becomes a junk drawer of conflicting instructions, baggage-policy phrasing bleeds into refund handling, every request pays the token cost of every capability, and I can’t test or improve one skill without risking the others.
+The inputs are genuinely heterogeneous — that’s the signal this is a routing problem.</p>
+<p>So: a router at the front door, four specialist handlers behind it, and a human escalation lane.
+Here’s the whiteboard:</p>
+<pre><code>                      +-----------------+
+   user message ---&gt;  |     ROUTER      |
+                      | (small LLM      |
+                      |  classifier)    |
+                      +-----------------+
+                        |    |    |    \__________
+              booking   | refund  | baggage/policy \  unclear/
+                        |    |    |                 \  low-conf
+                        v    v    v                  v
+                   +------+ +------+ +---------+  +-----------+
+                   |Book- | |Refund| | Policy  |  | Clarify or|
+                   |ing   | |chain | | Q&amp;A     |  | human     |
+                   |chain | |+human| | (RAG)   |  | handoff   |
+                   |+tools| | gate | |         |  |           |
+                   +------+ +------+ +---------+  +-----------+
+                        \      |       /              |
+                         v     v      v               v
+                          reply to user          human agent
+</code></pre>
+<p>The flow: a message arrives, and the router — I’d start with a small fast LLM given a tightly constrained prompt: ‘classify into booking, refund, baggage_policy, flight_status, or unclear; output only the label’ — makes the call in a few hundred milliseconds.
+My orchestrator validates that the output is actually one of the allowed labels — if the model returns anything creative, that’s treated as <code>unclear</code>, never a crash.
+Then the original message, the label, and the customer’s context — their identity, their upcoming trips pulled from the booking system — get handed to the specialist.</p>
+<p>Each specialist is its own small, boring, testable thing.
+The booking handler is a short chain with the booking API as a tool.
+The refund handler is a chain with a hard code-level gate: refunds above a threshold require human approval regardless of what the model thinks — that’s a guardrail, not a suggestion.
+The baggage-and-policy handler is retrieval-based: it looks up the actual policy documents and answers <em>from</em> them, so policy answers are grounded in the real text rather than the model’s memory.
+Flight status is barely AI at all — extract the flight number, call the status API, template the answer; cheap and instant.
+And <code>unclear</code> is a first-class route, not an error: low router confidence or genuinely weird requests get one clarifying question, and if that doesn’t resolve it, a warm handoff to a human with the full conversation attached.</p>
+<p>Why LLM routing rather than rules or a trained classifier?
+Sequencing, honestly.
+Day one, I have no labeled data, so an LLM router ships immediately and handles messy phrasing well.
+But I log every decision, and after a month I have tens of thousands of examples — at which point I’d train a small dedicated classifier for the head of the distribution, because at our volume, shaving a few hundred milliseconds and most of the routing cost off every single request is real money and real snappiness.
+I’d keep the LLM router as the fallback tier for whatever the classifier isn’t confident about, and cheap regex-style rules can pre-empt both for dead-giveaway cases like a message that’s just a flight number.
+Router as a funnel: rules, then classifier, then LLM — cheapest adequate decider wins.</p>
+<p>Failure modes, before you ask.
+Misrouting is the big one — a refund question sent to the booking handler.
+Three defenses: the confidence threshold routes doubt to clarification instead of a guess; handlers are prompted to recognize out-of-scope requests and bounce them back to the router once — with a loop counter so a request can’t ping-pong forever, two bounces and it goes to a human; and I track misroutes explicitly as a metric, measured on a labeled sample every week.
+Multi-intent messages — ‘cancel my flight and where’s my bag’ — get a policy: handle the primary intent, explicitly acknowledge the second, offer to do it next; users forgive sequencing, they don’t forgive being half-ignored.
+Category drift: six months in, users will ask about things my routes don’t cover — new products, new policies.
+The route distribution dashboard and a weekly review of the <code>unclear</code> bucket catch that; when a new cluster shows up in <code>unclear</code>, that’s my signal to build route number six.
+And the platform failures: the router itself times out — after two seconds I skip it and drop to keyword rules plus a generalist prompt, degraded but alive; a downstream API is down — the handler says so honestly and offers the human queue, rather than hallucinating a flight status.</p>
+<p>Evaluation.
+The lovely thing about routing is that the core decision is just classification, which is crisply measurable: I’d maintain a labeled test set of a thousand-odd real messages and track routing accuracy — overall and per class, because the confusion between specific pairs, like refund-versus-booking, is where the pain concentrates.
+I want that north of, say, 97% before I trust automation with money.
+Each handler then gets its own eval — resolution rate, grounding accuracy for the policy bot — which routing makes possible in the first place, because each skill is now an independently testable unit.
+In production: route distribution over time, per-route escalation rate, end-to-end resolution rate — the fraction of chats resolved with no human — CSAT if we have it, p95 latency per route, and cost per conversation, all on one dashboard, with traces on every conversation so any complaint can be replayed step by step.</p>
+<p>Cost.
+The router is a few hundred tokens on a small model — a fraction of a cent — and most handlers similarly; the expensive routes are the retrieval-heavy policy answers.
+Blended, well under a cent per message, a few cents per conversation — versus several dollars for a human-handled contact, so every percentage point of automated resolution pays for the whole system many times over.
+Under a one-week deadline: ship the router plus the two highest-volume routes — flight status and baggage Q&amp;A, which are also the safest — and route <em>everything else</em> to humans.
+One wrinkle worth naming before I close: conversations have turns, and the router runs on every turn — but not statelessly.
+Turn two of a refund conversation shouldn’t be re-triaged from scratch; the router sees the active route as context and applies stickiness — stay with the refund handler unless the user has clearly changed subjects — because re-classifying ‘yes, that one’ with no context is how mid-conversation misroutes happen.
+Topic switches are then an explicit, logged event: close out the old route’s state, open the new one, and tell the user what’s happening — ‘I’ll come back to the refund after we find your bag.’</p>
+<p>That’s the beauty of this pattern: the routes you haven’t built yet just fall through to people, so you can launch a third of the system and it’s still honest.“</p>
+<h2 id="follow-ups-they-will-ask"><a class="header" href="#follow-ups-they-will-ask">Follow-ups they will ask</a></h2>
+<p><strong>“What exactly happens when the router is wrong?”</strong>
+“Depends where it’s caught.
+Best case, the handler notices — it’s prompted to check scope — and bounces the request back with a ‘not mine’ signal; the router re-decides with that exclusion, capped at two bounces before a human takes it.
+Worst case nobody notices and the user gets a useless answer — which is why I measure misroute rate on labeled samples rather than assuming silence means success, and why the confusion between specific route pairs drives my prompt and threshold tuning.”</p>
+<p><strong>“LLM router, embeddings, rules, or a trained classifier — pick one and defend it.”</strong>
+“I refuse the premise slightly: it’s a lifecycle, not a pick.
+LLM router first — zero data needed, ships today, great with messy language.
+Its logs become training data; a small trained classifier then takes the high-volume head for speed and cost; trivial rules pre-empt both for unambiguous patterns.
+Cheapest adequate decider at each tier, LLM as the safety net.
+If forced to run exactly one forever at high volume, I’d take the trained classifier and pay the labeling cost.”</p>
+<p><strong>“A message contains two different requests. What does your system do?”</strong>
+“Policy, decided in advance: the router flags multi-intent, the system handles the primary — the one with urgency or money attached — and explicitly says ‘I see you also asked about X; want me to do that next?’
+Splitting into two parallel handler runs is also viable and I’d consider it once the basics are solid, but acknowledged sequencing is simpler and users respond well to it.
+The unacceptable option is silently answering half the message.”</p>
+<p><strong>“How do you add a new category without breaking the existing ones?”</strong>
+“This is routing’s best feature.
+The new handler gets built and tested in isolation against its own eval set.
+Adding it to the router is one new label — I re-run the full routing test set to check the newcomer didn’t steal traffic from existing routes, since classification boundaries shift when a class is added.
+Then a canary rollout: the new route live for a small slice of traffic, watched, then ramped.
+The old handlers’ code never changed.”</p>
+<p><strong>“Doesn’t the router add latency to every single request?”</strong>
+“Yes — it’s a tax, and I’d size it honestly: a small-model call is a few hundred milliseconds.
+I’d claw it back three ways: rules short-circuit the obvious cases for free; a trained classifier eventually makes the common case near-instant; and the router’s decision can overlap with fetching the customer’s context, since those are independent — a small dose of parallelization inside the routing step itself.
+The tax buys specialist quality everywhere downstream; that trade is almost always worth it.”</p>
+<p><strong>“Where else besides the front door would you put routing?”</strong>
+“Anywhere the workflow needs a decision.
+Mid-chain: after extraction, route on whether it succeeded — clean data proceeds, ambiguous data detours to a recovery step, garbage goes to a human.
+Tool selection: choosing which of several APIs answers a question is a routing decision.
+Even escalation is routing — ‘model handles it versus human handles it’ is the single most important fork in the whole system, and I want it explicit and measured, not implicit in a prompt.”</p>
+<p><strong>“How do you set the confidence threshold for the <code>unclear</code> route?”</strong>
+“Empirically, from the cost asymmetry of the two mistakes.
+Routing when unsure risks a misroute — a confidently wrong answer, which for an airline handling money is expensive; clarifying when actually sure costs one extra user turn — mildly annoying, cheap.
+So I’d plot, on my labeled set, misroute rate versus clarification rate at different thresholds, and pick the point where the next bit of safety costs too much friction — for money-touching routes I’d sit conservative, clarifying maybe 10% of the time; for the flight-status route, aggressive, because a wrong guess there is trivially corrected.
+Per-route thresholds, in other words — one global number is a smell, because it pretends all mistakes cost the same.”</p>
+<p><strong>“Isn’t the router a single point of failure? Everything flows through it.”</strong>
+“Structurally yes — every request crosses that one component, so it deserves the most protective engineering in the system.
+Concretely: the router gets the tightest timeout, with a degraded fallback behind it — keyword rules plus a generalist prompt — so router trouble means worse routing, never no service.
+Its output is validated against the allowed label set, so a malformed answer can’t crash the dispatch logic.
+It’s the first thing I’d put a canary on when changing prompts or models, because a routing regression damages every route at once.
+And it’s the best-instrumented component I own — if route distribution shifts suddenly, I want the alert within minutes, because that’s either a router bug or the users changed, and both are urgent news.”</p>
+<h2 id="how-the-other-scenarios-morph"><a class="header" href="#how-the-other-scenarios-morph">How the other scenarios morph</a></h2>
+<p>The internal employee-helper question — HR, IT, finance — is the airline answer with the nouns swapped and one twist worth voicing: the domains have different <em>privacy</em> postures, so the router’s label also selects which systems the handler may touch, and misrouting isn’t just a wrong answer, it’s potentially an HR question answered with access to finance data — say that out loud and you’ve turned a triage question into a security answer.
+The coding-assistant question — debug, explain, translate — moves the router’s evidence from words to <em>artifacts</em>: the pasted code’s language is detectable by cheap deterministic means, so rules carry more weight, and the intent (fix versus explain) comes from the surrounding message; it’s also the cleanest example of the book’s point that routing selects <em>tools</em>, not just conversation paths.
+In both cases the skeleton is untouched: one front door, a labeled fork, specialists behind each label, an honest <code>unclear</code> lane, and metrics on the fork itself.</p>
+<h2 id="say-it-in-one-breath"><a class="header" href="#say-it-in-one-breath">Say it in one breath</a></h2>
+<p>Routing puts a classify-then-dispatch decision at the front of the system: a router — rules, embeddings, a trained classifier, or an LLM — labels each incoming request and sends it to a specialist handler, with an explicit <code>unclear</code> route falling back to clarification or a human.
+It exists because heterogeneous traffic through one generalist pipeline means mediocrity everywhere, while specialists stay small, testable, and independently improvable.
+Watch for misrouting, have a multi-intent policy, review the <code>unclear</code> bucket for category drift — and remember the pragmatic lifecycle: LLM router first, graduate the high-volume head to a classifier, rules for the giveaways.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../agentic-design-pattern/01-prompt-chaining.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../agentic-design-pattern/03-parallelization.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../agentic-design-pattern/01-prompt-chaining.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../agentic-design-pattern/03-parallelization.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

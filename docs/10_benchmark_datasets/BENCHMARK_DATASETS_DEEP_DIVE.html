@@ -1,0 +1,1243 @@
+<!DOCTYPE HTML>
+<html lang="en" class="navy sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Benchmark Datasets Deep Dive - Agentic AI Evaluation — A Practical Guide</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="Frameworks, metrics, benchmarks, tool-use and safety evaluation, and production monitoring for agentic AI systems.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../custom-9222a227.css">
+
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "navy";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-96a8b00f.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-4b3c722b.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('navy')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Agentic AI Evaluation — A Practical Guide</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/ffaisal93/agentic-ai-evaluation-guide" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/ffaisal93/agentic-ai-evaluation-guide/edit/main/./10_benchmark_datasets/BENCHMARK_DATASETS_DEEP_DIVE.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="benchmark-datasets-for-agent-evaluation"><a class="header" href="#benchmark-datasets-for-agent-evaluation">Benchmark Datasets for Agent Evaluation</a></h1>
+<blockquote>
+<p><strong>Why this matters.</strong> Your evaluation is only as good as its data. You can build the most careful harness, the most rigorous metrics, and the most beautiful dashboards — and if the underlying tasks are ambiguous, mislabeled, too easy, or already sitting in your model’s pretraining corpus, every number you report is fiction. This chapter is deliberately <em>not</em> about metrics (that is Chapter 3). It is about the <strong>data</strong>: how to use standard benchmarks without fooling yourself, how to build a custom benchmark for your own agent and domain, how to prove the dataset is actually good (coverage, calibration, label correctness, inter-annotator agreement), how to keep it out of the training set, when synthetic data helps and when it lies, and how to version, license, and document what you ship. By the end you should be able to (a) <em>build and validate</em> an agent eval dataset end to end with runnable code; (b) <em>reason about</em> the failure modes that silently inflate benchmark scores; and (c) <em>convince a senior interviewer</em> that you understand data quality at the level the 2025–2026 frontier demands.</p>
+</blockquote>
+<blockquote>
+<p><strong>How to read this chapter.</strong> Sections 1–2 build intuition and anatomy. The <strong>2025–2026 landscape</strong> section (right after) is the “what does the field actually do today” briefing — read it before an interview. Sections 3–9 are the mechanics: using standard benchmarks, building your own, measuring agreement, fighting contamination, synthetic data, worked code, and documentation. The <strong>Build it in practice</strong> toolkit gives you a runnable dataset-QA harness. <strong>Production case studies &amp; war stories</strong> shows what goes wrong at scale. <strong>Interview mastery</strong> is the drill sheet. Everything is cross-referenced so you can jump.</p>
+</blockquote>
+<hr>
+<h2 id="1-core-intuition-the-dataset-is-the-ruler"><a class="header" href="#1-core-intuition-the-dataset-is-the-ruler">1. Core intuition: the dataset is the ruler</a></h2>
+<p>A benchmark dataset is a <strong>measuring instrument</strong>. When you report “our agent scores 71%,” you are reading a number off a ruler. If the ruler’s tick marks are unevenly spaced (difficulty not calibrated), some marks are in the wrong place (bad labels), or the ruler has been photographed and memorized by the thing you are measuring (contamination), the reading is meaningless — no matter how precisely you read it.</p>
+<p>The metric is the <em>reading device</em>; the dataset is the <em>ruler itself</em>. Chapter 3 sharpens the reading device (pass@k, confidence intervals, judge calibration). This chapter makes sure the ruler is straight. The two failures are independent: a perfectly calibrated metric on a contaminated dataset produces a confidently wrong number, and that is worse than an honestly noisy one, because it <em>looks</em> trustworthy.</p>
+<p>Three intuitions carry the whole chapter:</p>
+<ol>
+<li><strong>Garbage tasks beat good models.</strong> A single ambiguous task with a wrong golden answer can flip a leaderboard ranking. SWE-bench’s original test set had tasks where the hidden unit tests rejected <em>correct</em> patches; OpenAI found this affected a majority of samples (§2.2, §4). If your data is noisy, you are ranking noise. This is not a metaphor: Northcutt et al. showed that correcting a 6% label-error slice in ImageNet is enough to flip the ResNet-50-beats-ResNet-18 ordering (see Production war stories). The data, not the model, decided the ranking.</li>
+<li><strong>A benchmark answers exactly one question, and you must know which.</strong> “Can the agent book a flight?” and “Can the agent book a flight <em>reliably across 8 tries under an adversarial user</em>?” are different questions requiring different data. τ-bench exists because the second question needs multi-trial tasks with state-based checks, not single-shot Q&amp;A. Before you touch a dataset, write down the exact sentence it answers. If you cannot, you are not ready to score anything.</li>
+<li><strong>Every public benchmark is decaying the moment it is published.</strong> The internet ingests it, the next pretraining run swallows it, and contamination silently inflates scores. A good data strategy plans for this from day one with held-out and canary sets. In 2024–2026 this decay went from a footnote to a first-class design constraint: LiveCodeBench, LiveBench, and GAIA’s private split all exist <em>specifically</em> to route around it.</li>
+</ol>
+<p>A fourth intuition worth internalizing before interviews: <strong>a dataset is a claim about a distribution.</strong> Every task you include is an implicit assertion that “this is the kind of thing our agent will face, and this is what success looks like.” When the claim is wrong — because you sampled the easy tail, or invented tasks a real user never asks, or annotated the gold answer by intuition — the benchmark measures a world your agent will never inhabit. Coverage, difficulty calibration, and provenance are all just ways of making that distributional claim honest.</p>
+<hr>
+<h2 id="2-anatomy-of-a-good-benchmark-dataset"><a class="header" href="#2-anatomy-of-a-good-benchmark-dataset">2. Anatomy of a good benchmark dataset</a></h2>
+<p>Whether you use one off the shelf or build your own, a benchmark dataset has the same load-bearing parts. If any are missing, be suspicious.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Component</th><th>What it is</th><th>Why it matters</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Task instances</strong></td><td>The individual problems the agent must solve (a GitHub issue, a customer request, a web goal)</td><td>These <em>are</em> the benchmark; everything else supports them</td></tr>
+<tr><td><strong>Ground truth</strong></td><td>The correct answer, final state, or reference trajectory</td><td>Determines what “success” means; the #1 source of silent error</td></tr>
+<tr><td><strong>Verifier / scorer</strong></td><td>The mechanism that decides pass/fail (unit tests, state diff, exact match, LLM judge)</td><td>A benchmark is task + verifier; a task with no reliable verifier is not a benchmark</td></tr>
+<tr><td><strong>Difficulty spread</strong></td><td>A range from easy to hard, ideally with labeled tiers</td><td>Flat difficulty gives no signal; you need discrimination across systems</td></tr>
+<tr><td><strong>Metadata</strong></td><td>Per-task tags: domain, tools required, length, source, license, creation date</td><td>Enables slicing, contamination checks, and honest reporting</td></tr>
+<tr><td><strong>Splits</strong></td><td>Public/dev vs. held-out/private vs. canary</td><td>Lets you develop without overfitting and detect leakage</td></tr>
+<tr><td><strong>Datasheet</strong></td><td>Human-readable documentation of provenance, collection, and intended use</td><td>The difference between a dataset and a pile of JSON</td></tr>
+</tbody>
+</table>
+</div>
+<p>The single most useful reframe: <strong>a benchmark is not the tasks, it is the pair (tasks, verifier).</strong> Two teams shipping “the same” 500 GitHub issues but with different test harnesses have built two different rulers that will disagree. When you cite a benchmark you are implicitly citing its verifier and its harness; when you build one, the verifier is where most of your engineering — and most of your bugs — will live (§4, Step 3).</p>
+<h3 id="21-what-ground-truth-looks-like-for-agents"><a class="header" href="#21-what-ground-truth-looks-like-for-agents">2.1 What ground truth looks like for agents</a></h3>
+<p>For agents, “ground truth” is rarely a single string. It comes in three common shapes:</p>
+<ul>
+<li><strong>Outcome / state-based</strong> (τ-bench, WebArena): success = the final world state matches an annotated goal state (the DB row was updated, the item is in the cart). Robust to <em>how</em> the agent got there. Requires an executable environment.</li>
+<li><strong>Reference-answer</strong> (GAIA): success = the agent’s final answer matches a single unambiguous gold answer under quasi-exact match. Cheap to score, but only works when the answer is short and unique.</li>
+<li><strong>Reference-trajectory / test-based</strong> (SWE-bench): success = the agent’s artifact (a code patch) makes a set of <code>FAIL_TO_PASS</code> and <code>PASS_TO_PASS</code> tests go green. Verifiable and objective, but only as fair as the tests.</li>
+</ul>
+<blockquote>
+<p>Rule of thumb: prefer <em>executable</em> ground truth (tests, state diffs) over <em>judged</em> ground truth (LLM-as-judge, human rubric) whenever the domain allows it. Executable checks do not drift, do not have mood, and cost nothing to re-run.</p>
+</blockquote>
+<p>There is a fourth, increasingly common shape you should be able to name: <strong>rubric / judged ground truth</strong>, where a human rubric or an LLM-as-judge scores an open-ended response (a research report, a chat turn, a design doc). It is unavoidable when the output space is too large for an exact match and there is no executable world to diff — but it is the <em>most</em> fragile, because the “ground truth” now lives in a prompt or a rubric that can drift, disagree with itself, and be gamed. When you must use it, pin the judge model version, hold out a human-labeled calibration slice, and report judge–human agreement as its own kappa (Chapter 3 covers judge calibration; this chapter covers the <em>data</em> side — the rubric and the calibration set are dataset artifacts you must version). A defensible hierarchy of ground truth, best to worst: <strong>executable state diff &gt; passing tests &gt; exact/normalized answer match &gt; human rubric &gt; single LLM judge with no calibration.</strong> Climb as high as your domain allows.</p>
+<h3 id="22-case-studies-how-the-majors-built-their-data"><a class="header" href="#22-case-studies-how-the-majors-built-their-data">2.2 Case studies: how the majors built their data</a></h3>
+<p><strong>SWE-bench Verified</strong> — the canonical lesson in why data quality dominates. The original SWE-bench scraped real GitHub issues + PRs from popular Python repos and used the PR’s tests as the verifier. But OpenAI, working with the SWE-bench authors, had <strong>93 experienced Python developers</strong> manually screen <strong>1,699</strong> randomly sampled instances, producing a filtered set of <strong>500</strong> (“Verified”). They rated two failure modes on a 0–3 severity scale: <strong>underspecified problem statements</strong> (found in ~38% of samples) and <strong>unit tests that would reject a valid solution</strong> (~61%). Each sample was independently annotated by <strong>3 developers</strong>, ensembled by taking the <em>highest</em> severity label (conservative — bias toward exclusion). GPT-4o jumped from ~16% on the original set to ~33% on Verified — the same model, a cleaner ruler. (<a href="https://openai.com/index/introducing-swe-bench-verified/">OpenAI</a>, <a href="https://huggingface.co/datasets/SWE-bench/SWE-bench_Verified">dataset</a>)</p>
+<p>The deeper lesson is <em>what they measured to earn the label</em>. They did not just eyeball tasks; they defined an explicit <strong>annotation rubric</strong> (is the issue text sufficient to know what “fixed” means? do the <code>FAIL_TO_PASS</code> tests actually encode the issue, or do they over-specify implementation details a valid patch might legitimately differ on?), ran it past multiple annotators, and treated the <em>dataset construction as the experiment</em>. That is the posture to copy: your dataset build has a protocol, a rubric, annotators, an agreement number, and an errata process, exactly like a small research paper.</p>
+<p><strong>GAIA</strong> — <strong>466</strong> questions that are “conceptually simple for humans yet challenging for advanced AIs,” designed so that <strong>humans score ~92%</strong> while GPT-4 with plugins scored <strong>~15%</strong>. Three difficulty <strong>levels</strong> by the number of steps and tools required: Level 1 (few steps, at most one tool), Level 2 (several steps, multiple tools), Level 3 (long open-ended tool use). Each question has a <strong>single unambiguous answer</strong> graded by quasi-exact match, and 300 answers are held private for the leaderboard. The design philosophy is a deliberate inversion of “make it harder for humans.” (<a href="https://arxiv.org/abs/2311.12983">arXiv</a>)</p>
+<p>GAIA’s authoring discipline is the part interviewers probe: questions were <strong>hand-written by humans</strong>, then each was constrained to have <em>one</em> correct, non-gameable, order-invariant answer that a search engine cannot return directly — the authors deliberately avoided questions whose answer is a single web lookup, because those measure retrieval, not assistant capability. The “conceptually simple for humans” criterion is a <strong>validity gate</strong>: if a smart human with a browser cannot solve it in a reasonable time, the task is probably ambiguous or wrong, not “hard.” Human ceiling ~92% (not 100%) is itself a signal — it tells you the residual ambiguity in the set and puts a realistic cap on what any agent can score.</p>
+<p><strong>τ-bench</strong> — tasks in <strong>retail</strong> and <strong>airline</strong> domains where a language agent talks to an <strong>LLM-simulated user</strong> while calling domain APIs under written policy. Success is scored by <strong>comparing the final database state to an annotated goal state</strong> — objective, no judge. It introduced <strong>pass^k</strong> (the probability all k independent trials of a task succeed) to measure <em>reliability</em>, not just average success; even strong models fell below 25% pass^8 in retail. Task authoring bundles a database schema, an API/tool set, a policy document, and per-task goal states. (<a href="https://arxiv.org/abs/2406.12045">arXiv</a>, <a href="https://github.com/sierra-research/tau2-bench">Sierra</a>)</p>
+<p>τ-bench (and its 2025 successor <strong>τ²-bench</strong>, which adds a “dual-control” setting where the user can also act on the environment) shows how to author a <em>stateful</em> agent benchmark: you do not write a question and an answer, you write a <strong>world</strong> (schema + seed data), a <strong>contract</strong> (the policy document the agent must obey), a <strong>tool surface</strong> (the APIs), and a <strong>goal predicate</strong> (the DB state that counts as done). Every one of those is a versioned artifact. The user is <em>simulated by an LLM</em> so trials are reproducible and cheap, but that introduces a second-order data question the authors had to answer: is the simulated user faithful and consistent enough that the task’s difficulty comes from the domain and not from a flaky user? Pinning the user-simulator model and prompt is part of the dataset spec.</p>
+<p><strong>WebArena</strong> — <strong>812</strong> tasks over <strong>self-hostable, reproducible</strong> web apps (a fork of GitLab, a Reddit-like forum, an e-commerce CMS, a wiki). Because the sites are self-hosted and deterministic, evaluation uses <strong>functional correctness</strong> — programmatic checks on the resulting page/DB state or exact information match — rather than screenshots. The reproducible environment <em>is</em> the ground truth. (<a href="https://arxiv.org/pdf/2307.13854">arXiv</a>, <a href="https://github.com/web-arena-x/webarena">repo</a>)</p>
+<p>WebArena’s move — ship the <em>environment</em>, not screenshots — is the deepest data idea in agent evals: when the world is deterministic and self-hostable, the world itself becomes the golden reference and you never have to annotate “what the page should look like.” The cost is operational (you host a small internet), but the payoff is a verifier that cannot drift and tasks that cannot be solved by memorized text, only by <em>doing</em>.</p>
+<p>The pattern across all four: <strong>objective, executable verifiers + explicit human quality control + difficulty tiers + a plan for contamination.</strong> Copy that pattern. Notice what they share: none of them trusts a single string label produced by intuition, all of them either execute or exact-match, all of them did explicit human validation, and the strongest ones (GAIA, LiveCodeBench, τ-bench) built contamination resistance into the <em>distribution</em> (private answers, time-sliced problems, LLM-simulated users) rather than bolting it on afterward.</p>
+<hr>
+<h2 id="3-the-20252026-landscape-how-todays-agent-datasets-are-actually-built-and-validated"><a class="header" href="#3-the-20252026-landscape-how-todays-agent-datasets-are-actually-built-and-validated">3. The 2025–2026 landscape: how today’s agent datasets are actually built and validated</a></h2>
+<p>If you walk into a senior interview in 2026 and describe benchmark construction the way papers did in 2021 — scrape, split, publish — you will sound a generation behind. The field has converged on a set of practices in response to three pressures: <strong>frontier models saturate static benchmarks within months</strong>, <strong>contamination is now assumed rather than feared</strong>, and <strong>agents need stateful, executable, multi-trial tasks</strong> that a Q&amp;A pair cannot express. This section is the briefing on what “good” looks like right now.</p>
+<h3 id="31-human-validation-pipelines-are-now-standard-not-exceptional"><a class="header" href="#31-human-validation-pipelines-are-now-standard-not-exceptional">3.1 Human-validation pipelines are now standard, not exceptional</a></h3>
+<p>SWE-bench Verified (Aug 2024) made <strong>human validation of a scraped benchmark a mandatory step</strong>, and the field internalized it. The recipe that is now considered table stakes:</p>
+<ol>
+<li><strong>Over-sample</strong> the raw source (SWE-bench: 1,699 instances to yield 500).</li>
+<li><strong>Write an explicit rubric</strong> with named failure categories and a severity scale (0–3), not a thumbs-up/down.</li>
+<li><strong>Triple-annotate</strong> every instance with independent experts.</li>
+<li><strong>Ensemble conservatively</strong> — take the <em>worst</em> severity across annotators so a single credible objection removes a task.</li>
+<li><strong>Report the agreement</strong> and the fraction removed, so downstream users can see how noisy the raw source was.</li>
+</ol>
+<p>The number that should stick with you: on the <em>original</em> SWE-bench, roughly <strong>38%</strong> of sampled tasks were underspecified and roughly <strong>61%</strong> had tests that could reject a valid patch. Those are not edge cases; that is the <em>majority</em> of a widely cited benchmark. The 2025 follow-up “Are ‘Solved Issues’ in SWE-bench Really Solved Correctly?” pushed further, showing that even <em>passing</em> patches are often not genuine fixes — the tests pass but the patch is wrong — which means an executable verifier is necessary but not sufficient. (<a href="https://openai.com/index/introducing-swe-bench-verified/">SWE-bench Verified — OpenAI</a>, <a href="https://arxiv.org/html/2503.15223v1">arXiv 2503.15223</a>)</p>
+<h3 id="32-gaia-and-τ-bench-authoring-for-validity-and-reliability"><a class="header" href="#32-gaia-and-τ-bench-authoring-for-validity-and-reliability">3.2 GAIA and τ-bench: authoring for validity and reliability</a></h3>
+<p>The 2023–2025 wave of <em>agent</em> benchmarks shifted the authoring center of gravity from “collect and label” to “design a world and a validity gate.”</p>
+<ul>
+<li><strong>GAIA (Meta, arXiv 2311.12983, Nov 2023)</strong> hand-authored 466 questions under a strict validity constraint: <strong>one unambiguous, order-invariant answer that cannot be returned by a single search</strong>, and a human ceiling near 92%. The private-answer split (300 held back) is the contamination defense baked into the release. (<a href="https://arxiv.org/abs/2311.12983">arXiv</a>, <a href="https://huggingface.co/datasets/gaia-benchmark/GAIA">dataset</a>)</li>
+<li><strong>τ-bench / τ²-bench (Sierra, arXiv 2406.12045, Jun 2024; τ² in 2025)</strong> authored <em>stateful worlds</em> — schema, seed DB, policy doc, tool APIs, goal-state predicate — and scored by <strong>database-state equality</strong>, then introduced <strong>pass^k</strong> so the benchmark measures reliability, not just average success. The LLM-simulated user is pinned as part of the spec. (<a href="https://arxiv.org/abs/2406.12045">arXiv</a>, <a href="https://github.com/sierra-research/tau2-bench">repo</a>)</li>
+</ul>
+<p>The through-line: modern agent authoring produces <strong>executable artifacts with an explicit validity gate</strong>, not string labels. If your custom benchmark is a spreadsheet of prompts and expected answers, you are building 2021’s ruler.</p>
+<h3 id="33-living--contamination-aware-benchmarks"><a class="header" href="#33-living--contamination-aware-benchmarks">3.3 Living / contamination-aware benchmarks</a></h3>
+<p>Because static benchmarks decay, the strongest 2024–2026 benchmarks are <strong>living</strong>: they add fresh tasks on a schedule and expose <em>creation dates</em> so you can score only post-cutoff items.</p>
+<ul>
+<li><strong>LiveCodeBench (arXiv 2403.07974, Mar 2024)</strong> continuously collects new competitive-programming problems from LeetCode, AtCoder, and Codeforces <strong>with release timestamps</strong>, so you can evaluate a model <em>only</em> on problems published after its training cutoff — a clean, built-in contamination control. It also evaluates <em>holistically</em> (self-repair, test output prediction, execution), not just pass@1. (<a href="https://livecodebench.github.io/">livecodebench.github.io</a>, <a href="https://arxiv.org/abs/2403.07974">arXiv</a>)</li>
+<li><strong>LiveBench (arXiv 2406.19314, 2024, updated through 2025)</strong> releases new questions monthly across math, coding, reasoning, and data, with objective ground-truth scoring and a rolling refresh so saturated categories get replaced. (<a href="https://github.com/livebench/livebench">github.com/livebench/livebench</a>)</li>
+<li><strong>GSM1k (Scale AI, arXiv 2405.00332, May 2024)</strong> is a one-shot version of the same idea: rebuild a saturated benchmark (GSM8k) from scratch, held private, to measure the <em>overfitting gap</em>. It found accuracy drops of up to ~8% on some model families and a Spearman correlation (r² ≈ 0.36) between a model’s probability of <em>generating</em> GSM8k examples and its GSM8k→GSM1k performance drop — a memorization fingerprint. (<a href="https://arxiv.org/abs/2405.00332">arXiv</a>)</li>
+</ul>
+<p>The design principle: <strong>make time a first-class dimension of the dataset.</strong> Timestamped tasks turn “is this contaminated?” from a forensic guess into a slicing operation.</p>
+<h3 id="34-contamination-detection-has-matured-into-a-toolkit"><a class="header" href="#34-contamination-detection-has-matured-into-a-toolkit">3.4 Contamination detection has matured into a toolkit</a></h3>
+<p>By 2026 contamination detection is a named subfield with three families of method, each with different access requirements (full mechanics in §7; here is the landscape):</p>
+<ul>
+<li><strong>Surface overlap</strong> — n-gram / substring matching between test items and any available training corpus. Cheap, catches direct copies, blind to paraphrase. Scaled with MinHash/LSH and Bloom filters.</li>
+<li><strong>Canary strings</strong> — a unique GUID embedded in the dataset (the <strong>BIG-bench canary</strong> convention, 2022) that trainers are asked to exclude and evaluators can later probe for. It does not prevent ingestion; it makes ingestion <em>detectable and filterable</em>. (<a href="https://github.com/google/BIG-bench">BIG-bench</a>)</li>
+<li><strong>Membership inference / memorization probes</strong> — statistical tests on the model itself. <strong>Min-K% Prob (Detecting Pretraining Data, arXiv 2310.16789)</strong> flags text whose k% least-likely tokens are anomalously <em>not</em> low-probability, a signature of memorization; <strong>Min-K%++ (arXiv 2404.02936, ICLR’25)</strong> improves the baseline. Guided/quiz prompting and perturbation probing are the black-box cousins. (<a href="https://arxiv.org/abs/2310.16789">arXiv 2310.16789</a>, <a href="https://arxiv.org/html/2404.02936v2">Min-K%++</a>, <a href="https://arxiv.org/html/2502.14425v2">survey arXiv 2502.14425</a>)</li>
+</ul>
+<p>The senior-level nuance: <strong>no single method is proof.</strong> N-gram overlap has false negatives (paraphrase) and false positives (common boilerplate); membership-inference methods have modest AUC on modern large models and are sensitive to distribution shift between “member” and “non-member” probe sets. You <em>triangulate</em> — surface overlap + a recency cliff + a memorization probe agreeing is a case; any one alone is a hint.</p>
+<h3 id="35-synthetic-data-for-evals-from-novelty-to-normal-with-guardrails"><a class="header" href="#35-synthetic-data-for-evals-from-novelty-to-normal-with-guardrails">3.5 Synthetic data for evals: from novelty to normal, with guardrails</a></h3>
+<p>Synthetic task generation (see §8) went mainstream because frontier models can now author plausible tasks cheaply. The 2025–2026 consensus is <em>not</em> “generate your benchmark”; it is “<strong>generate candidates, then verify and human-filter</strong>.” The durable recipe traces to <strong>Self-Instruct (arXiv 2212.10560)</strong>: seed with human tasks, over-generate, then filter hard for validity and diversity. What changed by 2026:</p>
+<ul>
+<li><strong>Generator ≠ evaluatee, always.</strong> Using model X to author tasks you then use to grade model X (or its siblings) measures agreement with X’s priors, not capability. Teams now use a <em>stronger, different</em> generator and disclose it.</li>
+<li><strong>Verifier-in-the-loop generation.</strong> The strongest pipelines only keep a synthetic task if an <em>independent executable verifier</em> confirms the gold answer (e.g., generate a coding task, then require reference tests to actually pass on a reference solution). Unverified LLM “gold” labels are treated as radioactive.</li>
+<li><strong>Synthetic stays a labeled minority.</strong> It fills coverage gaps (rare, adversarial, privacy-sensitive cases) on top of a real-data core; the synthetic fraction is <em>reported</em>, not hidden.</li>
+<li><strong>Persona / scenario expansion</strong> for user-facing agents (parameterize a validated task family across personas, locales, edge policies) is now a standard coverage tool — but each expanded task still passes the same validity gate.</li>
+</ul>
+<p>The honest framing for an interview: synthetic data is a <strong>coverage and scaling tool bolted onto human-validated cores and executable verifiers</strong>, never a replacement for either.</p>
+<h3 id="36-dataset-documentation-norms-datasheets-and-croissant"><a class="header" href="#36-dataset-documentation-norms-datasheets-and-croissant">3.6 Dataset documentation norms: datasheets and Croissant</a></h3>
+<p>Two documentation standards are now expected of a serious release:</p>
+<ul>
+<li><strong>Datasheets for Datasets (Gebru et al., arXiv 1803.09010)</strong> — the human-readable provenance document: motivation, composition, collection, preprocessing, uses, distribution, maintenance. Answering its questions is how you turn JSON into an instrument others can trust and critique. (<a href="https://arxiv.org/pdf/1803.09010">arXiv 1803.09010</a>)</li>
+<li><strong>Croissant (MLCommons, 2024)</strong> — a <strong>machine-readable</strong> metadata format (JSON-LD, built on schema.org) that describes a dataset’s resources, fields, splits, and semantics so tools can load and audit it uniformly. Hugging Face, Kaggle, and OpenML emit Croissant; it is the “package.json for datasets.” The 2025 work connecting Croissant to MCP makes datasets discoverable and loadable by agents directly. (<a href="https://mlcommons.org/2024/03/croissant_metadata_announce/">announcement, Mar 2024</a>, <a href="https://docs.mlcommons.org/croissant/docs/croissant-spec.html">spec</a>, <a href="https://mlcommons.org/2025/10/croissant-mcp/">Croissant+MCP, Oct 2025</a>)</li>
+</ul>
+<p>The relationship to remember: a <strong>datasheet is the prose a human reads to decide whether to trust and how to use the data; Croissant is the structured metadata a machine reads to load, validate, and track it.</strong> A mature release ships both, plus semantic versions and per-task content hashes (§9).</p>
+<h3 id="37-the-landscape-in-one-table"><a class="header" href="#37-the-landscape-in-one-table">3.7 The landscape in one table</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Pressure (2025–2026)</th><th>Old practice</th><th>Current practice</th><th>Named example</th></tr>
+</thead>
+<tbody>
+<tr><td>Benchmarks saturate fast</td><td>Publish once, cite for years</td><td>Living benchmarks with dated tasks</td><td>LiveCodeBench, LiveBench</td></tr>
+<tr><td>Contamination assumed</td><td>Ignore or hope</td><td>Canary + recency slice + MI probe</td><td>BIG-bench canary, Min-K%++</td></tr>
+<tr><td>Scraped data is noisy</td><td>Trust the scrape</td><td>Rubric + triple-annotate + errata</td><td>SWE-bench Verified</td></tr>
+<tr><td>Agents are stateful</td><td>Q&amp;A pairs</td><td>Executable worlds + state-diff verifiers</td><td>τ-bench, WebArena</td></tr>
+<tr><td>Coverage gaps</td><td>Wait for real data</td><td>Verifier-filtered synthetic minority</td><td>Self-Instruct lineage</td></tr>
+<tr><td>Trust &amp; reproducibility</td><td>A README</td><td>Datasheet + Croissant + semver + hashes</td><td>Gebru datasheets, MLCommons Croissant</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="4-using-standard-benchmarks-correctly"><a class="header" href="#4-using-standard-benchmarks-correctly">4. Using standard benchmarks correctly</a></h2>
+<p>Off-the-shelf benchmarks are tempting because they give you comparability. They also give you a dozen ways to lie to yourself.</p>
+<p><strong>Do:</strong></p>
+<ul>
+<li><strong>Pin the exact version and split.</strong> “SWE-bench” is ambiguous; “SWE-bench Verified, 500 instances, HF revision <code>abc123</code>” is not. Record the revision hash, not just the name — datasets mutate on the Hub.</li>
+<li><strong>Report the harness.</strong> The same tasks under different scaffolds (retrieval, max turns, tool set, timeout, retries) produce wildly different scores. State yours in full. A SWE-bench number without the agent scaffold, model, and turn budget is uninterpretable; two “SWE-bench Verified 55%” claims can be a factor-of-two apart in real capability.</li>
+<li><strong>Report trials and variance.</strong> Agents are stochastic. One seed is an anecdote. Report pass@k / pass^k and dispersion (Chapter 3), and give confidence intervals — a 3-point gap on 500 tasks is often within noise.</li>
+<li><strong>Slice by metadata.</strong> A single aggregate hides that you fail every Level-3 GAIA task. Break down by difficulty tier, domain, tool-count, and — critically — by task creation date relative to your model’s cutoff.</li>
+<li><strong>Check the benchmark’s own known errata.</strong> Most mature benchmarks publish a list of retired/broken tasks. Use it, and cite which errata revision you applied.</li>
+<li><strong>Read the datasheet and the verifier code.</strong> Know what the pass/fail actually checks before you quote the number. Many “reasoning” benchmarks are exact-match on a normalized string; a formatting mismatch reads as a wrong answer.</li>
+</ul>
+<p><strong>Don’t:</strong></p>
+<ul>
+<li><strong>Don’t tune on the test set.</strong> If you iterate against the public benchmark, you are overfitting to it. Keep a private slice you look at rarely (§8.1 on dev-to-test bleed).</li>
+<li><strong>Don’t compare across harness versions</strong> as if they were the same experiment. Leaderboard deltas across scaffold changes are not model deltas.</li>
+<li><strong>Don’t assume the benchmark measures what its name says.</strong> SWE-bench measures “resolve a scraped GitHub issue whose PR had good tests,” which is narrower than “software engineering.” GAIA measures “multi-step tool use with a unique answer,” not “general intelligence.” Read the datasheet.</li>
+<li><strong>Don’t ignore contamination just because the benchmark is popular</strong> — popularity <em>causes</em> contamination (§8). The more cited a static benchmark, the more crawled its tasks and solutions.</li>
+<li><strong>Don’t trust a single leaderboard cell.</strong> Reproduce at least a slice yourself. Leaderboards mix harnesses, prompt formats, and sometimes silent test-set fixes.</li>
+</ul>
+<blockquote>
+<p>The one-line policy: <strong>treat a public benchmark number as a claim you must be able to reproduce, with a pinned (dataset revision, harness, model, trials) tuple, or you do not cite it.</strong></p>
+</blockquote>
+<hr>
+<h2 id="5-building-a-custom-benchmark-step-by-step"><a class="header" href="#5-building-a-custom-benchmark-step-by-step">5. Building a custom benchmark, step by step</a></h2>
+<p>Standard benchmarks rarely match your agent’s actual job. When you build your own, treat it as a small research project with reviews and acceptance criteria, not a spreadsheet someone fills in on a Friday.</p>
+<p><strong>Step 1 — Define the question and the unit of evaluation.</strong> Write one sentence: “Can our support agent resolve a billing dispute end-to-end, correctly updating the ledger, under our refund policy?” That sentence fixes the domain, the ground-truth shape (state-based ledger diff), and the verifier. If you cannot write the sentence, stop; you will build a ruler for a length you have not defined. A good acceptance sentence names the <em>actor</em>, the <em>task family</em>, the <em>success condition</em>, and the <em>constraints</em> — all four.</p>
+<p><strong>Step 2 — Source raw tasks.</strong> Prefer real distribution over invented tasks. Good sources, roughly in order of value:</p>
+<ul>
+<li><strong>Production logs / transcripts</strong> (anonymized) — the true distribution of what users ask. Sample stratified by intent so rare-but-critical cases appear. Log-derived tasks carry a contamination <em>advantage</em> too: they are post-cutoff and private by default.</li>
+<li><strong>Domain experts</strong> authoring realistic scenarios the logs miss (edge cases, adversarial users, policy corners).</li>
+<li><strong>Existing tickets, docs, or issue trackers</strong> — like SWE-bench mining GitHub. Capture the <em>creation date</em> per task for later recency slicing.</li>
+<li><strong>Synthetic generation</strong> (§9) — to fill coverage gaps, never as the backbone, and only verifier-filtered.</li>
+</ul>
+<p><strong>Step 3 — Author golden answers / trajectories <em>and the verifier</em>.</strong> For each task, produce the ground truth and, crucially, the <em>verifier</em>. This is where most of the work — and most of the bugs — live:</p>
+<ul>
+<li>For <strong>state-based</strong> tasks: write the goal-state assertion (SQL/JSON diff) and a <strong>seed database</strong> the task runs against. Test the assertion against a known-good and a known-bad final state before you trust it.</li>
+<li>For <strong>answer-based</strong> tasks: write the unambiguous gold answer <em>and</em> the matching rule (exact, numeric-tolerance, set-equality, case/whitespace normalization). Ambiguity in the <em>matching rule</em> is as damaging as a wrong answer.</li>
+<li>For <strong>trajectory/test-based</strong> tasks: write reference tests, and — as SWE-bench learned — also <code>PASS_TO_PASS</code> guards so an agent cannot “fix” the issue by breaking everything else. Then apply the 2025 lesson (arXiv 2503.15223): a passing test is necessary, not sufficient — spot-check that passing patches are <em>genuine</em> fixes, or your verifier will bless plausible-but-wrong solutions.</li>
+<li><strong>Verify the verifier.</strong> For every task, run the reference/gold solution through the verifier (must pass) and at least one deliberately wrong solution (must fail). A verifier you never tested is a coin flip.</li>
+</ul>
+<p><strong>Step 4 — Calibrate difficulty.</strong> Run 2–3 baselines (a weak model, a strong model, a human). Bucket tasks by observed solve rate: <strong>easy</strong> (&gt;80% solve), <strong>medium</strong> (20–80%), <strong>hard</strong> (&lt;20%). A benchmark where every task is solved or none is has zero discriminative power. Aim for a spread centered where you expect frontier systems to sit, so the ruler has ticks near the interesting region. Borrow from item-response theory: a task that <em>every</em> system passes or fails carries no information about <em>ranking</em>; the informative tasks are the ones that split your systems.</p>
+<p><strong>Step 5 — Review.</strong> Every task gets independent review by ≥2 people who did <em>not</em> author it, checking: (a) is the problem statement fully specified? (b) is the gold answer correct? (c) does the verifier accept all correct solutions and reject all wrong ones? Adopt SWE-bench’s conservative ensembling: if any reviewer flags a severe problem, pull the task. Use a written rubric with named categories and a severity scale so reviews are comparable and you can compute agreement on them.</p>
+<p><strong>Step 6 — Measure quality.</strong> Compute inter-annotator agreement (§7), coverage against your intent taxonomy, and a contamination scan (§8) before you trust a single score. Set explicit gates: e.g., ship only if label-correctness ( \kappa \ge 0.7 ), every taxonomy cell has ≥N tasks, and no task exceeds your n-gram contamination threshold against the corpora you can access.</p>
+<p><strong>Step 7 — Version, document, license (§11).</strong> Freeze it, datasheet it, emit Croissant metadata, content-hash every task, and split off a held-out canary set before anyone runs an agent on it.</p>
+<blockquote>
+<p>Coverage checklist: build an explicit <strong>taxonomy</strong> of the capabilities/intents you care about (e.g., refund, address-change, plan-upgrade, fraud-hold) and require ≥N tasks per cell, including the adversarial and multi-tool cells. Coverage is a property you <em>design in</em>, not one you hope for. A coverage matrix (intent × difficulty × tool-count) with a task count in every cell is the artifact to show an interviewer.</p>
+</blockquote>
+<p><strong>The build as a pipeline.</strong> Steps 1–7 are a directed pipeline with gates, and it is worth being able to draw it:</p>
+<pre><code>define question ─▶ source tasks ─▶ author gold + verifier ─▶ verify the verifier
+      │                                                              │
+      ▼                                                              ▼
+ acceptance sentence                                        calibrate difficulty
+                                                                     │
+   ship ◀─ version/datasheet/Croissant ◀─ QA gates ◀── independent review
+           (semver + hashes + canary)     (κ≥0.7,
+                                            coverage,
+                                            contamination)
+</code></pre>
+<p>Each arrow is a gate that can send a task back or out. The gates — not the collection — are what make it a benchmark rather than a pile of tasks.</p>
+<hr>
+<h2 id="6-build-it-in-practice-a-runnable-dataset-qa-toolkit"><a class="header" href="#6-build-it-in-practice-a-runnable-dataset-qa-toolkit">6. Build it in practice: a runnable dataset-QA toolkit</a></h2>
+<p>Theory is cheap; here is a toolkit you can actually run. It does three jobs that every serious benchmark build needs: (1) <strong>measure inter-annotator agreement</strong> and flag the contentious tasks, (2) <strong>screen for contamination</strong> with a canary probe and an n-gram overlap scan (plus a recency slice), and (3) <strong>generate synthetic tasks and route them through an independent verifier and a human-filter queue</strong>. It is pure standard library except where noted, and every function is designed to be correct enough to lift into a real pipeline.</p>
+<h3 id="61-a-minimal-task-schema"><a class="header" href="#61-a-minimal-task-schema">6.1 A minimal task schema</a></h3>
+<p>Give every task a stable identity, provenance, a creation date (for recency slicing), and a content hash (for versioning). This one object threads through the whole toolkit.</p>
+<pre><code class="language-python">"""dataset_qa.py — a small, correct dataset-QA toolkit for agent benchmarks."""
+from __future__ import annotations
+from dataclasses import dataclass, field, asdict
+from datetime import date
+from collections import Counter
+import hashlib
+import json
+
+
+@dataclass
+class Task:
+    id: str
+    prompt: str                     # what the agent is asked to do
+    gold: str                       # gold answer OR goal-state spec (JSON string)
+    verifier: str                   # name of the scorer: "exact" | "state_diff" | "tests"
+    domain: str
+    difficulty: str = "unknown"     # easy | medium | hard, set during calibration
+    created: str = "1970-01-01"     # ISO date; enables recency-based contamination checks
+    source: str = "unknown"         # logs | expert | scraped | synthetic
+    tags: list[str] = field(default_factory=list)
+
+    def content_hash(self) -&gt; str:
+        """Stable hash over the load-bearing fields; changing any of these is a NEW task."""
+        payload = json.dumps(
+            {"prompt": self.prompt, "gold": self.gold, "verifier": self.verifier},
+            sort_keys=True, ensure_ascii=False,
+        )
+        return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
+
+
+def release_hash(tasks: list[Task]) -&gt; str:
+    """One hash for a whole release: anyone can verify they ran the exact data you did."""
+    joined = "\n".join(sorted(t.content_hash() for t in tasks))
+    return hashlib.sha256(joined.encode("utf-8")).hexdigest()[:16]
+</code></pre>
+<h3 id="62-inter-annotator-agreement-and-low-agreement-flagging"><a class="header" href="#62-inter-annotator-agreement-and-low-agreement-flagging">6.2 Inter-annotator agreement and low-agreement flagging</a></h3>
+<p>Cohen’s ( \kappa ) for two raters, Fleiss’ ( \kappa ) for a panel, plus a helper that returns the <em>specific</em> tasks reviewers split on — those are the ones to fix or cut before you trust any score computed on the set.</p>
+<pre><code class="language-python"># ---------- Cohen's kappa (2 annotators) ----------
+def cohens_kappa(a: list, b: list) -&gt; float:
+    """a, b: equal-length lists of categorical labels from two raters."""
+    assert len(a) == len(b) and len(a) &gt; 0
+    n = len(a)
+    p_o = sum(x == y for x, y in zip(a, b)) / n           # observed agreement
+    ca, cb = Counter(a), Counter(b)
+    cats = set(ca) | set(cb)
+    p_e = sum((ca[c] / n) * (cb[c] / n) for c in cats)    # chance agreement
+    return 1.0 if p_e == 1 else (p_o - p_e) / (1 - p_e)
+
+
+# ---------- Fleiss' kappa (n raters per item, fixed panel size) ----------
+def fleiss_kappa(ratings: list[list]) -&gt; tuple[float, list[float]]:
+    """ratings: list of items; each item is a list of labels (one per rater).
+    Returns (aggregate kappa, per-item agreement P_i)."""
+    cats = sorted({lbl for item in ratings for lbl in item})
+    idx = {c: j for j, c in enumerate(cats)}
+    N = len(ratings)
+    n = len(ratings[0])
+    assert all(len(item) == n for item in ratings), "fixed rater count required"
+
+    M = [[0] * len(cats) for _ in range(N)]               # N x k count matrix
+    for i, item in enumerate(ratings):
+        for lbl in item:
+            M[i][idx[lbl]] += 1
+
+    P_i = [(sum(c * c for c in M[i]) - n) / (n * (n - 1)) for i in range(N)]
+    P_bar = sum(P_i) / N
+    p_j = [sum(M[i][j] for i in range(N)) / (N * n) for j in range(len(cats))]
+    P_e = sum(p * p for p in p_j)
+    kappa = 1.0 if P_e == 1 else (P_bar - P_e) / (1 - P_e)
+    return kappa, P_i
+
+
+def flag_low_agreement(ratings: list[list], threshold: float = 0.5) -&gt; list[int]:
+    """Indices of items whose per-item agreement P_i is below threshold — the tasks to fix/cut."""
+    _, P_i = fleiss_kappa(ratings)
+    return [i for i, p in enumerate(P_i) if p &lt; threshold]
+
+
+def gate_on_agreement(ratings: list[list], min_kappa: float = 0.7) -&gt; dict:
+    """A QA gate: is the set's label agreement high enough to publish scores from?"""
+    kappa, P_i = fleiss_kappa(ratings)
+    contentious = [i for i, p in enumerate(P_i) if p &lt; 0.5]
+    return {"kappa": round(kappa, 3), "pass": kappa &gt;= min_kappa,
+            "n_contentious": len(contentious), "contentious_items": contentious}
+</code></pre>
+<h3 id="63-contamination-screening-canary-probe--n-gram-overlap--recency-slice"><a class="header" href="#63-contamination-screening-canary-probe--n-gram-overlap--recency-slice">6.3 Contamination screening: canary probe + n-gram overlap + recency slice</a></h3>
+<p>Three complementary screens. The canary probe is black-box (does the model regurgitate a GUID you planted?). The n-gram scan is corpus-based (does a test task appear verbatim in text you can access?). The recency slice needs no corpus at all — it just compares solve rates before and after the model’s cutoff, and a cliff <em>is</em> the signal.</p>
+<pre><code class="language-python"># ---------- Canary strings ----------
+import uuid
+
+def make_canary() -&gt; str:
+    """A unique GUID to embed in the dataset (BIG-bench convention). Ship it in the
+    datasheet and ask trainers to exclude any document containing it."""
+    return f"BENCHMARK-CANARY-GUID:{uuid.uuid4()}"
+
+
+def canary_leak_probe(canary: str, model_generate) -&gt; bool:
+    """Black-box check: prompt the model to continue the canary; if it reproduces the
+    exact GUID, the dataset (or a doc quoting it) was in training. `model_generate` is
+    any callable str-&gt;str (your model API)."""
+    prefix = canary.split(":")[0] + ":"          # give only the label, hide the GUID
+    out = model_generate(f"Complete this identifier exactly: {prefix}")
+    return canary.split(":", 1)[1] in out
+
+
+# ---------- N-gram overlap ----------
+def ngrams(text: str, n: int = 8) -&gt; set[tuple]:
+    toks = text.lower().split()
+    return {tuple(toks[i:i + n]) for i in range(len(toks) - n + 1)}
+
+
+def contamination_score(test_item: str, corpus_ngrams: set, n: int = 8) -&gt; float:
+    """Fraction of the test item's n-grams that appear in the training corpus.
+    ~0 = clean; near 1 = the item is essentially in the corpus."""
+    tg = ngrams(test_item, n)
+    if not tg:
+        return 0.0
+    return len(tg &amp; corpus_ngrams) / len(tg)
+
+
+def scan_contamination(test_items: list[str], corpus_texts: list[str],
+                       n: int = 8, flag_at: float = 0.5) -&gt; list[tuple[int, float]]:
+    corpus_ngrams: set = set()
+    for doc in corpus_texts:
+        corpus_ngrams |= ngrams(doc, n)
+    flagged = []
+    for i, item in enumerate(test_items):
+        s = contamination_score(item, corpus_ngrams, n)
+        if s &gt;= flag_at:
+            flagged.append((i, round(s, 3)))
+    return flagged
+
+
+# ---------- Recency slice (no corpus needed) ----------
+def recency_cliff(tasks: list[Task], solve: dict[str, bool], cutoff: str) -&gt; dict:
+    """Compare solve rate on tasks created BEFORE vs AFTER the model's training cutoff.
+    A large positive (pre - post) gap is a contamination signal."""
+    pre = [t for t in tasks if t.created &lt;= cutoff]
+    post = [t for t in tasks if t.created &gt; cutoff]
+    def rate(ts):
+        vals = [solve[t.id] for t in ts if t.id in solve]
+        return sum(vals) / len(vals) if vals else float("nan")
+    r_pre, r_post = rate(pre), rate(post)
+    return {"n_pre": len(pre), "n_post": len(post),
+            "solve_pre": round(r_pre, 3), "solve_post": round(r_post, 3),
+            "cliff": round(r_pre - r_post, 3)}
+</code></pre>
+<p>Notes on correctness and scale:</p>
+<ul>
+<li>The n-gram scanner is a <strong>screen, not a proof</strong> — it catches direct/near-direct copies at the chosen <code>n</code>. Lower <code>n</code> catches more (and more false positives); it will <em>not</em> catch paraphrase leakage, for which you need the perplexity/probing methods in §8.2. In production, hash n-grams and use a <strong>Bloom filter or MinHash/LSH</strong> (the <code>datasketch</code> library) so you can scan a test set against a terabyte-scale corpus without holding it in RAM.</li>
+<li><code>recency_cliff</code> is the cheapest contamination signal you own and needs no training corpus — which is why timestamped tasks (§3.3) are worth the bookkeeping. Interpret it with a confidence interval: a 2-point cliff on 40 tasks is noise; a 20-point cliff is a finding.</li>
+<li><code>canary_leak_probe</code> cannot <em>prevent</em> ingestion; it makes it <em>detectable</em>. A negative result is weak evidence (the model may know the GUID but not surface it); a positive result is strong.</li>
+</ul>
+<h3 id="64-synthetic-task-generation-with-a-verifier-gate-and-a-human-filter-queue"><a class="header" href="#64-synthetic-task-generation-with-a-verifier-gate-and-a-human-filter-queue">6.4 Synthetic task generation with a verifier gate and a human-filter queue</a></h3>
+<p>The safe pattern from §3.5 and §9, made concrete: over-generate with a <em>strong, different</em> model, <strong>discard anything the independent verifier cannot confirm</strong>, deduplicate against existing tasks, and route the survivors to a <strong>human-filter queue</strong> — synthetic tasks are candidates, never auto-admitted.</p>
+<pre><code class="language-python">"""synth.py — generate, verify, dedup, and human-filter synthetic eval tasks."""
+from difflib import SequenceMatcher
+
+
+def generate_candidates(seed_tasks: list[Task], generator, n: int = 50) -&gt; list[Task]:
+    """Over-generate candidates from human seeds using a STRONGER, DIFFERENT model than
+    any under test. `generator(prompt) -&gt; str` returns a JSON task spec. We never trust
+    the generator's 'gold' until an independent verifier confirms it (next step)."""
+    seeds_txt = "\n".join(f"- {t.prompt}" for t in seed_tasks[:10])
+    out = []
+    for i in range(n):
+        raw = generator(
+            "You are authoring EVAL tasks. Given these seed tasks, write ONE new, "
+            f"realistic task in the same family but a distinct scenario:\n{seeds_txt}\n"
+            "Return JSON with keys: prompt, gold, verifier, domain."
+        )
+        try:
+            d = json.loads(raw)
+            out.append(Task(id=f"syn-{i}", prompt=d["prompt"], gold=d["gold"],
+                            verifier=d["verifier"], domain=d["domain"],
+                            source="synthetic", created=str(date.today())))
+        except (json.JSONDecodeError, KeyError):
+            continue                                   # malformed generations are dropped
+    return out
+
+
+def verify_gold(task: Task, run_reference_solution) -&gt; bool:
+    """INDEPENDENT verifier gate: execute a reference solution against the task's verifier.
+    Only keep synthetic tasks whose 'gold' is actually confirmed correct. `run_reference_
+    solution(task) -&gt; bool` returns True iff a known-good solution passes task.verifier."""
+    return run_reference_solution(task)
+
+
+def dedup(candidates: list[Task], existing: list[Task], max_sim: float = 0.8) -&gt; list[Task]:
+    """Drop candidates too similar to any existing task (self-contamination / low diversity).
+    SequenceMatcher stands in for the ROUGE-L overlap filter used by Self-Instruct."""
+    kept = []
+    corpus = [t.prompt for t in existing]
+    for c in candidates:
+        if all(SequenceMatcher(None, c.prompt, e).ratio() &lt; max_sim for e in corpus):
+            kept.append(c)
+            corpus.append(c.prompt)                    # dedup among candidates too
+    return kept
+
+
+def human_filter_queue(candidates: list[Task]) -&gt; list[dict]:
+    """Emit review cards. Synthetic tasks are CANDIDATES: a human must accept each before
+    it enters the benchmark, and the accepted set stays a labeled minority."""
+    return [{"id": c.id, "prompt": c.prompt, "gold": c.gold, "source": c.source,
+             "decision": None, "reviewer": None} for c in candidates]
+
+
+def synth_pipeline(seed_tasks, existing, generator, run_reference_solution,
+                   n: int = 50) -&gt; dict:
+    cands = generate_candidates(seed_tasks, generator, n=n)
+    verified = [t for t in cands if verify_gold(t, run_reference_solution)]
+    deduped = dedup(verified, existing)
+    queue = human_filter_queue(deduped)
+    return {"generated": len(cands), "verifier_passed": len(verified),
+            "after_dedup": len(deduped), "to_human_review": queue,
+            "synthetic_fraction": round(len(deduped) / (len(existing) + len(deduped)), 3)}
+</code></pre>
+<h3 id="65-putting-it-together--a-demo-you-can-run"><a class="header" href="#65-putting-it-together--a-demo-you-can-run">6.5 Putting it together — a demo you can run</a></h3>
+<pre><code class="language-python">if __name__ == "__main__":
+    # --- IAA on a small panel ---
+    r1 = [1, 1, 0, 1, 0, 1]; r2 = [1, 0, 0, 1, 0, 1]
+    print("Cohen's kappa:", round(cohens_kappa(r1, r2), 3))
+    panel = [[1,1,1],[1,0,1],[0,0,0],[1,1,0],[0,0,0],[1,1,1]]
+    print("Agreement gate:", gate_on_agreement(panel, min_kappa=0.7))
+
+    # --- Contamination screens ---
+    tests = ["reset the user password and email a confirmation to the account owner"]
+    corpus = ["to reset the user password and email a confirmation to the account owner you call ..."]
+    print("N-gram flags:", scan_contamination(tests, corpus, n=6, flag_at=0.4))
+    canary = make_canary(); print("Ship this canary in the datasheet:", canary)
+
+    # --- Recency cliff (fake solve results) ---
+    tasks = [Task("a","...","x","exact","support",created="2023-01-01"),
+             Task("b","...","y","exact","support",created="2026-02-01")]
+    solve = {"a": True, "b": False}
+    print("Recency:", recency_cliff(tasks, solve, cutoff="2025-06-01"))
+
+    # --- Content + release hashes for versioning ---
+    print("Release hash:", release_hash(tasks))
+</code></pre>
+<p>What the toolkit gives you, mapped to the earlier theory: <code>gate_on_agreement</code> operationalizes §7 (do not publish below ( \kappa = 0.7 )); the three contamination functions operationalize §8; <code>synth_pipeline</code> operationalizes the §9 safe-synthetic rules (different generator, verifier gate, dedup, human filter, reported fraction); and <code>content_hash</code>/<code>release_hash</code> operationalize §11 versioning. Wire these into CI and a benchmark cannot regress silently: a PR that lowers agreement, raises contamination, or mutates a task hash fails the build.</p>
+<hr>
+<h2 id="7-validating-quality-inter-annotator-agreement"><a class="header" href="#7-validating-quality-inter-annotator-agreement">7. Validating quality: inter-annotator agreement</a></h2>
+<p>If two competent humans disagree about whether a task’s answer is correct, the <em>task</em> is broken, not the annotators. Inter-annotator agreement (IAA) quantifies this. Raw percent agreement is misleading because raters agree partly <strong>by chance</strong> — if 90% of items are “pass,” two raters who guess “pass” blindly agree 81% of the time while knowing nothing. Chance-corrected agreement fixes this. IAA is the single most important quality number to report about a hand-labeled benchmark: it is the calibration certificate on your ruler.</p>
+<h3 id="71-cohens-kappa-two-annotators"><a class="header" href="#71-cohens-kappa-two-annotators">7.1 Cohen’s kappa (two annotators)</a></h3>
+<p>Cohen’s ( \kappa ) compares observed agreement to chance agreement:</p>
+<p>[
+\kappa = \frac{p_o - p_e}{1 - p_e}
+]</p>
+<p>where ( p_o ) is the observed proportion of items the two raters agree on, and ( p_e ) is the agreement expected by chance, computed from each rater’s marginal label frequencies:</p>
+<p>[
+p_e = \sum_{c} \left( \frac{n_{1c}}{N} \cdot \frac{n_{2c}}{N} \right)
+]</p>
+<p>Here ( c ) indexes categories, ( n_{1c} ) is how many items rater 1 put in category ( c ), and ( N ) is the number of items. ( \kappa = 1 ) is perfect agreement, ( \kappa = 0 ) is chance-level, and negative means worse than chance.</p>
+<p><strong>Worked calculation.</strong> Two reviewers label ( N = 100 ) agent outputs as <strong>pass</strong> or <strong>fail</strong>. The confusion matrix:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th></th><th>R2: pass</th><th>R2: fail</th><th>R1 total</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>R1: pass</strong></td><td>45</td><td>10</td><td>55</td></tr>
+<tr><td><strong>R1: fail</strong></td><td>15</td><td>30</td><td>45</td></tr>
+<tr><td><strong>R2 total</strong></td><td>60</td><td>40</td><td>100</td></tr>
+</tbody>
+</table>
+</div>
+<p>Observed agreement (the diagonal):
+[
+p_o = \frac{45 + 30}{100} = 0.75
+]</p>
+<p>Chance agreement from the marginals (R1 pass = 0.55, R2 pass = 0.60; R1 fail = 0.45, R2 fail = 0.40):
+[
+p_e = (0.55 \times 0.60) + (0.45 \times 0.40) = 0.33 + 0.18 = 0.51
+]</p>
+<p>Therefore:
+[
+\kappa = \frac{0.75 - 0.51}{1 - 0.51} = \frac{0.24}{0.49} \approx 0.49
+]</p>
+<p>So despite 75% raw agreement, chance-corrected agreement is only <strong>~0.49 — “moderate.”</strong> That is a warning sign: a nontrivial share of your tasks are ambiguous enough that trained reviewers split on them, and any score you compute on this set inherits that noise.</p>
+<p><strong>The kappa paradox — a trap interviewers set.</strong> Kappa can be <em>low even when agreement is high</em> if the labels are very imbalanced (say 95% “pass”). Because ( p_e ) is then huge, there is little room above chance and ( \kappa ) collapses toward 0 even at 95% raw agreement. The fix is to <em>not</em> read kappa in a vacuum: report raw agreement, the marginal distribution, and kappa together, and on skewed sets consider prevalence-adjusted measures (PABAK) or Gwet’s AC1. The senior-level takeaway: kappa measures agreement <em>beyond chance given your label distribution</em>; a low kappa on a skewed set may mean “the labels are easy and imbalanced,” not “the annotators are bad.” Diagnose before you act.</p>
+<h3 id="72-interpreting-kappa-landis--koch-scale"><a class="header" href="#72-interpreting-kappa-landis--koch-scale">7.2 Interpreting kappa (Landis &amp; Koch scale)</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>( \kappa )</th><th>Interpretation</th></tr>
+</thead>
+<tbody>
+<tr><td>&lt; 0.00</td><td>Worse than chance</td></tr>
+<tr><td>0.00–0.20</td><td>Slight</td></tr>
+<tr><td>0.21–0.40</td><td>Fair</td></tr>
+<tr><td>0.41–0.60</td><td>Moderate</td></tr>
+<tr><td>0.61–0.80</td><td>Substantial</td></tr>
+<tr><td>0.81–1.00</td><td>Almost perfect</td></tr>
+</tbody>
+</table>
+</div>
+<p>For a benchmark you will publish scores from, target <strong>( \kappa \ge 0.7 )</strong> on label correctness. Below that, revise task wording and rubrics before proceeding — low agreement is a data-quality bug, not a personality difference. The Landis &amp; Koch bands are <em>conventions</em>, not laws; some fields demand ( \kappa \ge 0.8 ) for clinical-grade labels. State the threshold you chose and why.</p>
+<h3 id="73-fleiss-kappa-three-or-more-annotators"><a class="header" href="#73-fleiss-kappa-three-or-more-annotators">7.3 Fleiss’ kappa (three or more annotators)</a></h3>
+<p>When each item is rated by ( n ) raters (possibly a different panel per item) across ( k ) categories, use Fleiss’ ( \kappa ). Build ( N \times k ) matrix ( M ) where ( M_{ij} ) = number of raters assigning item ( i ) to category ( j ) (each row sums to ( n )).</p>
+<p>Per-item agreement:
+[
+P_i = \frac{1}{n(n-1)} \left( \sum_{j=1}^{k} M_{ij}^2 - n \right)
+]</p>
+<p>Mean observed agreement and per-category expected probability:
+[
+\bar{P} = \frac{1}{N} \sum_{i=1}^{N} P_i, \qquad p_j = \frac{1}{N n} \sum_{i=1}^{N} M_{ij}, \qquad P_e = \sum_{j=1}^{k} p_j^2
+]</p>
+<p>[
+\kappa = \frac{\bar{P} - P_e}{1 - P_e}
+]</p>
+<p>The same [0,1] interpretation applies. Beyond the aggregate score, the per-item ( P_i ) tells you <em>which</em> tasks are contentious — those are the ones to fix or cut. That per-item signal is exactly what <code>flag_low_agreement</code> in §6.2 returns, and routing low-( P_i ) tasks back to a third reviewer (or out of the set) is the single highest-leverage quality action you can take.</p>
+<h3 id="74-which-agreement-statistic-when"><a class="header" href="#74-which-agreement-statistic-when">7.4 Which agreement statistic, when</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Situation</th><th>Use</th><th>Why</th></tr>
+</thead>
+<tbody>
+<tr><td>2 raters, categorical labels</td><td>Cohen’s ( \kappa )</td><td>Standard pairwise, chance-corrected</td></tr>
+<tr><td>≥3 raters, categorical, possibly varying panel</td><td>Fleiss’ ( \kappa )</td><td>Handles many raters and per-item panels</td></tr>
+<tr><td>Ordinal labels (0–3 severity)</td><td>Weighted ( \kappa ) / Krippendorff’s ( \alpha )</td><td>Credits “close” disagreements, penalizes “far” ones</td></tr>
+<tr><td>Any level, missing data, mixed scales</td><td>Krippendorff’s ( \alpha )</td><td>Most general; handles gaps and any measurement level</td></tr>
+<tr><td>Highly skewed labels</td><td>PABAK / Gwet’s AC1</td><td>Robust to the kappa-paradox prevalence problem</td></tr>
+<tr><td>Continuous scores (e.g., 1–10 quality)</td><td>ICC / Pearson</td><td>Correlation of continuous ratings, not categories</td></tr>
+</tbody>
+</table>
+</div>
+<p>A subtle but important choice: when your labels are the <strong>0–3 severity scale</strong> SWE-bench Verified used, plain Fleiss’ kappa treats a 0-vs-3 disagreement the same as 2-vs-3. Use <strong>weighted kappa</strong> or <strong>Krippendorff’s ( \alpha )</strong> so “far apart” disagreements cost more — otherwise you understate how badly reviewers disagree on the tasks that matter most.</p>
+<hr>
+<h2 id="8-contamination-and-leakage"><a class="header" href="#8-contamination-and-leakage">8. Contamination and leakage</a></h2>
+<p><strong>Contamination</strong> is when your evaluation data (or something too close to it) has leaked into the model’s training set, so the model “solves” tasks by recall rather than capability. It is the single most under-reported source of inflated agent scores, and in 2025–2026 it is <em>assumed</em> by default — the question is not “is it contaminated?” but “how much, and can I bound it?”</p>
+<h3 id="81-how-it-happens"><a class="header" href="#81-how-it-happens">8.1 How it happens</a></h3>
+<ul>
+<li><strong>Direct ingestion.</strong> You benchmark on a public dataset; a later pretraining crawl scoops up the dataset, its GitHub repo, and every blog post quoting it.</li>
+<li><strong>Solution leakage.</strong> For SWE-bench-style tasks, the <em>fixing PR and its discussion</em> are on the public web — the model may have seen the exact patch, not just the issue.</li>
+<li><strong>Indirect / paraphrase leakage.</strong> The model saw a reworded version (a tutorial, a Kaggle notebook, a Stack Overflow answer), so n-gram checks miss it.</li>
+<li><strong>Dev-to-test bleed.</strong> Your team tunes prompts against the “held-out” set until it is effectively training data. This is contamination you cause yourself, and it is the most common kind in a real eval team. It has no crawler to blame; only a policy prevents it.</li>
+<li><strong>Benchmark-in-benchmark leakage.</strong> Your new benchmark reuses tasks from an older public one (directly or by paraphrase), inheriting its contamination silently.</li>
+</ul>
+<h3 id="82-how-to-detect-it"><a class="header" href="#82-how-to-detect-it">8.2 How to detect it</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Method</th><th>How it works</th><th>Access needed</th><th>Catches</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>N-gram / string overlap</strong></td><td>Look for long exact substrings shared between test items and the training corpus</td><td>Training corpus</td><td>Direct copies</td></tr>
+<tr><td><strong>Canary strings</strong></td><td>Embed a unique GUID in the dataset; later, prompt the model to reproduce it</td><td>Model (black-box)</td><td>Whole-dataset ingestion</td></tr>
+<tr><td><strong>Perplexity / Min-K% / Min-K%++</strong></td><td>Memorized text has anomalously low perplexity / few low-probability tokens vs. fresh text</td><td>Token logprobs</td><td>Memorization</td></tr>
+<tr><td><strong>Guided / quiz prompting</strong></td><td>Give the first half of a test item; see if the model completes the exact continuation</td><td>Model (black-box)</td><td>Instance memorization</td></tr>
+<tr><td><strong>Perturbation probing</strong></td><td>Offer the original vs. reworded variants; a model that always picks the original memorized it</td><td>Model (black-box)</td><td>Instance memorization</td></tr>
+<tr><td><strong>Timestamp / recency split</strong></td><td>Score tasks created <em>after</em> the model’s training cutoff separately</td><td>Metadata</td><td>Temporal leakage</td></tr>
+<tr><td><strong>Generation-probability correlation</strong></td><td>Correlate a model’s probability of <em>emitting</em> a benchmark example with its score gap on a fresh clone</td><td>Token logprobs</td><td>Fingerprint of memorization</td></tr>
+</tbody>
+</table>
+</div>
+<p>The last row is the GSM1k method (§12): Scale AI found a Spearman <strong>r² ≈ 0.36</strong> between how likely a model was to <em>generate</em> GSM8k items and how much it dropped from GSM8k to the fresh GSM1k — a direct, quantitative memorization fingerprint. (<a href="https://arxiv.org/html/2502.14425v2">survey arXiv 2502.14425</a>, <a href="https://arxiv.org/abs/2310.16789">Min-K% arXiv 2310.16789</a>, <a href="https://arxiv.org/html/2404.02936v2">Min-K%++ arXiv 2404.02936</a>, <a href="https://arxiv.org/abs/2405.00332">GSM1k arXiv 2405.00332</a>)</p>
+<p><strong>The 60-second detection story (memorize this for interviews).</strong> “Contamination is when the eval data leaked into training, so the model recalls instead of reasons. I never trust one signal — I triangulate three. First, a <strong>recency slice</strong>: I compare solve rate on tasks created before vs after the model’s cutoff; a cliff is the cheapest, most convincing signal and needs no corpus. Second, <strong>n-gram overlap</strong> against any training text I can access, scaled with MinHash/LSH — this catches verbatim copies but misses paraphrase. Third, a <strong>memorization probe</strong> — Min-K%++ on token logprobs, or a black-box guided-completion test where I feed half a task and see if the model reproduces the exact continuation. If all three agree, I have a case; any one alone is a hint. The real fix isn’t detection though — it’s a <strong>held-out private set with post-cutoff tasks and a canary string</strong>, so I’m measuring capability, not recall.”</p>
+<h3 id="83-how-to-prevent-it"><a class="header" href="#83-how-to-prevent-it">8.3 How to prevent it</a></h3>
+<ul>
+<li><strong>Canary GUID.</strong> Ship the dataset with a unique random string and publicly ask trainers to exclude any document containing it (the BIG-bench canary convention). It does not stop contamination but makes it detectable and gives trainers a filter. (<a href="https://github.com/google/BIG-bench">BIG-bench</a>)</li>
+<li><strong>Hold out a private test set.</strong> Publish a dev split; keep the scoring split behind an API or fully offline. GAIA keeps 300 answers private; τ-bench and SWE-bench evolve. This is the only robust defense.</li>
+<li><strong>Rotate and refresh.</strong> Treat benchmarks as perishable. Add new post-cutoff tasks each cycle; retire tasks once solve rates saturate suspiciously. This is exactly what LiveCodeBench and LiveBench institutionalize (§3.3).</li>
+<li><strong>Encrypt / gate.</strong> Distribute test payloads encrypted or under access agreements so crawlers cannot ingest raw text.</li>
+<li><strong>Recency-stratify.</strong> Always keep a slice of tasks provably created after the newest model’s cutoff, and watch for a score cliff between pre- and post-cutoff tasks — that cliff <em>is</em> the contamination signal (<code>recency_cliff</code> in §6.3).</li>
+<li><strong>Time-box your own dev usage.</strong> Log every scoring run against the private set; make repeated runs against it require sign-off. The cheapest contamination to prevent is the one you cause.</li>
+</ul>
+<blockquote>
+<p>Discipline beats cleverness here: a well-guarded held-out set of 50 fresh tasks is worth more than a 5,000-task public benchmark everyone (and every crawler) has seen. The half-life of a public benchmark’s trustworthiness is now measured in <em>months</em>, not years.</p>
+</blockquote>
+<hr>
+<h2 id="9-synthetic-data-for-evals"><a class="header" href="#9-synthetic-data-for-evals">9. Synthetic data for evals</a></h2>
+<p>LLM-generated tasks are attractive: cheap, scalable, and able to hit coverage gaps on demand. <strong>Self-Instruct</strong> is the canonical recipe — bootstrap from a small pool of human-written seed tasks (the paper used <strong>175</strong> seeds) and prompt an LLM to generate many more (they reached <strong>~52K</strong> instructions), then <strong>filter</strong> aggressively for validity and diversity (e.g., drop new tasks whose ROUGE-L overlap with existing ones exceeds a threshold). (<a href="https://arxiv.org/abs/2212.10560">Self-Instruct arXiv 2212.10560</a>)</p>
+<p><strong>When synthetic data helps:</strong></p>
+<ul>
+<li><strong>Coverage of rare/edge cases</strong> you cannot find enough of in logs (fraud attempts, policy-corner requests).</li>
+<li><strong>Scaling up structure</strong> once you have a validated template and verifier (parameterize a known-good task family).</li>
+<li><strong>Adversarial/red-team inputs</strong> where you want systematic variation.</li>
+<li><strong>Privacy</strong> — generating synthetic analogues of sensitive real transcripts.</li>
+<li><strong>Persona/locale expansion</strong> — apply a validated task family across personas, languages, and edge policies for user-facing agents.</li>
+</ul>
+<p><strong>The risks — and they are serious for evals specifically:</strong></p>
+<ul>
+<li><strong>The generator’s blind spots become the benchmark’s blind spots.</strong> If a model generates and (implicitly) knows how to solve the tasks, you measure agreement with the generator, not capability.</li>
+<li><strong>Self-contamination.</strong> Tasks generated by model X are trivially easy for model X and its relatives — you cannot use X-authored tasks to fairly grade X.</li>
+<li><strong>Distribution drift.</strong> Synthetic tasks cluster around the generator’s priors and miss the messy, ungrammatical, contradictory reality of real users.</li>
+<li><strong>Unverified gold answers.</strong> LLM-authored “correct” answers are frequently wrong. Never trust a synthetic label without an independent check.</li>
+<li><strong>Diversity collapse.</strong> Naive over-generation produces near-duplicates; without a dedup/diversity filter you inflate task count without adding information.</li>
+</ul>
+<p><strong>Rules for using synthetic eval data safely:</strong> (1) always pass every synthetic task through <strong>human filtering</strong> and an <strong>independent verifier</strong> (the <code>synth_pipeline</code> in §6.4); (2) use a <em>different, stronger</em> model to generate than the ones you evaluate, and never the one under test; (3) keep synthetic tasks a labeled <em>minority</em> of the benchmark, sitting on top of a real-data core; (4) <strong>report the synthetic fraction</strong>; (5) dedup against existing tasks to preserve diversity. Synthetic data is a coverage tool, not a foundation.</p>
+<p><strong>The one sentence to say in an interview:</strong> “I use synthetic data to <em>reach coverage I can’t find in logs</em> — rare, adversarial, privacy-sensitive cases — but only as a human-filtered, verifier-confirmed, reported minority on top of a real-data, human-validated core. I never let the model I’m grading author the tasks that grade it, and I never trust an LLM-written gold label without an executable check.”</p>
+<hr>
+<h2 id="10-a-compact-worked-example"><a class="header" href="#10-a-compact-worked-example">10. A compact worked example</a></h2>
+<p>The §6 toolkit is the production version. Here is the condensed, dependency-free reference implementation of the two most-asked-about pieces — inter-annotator agreement and an n-gram contamination check — in a single self-contained file. Keep this in your head for whiteboard interviews; it (a) computes Cohen’s and Fleiss’ kappa on annotations and flags low-agreement items for review, and (b) runs a simple n-gram contamination check between test tasks and a training corpus. Pure standard library plus optional scikit-learn.</p>
+<pre><code class="language-python">"""Benchmark dataset QA: inter-annotator agreement + contamination check."""
+from collections import Counter
+from itertools import combinations
+
+
+# ---------- 1. Cohen's kappa (2 annotators) ----------
+def cohens_kappa(a, b):
+    """a, b: equal-length lists of categorical labels from two raters."""
+    assert len(a) == len(b) and len(a) &gt; 0
+    n = len(a)
+    p_o = sum(x == y for x, y in zip(a, b)) / n           # observed agreement
+    ca, cb = Counter(a), Counter(b)
+    cats = set(ca) | set(cb)
+    p_e = sum((ca[c] / n) * (cb[c] / n) for c in cats)    # chance agreement
+    return 1.0 if p_e == 1 else (p_o - p_e) / (1 - p_e)
+
+
+# ---------- 2. Fleiss' kappa (n raters, per-item panel) ----------
+def fleiss_kappa(ratings):
+    """ratings: list of items; each item is a list of labels (one per rater).
+    Assumes a fixed number of raters n per item."""
+    cats = sorted({lbl for item in ratings for lbl in item})
+    idx = {c: j for j, c in enumerate(cats)}
+    N = len(ratings)
+    n = len(ratings[0])
+    assert all(len(item) == n for item in ratings), "fixed rater count required"
+
+    M = [[0] * len(cats) for _ in range(N)]               # N x k count matrix
+    for i, item in enumerate(ratings):
+        for lbl in item:
+            M[i][idx[lbl]] += 1
+
+    P_i = [(sum(c * c for c in M[i]) - n) / (n * (n - 1)) for i in range(N)]
+    P_bar = sum(P_i) / N
+    p_j = [sum(M[i][j] for i in range(N)) / (N * n) for j in range(len(cats))]
+    P_e = sum(p * p for p in p_j)
+    kappa = 1.0 if P_e == 1 else (P_bar - P_e) / (1 - P_e)
+    return kappa, P_i                                     # P_i flags contentious items
+
+
+def flag_low_agreement(ratings, threshold=0.5):
+    """Return indices of items whose per-item agreement P_i is below threshold."""
+    _, P_i = fleiss_kappa(ratings)
+    return [i for i, p in enumerate(P_i) if p &lt; threshold]
+
+
+# ---------- 3. Simple n-gram contamination check ----------
+def ngrams(text, n=8):
+    toks = text.lower().split()
+    return {tuple(toks[i:i + n]) for i in range(len(toks) - n + 1)}
+
+
+def contamination_score(test_item, corpus_ngrams, n=8):
+    """Fraction of the test item's n-grams that appear in the training corpus.
+    ~0 = clean; near 1 = the item is essentially in the corpus."""
+    tg = ngrams(test_item, n)
+    if not tg:
+        return 0.0
+    return len(tg &amp; corpus_ngrams) / len(tg)
+
+
+def scan_contamination(test_items, corpus_texts, n=8, flag_at=0.5):
+    corpus_ngrams = set()
+    for doc in corpus_texts:
+        corpus_ngrams |= ngrams(doc, n)
+    flagged = []
+    for i, item in enumerate(test_items):
+        s = contamination_score(item, corpus_ngrams, n)
+        if s &gt;= flag_at:
+            flagged.append((i, round(s, 3)))
+    return flagged
+
+
+# ---------- Demo ----------
+if __name__ == "__main__":
+    # Two reviewers labeling 6 agent outputs pass(1)/fail(0)
+    r1 = [1, 1, 0, 1, 0, 1]
+    r2 = [1, 0, 0, 1, 0, 1]
+    print("Cohen's kappa:", round(cohens_kappa(r1, r2), 3))
+
+    # Three reviewers per item, 6 items
+    panel = [
+        [1, 1, 1],   # unanimous pass
+        [1, 0, 1],   # split -&gt; low P_i
+        [0, 0, 0],   # unanimous fail
+        [1, 1, 0],   # split
+        [0, 0, 0],
+        [1, 1, 1],
+    ]
+    k, P_i = fleiss_kappa(panel)
+    print("Fleiss' kappa:", round(k, 3))
+    print("Low-agreement items:", flag_low_agreement(panel, threshold=0.5))
+
+    # Contamination: test task vs. a training corpus containing a near-copy
+    tests = ["reset the user password and email a confirmation to the account owner"]
+    corpus = ["to reset the user password and email a confirmation to the account owner you call ..."]
+    print("Contamination flags:", scan_contamination(tests, corpus, n=6, flag_at=0.4))
+</code></pre>
+<p>Notes on correctness and use:</p>
+<ul>
+<li><code>cohens_kappa</code> reproduces the §7.1 worked value on the 100-item matrix (feed it the expanded label lists) and returns ~0.49.</li>
+<li><code>fleiss_kappa</code> returns both the aggregate and the per-item ( P_i ); route items below your threshold back to a third reviewer or cut them.</li>
+<li>The n-gram scanner is a <strong>screen, not a proof</strong> — it catches direct/near-direct copies at the chosen <code>n</code>. Lower <code>n</code> catches more (and more false positives); it will <em>not</em> catch paraphrase leakage, for which you need the perplexity/probing methods in §8.2. In production, hash n-grams and use a Bloom filter or MinHash/LSH so you can scan a test set against a terabyte-scale corpus without holding it in RAM.</li>
+</ul>
+<hr>
+<h2 id="11-versioning-licensing-and-datasheets"><a class="header" href="#11-versioning-licensing-and-datasheets">11. Versioning, licensing, and datasheets</a></h2>
+<p>A benchmark you cannot cite exactly is a benchmark you cannot trust. Treat datasets like software releases.</p>
+<p><strong>Versioning.</strong></p>
+<ul>
+<li><strong>Immutable, semantic versions.</strong> <code>v1.0.0</code>, <code>v1.1.0</code> (added tasks), <code>v2.0.0</code> (changed a verifier — breaking). Never mutate a released version in place; a score is only comparable within a fixed version. A “silent fix” to a task is the most insidious way to make last quarter’s numbers incomparable with this quarter’s.</li>
+<li><strong>Content-hash every task</strong> and record the set hash for a release, so anyone can verify they ran the exact data you did (<code>content_hash</code> / <code>release_hash</code> in §6.1). A shared release hash turns “which SWE-bench did you run?” from an argument into a string comparison.</li>
+<li><strong>Changelog + errata.</strong> Log every task added, retired, or corrected, with a reason. Retire (don’t silently delete) broken tasks so old results remain interpretable — publish an errata revision id that others cite.</li>
+<li><strong>Track provenance and creation date per task</strong> — essential for the recency-stratified contamination check and for honest reporting of what distribution you sampled.</li>
+</ul>
+<p><strong>Licensing.</strong></p>
+<ul>
+<li><strong>Know the license of every source.</strong> Scraped GitHub code carries the repo’s license; production transcripts carry privacy obligations; another benchmark’s tasks carry <em>its</em> license (many are research-only / non-commercial). A single GPL or non-commercial task can poison the redistributability of your whole release.</li>
+<li><strong>Choose a clear license for your release.</strong> Permissive (CC-BY, Apache-2.0, MIT) maximizes reuse; a custom eval license or gated access may be warranted for a held-out set you must keep uncontaminated.</li>
+<li><strong>PII and consent.</strong> If tasks derive from real user data, anonymize, get consent where required, and document the process. This is a legal and ethical requirement, not a nicety, and it belongs in the datasheet.</li>
+</ul>
+<p><strong>Datasheets.</strong> Ship a <strong>datasheet</strong> (Gebru et al.) alongside the data answering: <em>motivation</em> (why it was created, by whom, funded how), <em>composition</em> (what a task is, how many, what’s labeled, sensitive content), <em>collection</em> (sources, sampling, who annotated, IAA achieved), <em>preprocessing/cleaning</em>, <em>uses</em> (intended and out-of-scope), <em>distribution and license</em>, and <em>maintenance</em> (who owns it, how errata are handled, how it’s versioned). This is the artifact that turns your JSON into an instrument other people can trust and critique. (<a href="https://arxiv.org/pdf/1803.09010">Datasheets for Datasets arXiv 1803.09010</a>)</p>
+<p><strong>Croissant — the machine-readable half.</strong> A datasheet is prose for humans; <strong>Croissant</strong> (MLCommons, 2024) is structured metadata for machines. It is a JSON-LD format (built on schema.org) that describes a dataset’s files, fields, splits, and semantics so any tool can load, validate, and track it uniformly — Hugging Face, Kaggle, TensorFlow Datasets, and OpenML all emit or consume it. Think of it as the <code>package.json</code> of a dataset: it makes your benchmark discoverable, loadable, and auditable without bespoke glue code, and the 2025 Croissant-plus-MCP work lets agents load datasets directly by their metadata. A mature release in 2026 ships <strong>both</strong> a datasheet (human trust) and a Croissant record (machine interoperability), on top of semantic versions and per-task content hashes. (<a href="https://mlcommons.org/2024/03/croissant_metadata_announce/">Croissant announcement, Mar 2024</a>, <a href="https://docs.mlcommons.org/croissant/docs/croissant-spec.html">spec</a>, <a href="https://mlcommons.org/2025/10/croissant-mcp/">Croissant + MCP, Oct 2025</a>)</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Documentation artifact</th><th>Audience</th><th>Answers</th><th>Standard</th></tr>
+</thead>
+<tbody>
+<tr><td>Datasheet</td><td>Humans deciding whether to trust/use</td><td>provenance, composition, consent, intended use</td><td>Gebru et al. 2018</td></tr>
+<tr><td>Croissant record</td><td>Tools &amp; agents loading/validating</td><td>files, fields, splits, types, semantics</td><td>MLCommons 2024</td></tr>
+<tr><td>Semantic version + changelog</td><td>Anyone comparing scores over time</td><td>what changed, when, why</td><td>SemVer convention</td></tr>
+<tr><td>Content/release hashes</td><td>Anyone reproducing a number</td><td>did I run the exact data you did</td><td>your pipeline</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="12-production-case-studies--war-stories"><a class="header" href="#12-production-case-studies--war-stories">12. Production case studies &amp; war stories</a></h2>
+<p>Theory is abstract; the failures are specific. These are real, documented incidents (and the durable curation practices behind good golden datasets). Each ends with the lesson to repeat in an interview.</p>
+<h3 id="121-how-good-teams-curate-a-golden-dataset"><a class="header" href="#121-how-good-teams-curate-a-golden-dataset">12.1 How good teams curate a golden dataset</a></h3>
+<p>Across strong eval teams the golden-dataset lifecycle looks the same, and it looks like software:</p>
+<ol>
+<li><strong>Seed from production, not imagination.</strong> Sample real, anonymized transcripts stratified by intent so the rare-but-critical cases (fraud, refunds at policy edges) appear at usable frequency. Real logs also happen to be post-cutoff and private — free contamination resistance.</li>
+<li><strong>Author the verifier with the task.</strong> For every golden item, write the executable check <em>and</em> run the reference solution through it (must pass) plus a known-wrong solution (must fail). A golden set without a tested verifier is decoration.</li>
+<li><strong>Double- or triple-review with a rubric</strong>, ensemble conservatively, and record the IAA. Below ( \kappa = 0.7 ), the set goes back for rewording, not out the door.</li>
+<li><strong>Calibrate difficulty with baselines</strong> so the set discriminates between the systems you actually compare.</li>
+<li><strong>Freeze, hash, datasheet, and split off a private slice</strong> before a single agent touches it.</li>
+<li><strong>Treat it as living:</strong> a standing errata process, a refresh cadence, and retirement (not deletion) of saturated or broken tasks.</li>
+<li><strong>Guard the private slice with policy:</strong> logged, infrequent scoring runs; no prompt-tuning against it. The discipline, not the cleverness, is what keeps the ruler straight.</li>
+</ol>
+<p>The recurring theme: the teams that trust their numbers are the ones that treat the dataset build as an engineering project with gates, reviews, and version control — exactly the §5 pipeline.</p>
+<h3 id="122-war-story-swe-benchs-original-verifiers-rejected-correct-code"><a class="header" href="#122-war-story-swe-benchs-original-verifiers-rejected-correct-code">12.2 War story: SWE-bench’s original verifiers rejected correct code</a></h3>
+<p><strong>What happened.</strong> The original SWE-bench used the real PR’s tests as the verifier on scraped GitHub issues. When OpenAI and the authors put 1,699 sampled tasks in front of 93 developers, they found roughly <strong>38% had underspecified problem statements</strong> and roughly <strong>61% had tests that could reject a valid solution</strong> — the <em>majority</em> of a widely cited benchmark was measuring the wrong thing. Filtering to 500 clean tasks (“Verified”) moved GPT-4o from ~16% to ~33% <em>on the same model</em>. The 2025 follow-up “Are ‘Solved Issues’ in SWE-bench Really Solved Correctly?” showed the inverse failure too: many <em>passing</em> patches are not genuine fixes — the tests are too weak, not too strict. (<a href="https://openai.com/index/introducing-swe-bench-verified/">SWE-bench Verified — OpenAI, Aug 2024</a>, <a href="https://arxiv.org/html/2503.15223v1">arXiv 2503.15223</a>)</p>
+<p><strong>Lesson.</strong> An executable verifier is necessary but not sufficient. A verifier can be <strong>too strict</strong> (rejects valid solutions — inflates difficulty, penalizes good agents) or <strong>too weak</strong> (accepts wrong solutions — inflates scores). You must test the verifier in <em>both</em> directions: run known-good solutions (must all pass) and known-bad solutions (must all fail). The single most valuable sentence: “the same model scored twice as high when the ruler was fixed — data quality dominated capability.”</p>
+<h3 id="123-war-story-gsm8k-saturation-was-partly-memorization-gsm1k"><a class="header" href="#123-war-story-gsm8k-saturation-was-partly-memorization-gsm1k">12.3 War story: GSM8k saturation was partly memorization (GSM1k)</a></h3>
+<p><strong>What happened.</strong> GSM8k (grade-school math) was near-saturated and widely quoted as evidence of reasoning. Scale AI rebuilt it from scratch as <strong>GSM1k</strong> — same distribution, held private — and re-evaluated. Some model families dropped <strong>up to ~8%</strong>, and there was a <strong>Spearman r² ≈ 0.36</strong> between a model’s probability of <em>generating</em> GSM8k examples and its GSM8k→GSM1k performance gap. Frontier models showed little drop; several smaller/open models showed the largest gaps. The benchmark had been partly measuring memorization, not arithmetic reasoning. (<a href="https://arxiv.org/abs/2405.00332">GSM1k, Scale AI, arXiv 2405.00332, May 2024</a>)</p>
+<p><strong>Lesson.</strong> Saturation on a popular static benchmark is <em>ambiguous</em>: it can mean “the models got good” or “the benchmark leaked.” The way to disambiguate is a <strong>fresh private clone of the same distribution</strong> — the recency/private-set defense in operational form. And the generation-probability correlation gives you a quantitative contamination fingerprint you can actually compute.</p>
+<h3 id="124-war-story-33-of-ground-truth-was-wrong--and-it-flipped-rankings"><a class="header" href="#124-war-story-33-of-ground-truth-was-wrong--and-it-flipped-rankings">12.4 War story: 3.3% of “ground truth” was wrong — and it flipped rankings</a></h3>
+<p><strong>What happened.</strong> Northcutt, Athalye, and Mueller audited the test sets of ten of the most cited ML benchmarks (MNIST, ImageNet, CIFAR, etc.) and found an average of <strong>at least 3.3% label errors</strong>, with <strong>~6% in the ImageNet validation set</strong>. The consequence was not cosmetic: on ImageNet, correcting the mislabeled slice was enough that <strong>ResNet-18 overtakes ResNet-50</strong> once the originally-mislabeled test prevalence rises by ~6% — i.e., the <em>lower-capacity</em> model was actually better on correctly-labeled data, and the label noise had hidden it. Benchmark rankings were partly an artifact of wrong labels. (<a href="https://arxiv.org/abs/2103.14749">Pervasive Label Errors, arXiv 2103.14749, 2021</a>)</p>
+<p><strong>Lesson.</strong> “Ground truth” is a claim, not a fact, and even canonical benchmarks carry a few percent of wrong labels — enough to invert model comparisons. This is <em>the</em> argument for measuring label correctness (IAA, independent gold review) before trusting any ranking, and for reporting per-slice results: a small mislabeled slice can dominate a close comparison. For agents, where a single ambiguous task can flip a leaderboard, the effect is larger, not smaller.</p>
+<h3 id="125-war-story-the-self-inflicted-contamination-of-a-held-out-set"><a class="header" href="#125-war-story-the-self-inflicted-contamination-of-a-held-out-set">12.5 War story: the self-inflicted contamination of a “held-out” set</a></h3>
+<p><strong>What happened (composite, representative of many eval teams).</strong> A team keeps a “held-out” eval set and, over six months, iterates prompts, tool schemas, and scaffolds against it daily — because it is the only realistic set they have. Dev score climbs steadily from 61% to 78%. Production quality does not move. The held-out set had quietly become training data: the team had <em>fit the scaffold to the specific tasks</em>, learning their idiosyncrasies rather than the capability. There was no crawler to blame; the leak was the team’s own workflow.</p>
+<p><strong>Lesson.</strong> The most common contamination in a real org is <strong>dev-to-test bleed</strong>, and it is a <em>policy</em> failure, not a modeling one. Fixes: demote the overused set to “dev,” cut a fresh private set (ideally post-cutoff) you look at <em>rarely</em> and <em>log</em>, require sign-off for scoring runs against it, and — the tell — watch for a growing gap between held-out score and production outcomes, which is the fingerprint of overfitting to your own ruler.</p>
+<h3 id="126-the-pattern-behind-every-war-story"><a class="header" href="#126-the-pattern-behind-every-war-story">12.6 The pattern behind every war story</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Incident</th><th>Root cause</th><th>Signal that would have caught it</th><th>Durable fix</th></tr>
+</thead>
+<tbody>
+<tr><td>SWE-bench too-strict tests</td><td>Untested verifier (too strict)</td><td>Reference-solution rejection rate</td><td>Verify the verifier both directions</td></tr>
+<tr><td>SWE-bench weak tests</td><td>Untested verifier (too weak)</td><td>Known-wrong-solution pass rate</td><td>Same; spot-check genuine fixes</td></tr>
+<tr><td>GSM8k saturation</td><td>Contamination / memorization</td><td>Recency clone score cliff; gen-prob correlation</td><td>Fresh private clone, timestamped tasks</td></tr>
+<tr><td>ImageNet ranking flip</td><td>Wrong labels</td><td>Label-correctness IAA; independent gold review</td><td>Measure IAA; per-slice reporting</td></tr>
+<tr><td>Held-out overfit</td><td>Dev-to-test bleed</td><td>Held-out vs production gap growing</td><td>Logged, infrequent private-set runs</td></tr>
+</tbody>
+</table>
+</div>
+<p>Every one traces to a <em>data</em> property — verifier fidelity, contamination, label correctness, or split hygiene — that a metric can never fix. That is the chapter’s whole thesis in one table.</p>
+<hr>
+<h2 id="13-failure-modes-and-pitfalls"><a class="header" href="#13-failure-modes-and-pitfalls">13. Failure modes and pitfalls</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Pitfall</th><th>Symptom</th><th>Fix</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Ambiguous tasks</strong></td><td>Low inter-annotator ( \kappa ); reviewers argue</td><td>Rewrite for a single unambiguous answer; cut irreparable ones</td></tr>
+<tr><td><strong>Wrong golden answers</strong></td><td>Strong agents “fail” tasks humans solve trivially</td><td>Independent gold-answer review; executable verifiers</td></tr>
+<tr><td><strong>Over-strict verifiers</strong></td><td>Correct solutions rejected (SWE-bench’s original flaw)</td><td>Add <code>PASS_TO_PASS</code> guards; test the verifier against known-good and known-bad solutions</td></tr>
+<tr><td><strong>Over-weak verifiers</strong></td><td>Wrong solutions accepted; passing patches aren’t real fixes</td><td>Strengthen tests; spot-check that passes are genuine (arXiv 2503.15223)</td></tr>
+<tr><td><strong>Flat difficulty</strong></td><td>Every system scores ~the same</td><td>Calibrate with baselines; ensure an easy/medium/hard spread</td></tr>
+<tr><td><strong>Contamination</strong></td><td>Score cliff between pre- and post-cutoff tasks; suspicious jumps</td><td>Canary strings, held-out set, recency split</td></tr>
+<tr><td><strong>Test-set overfitting</strong></td><td>Dev score climbs, real-world flat</td><td>Freeze a private slice; look at it rarely</td></tr>
+<tr><td><strong>Synthetic monoculture</strong></td><td>High scores that don’t transfer to production</td><td>Human-filter; keep synthetic a minority; verify labels</td></tr>
+<tr><td><strong>Aggregate-only reporting</strong></td><td>One number hides total failure on a whole category</td><td>Report per-slice and per-difficulty; publish variance</td></tr>
+<tr><td><strong>Silent mutation</strong></td><td>Old and new scores incomparable</td><td>Semantic versioning + content hashes + changelog</td></tr>
+<tr><td><strong>Too small</strong></td><td>Score swings wildly between runs</td><td>Power-check size; report confidence intervals</td></tr>
+<tr><td><strong>Kappa paradox misread</strong></td><td>Low ( \kappa ) on obviously-clean skewed labels</td><td>Report raw agreement + marginals; use PABAK/AC1 when skewed</td></tr>
+<tr><td><strong>Unpinned harness</strong></td><td>Two “same” benchmark numbers differ 2x</td><td>Pin (dataset revision, harness, model, trials) tuple</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="14-tools-and-datasets"><a class="header" href="#14-tools-and-datasets">14. Tools and datasets</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Name</th><th>Type</th><th>What it gives you</th><th>Link</th></tr>
+</thead>
+<tbody>
+<tr><td>SWE-bench / Verified</td><td>Coding benchmark</td><td>500 human-vetted real GitHub issues, test-based scoring</td><td><a href="https://www.swebench.com/verified.html">swebench.com</a></td></tr>
+<tr><td>GAIA</td><td>General-assistant benchmark</td><td>466 tool-use questions, 3 difficulty levels, private answers</td><td><a href="https://arxiv.org/abs/2311.12983">arXiv</a></td></tr>
+<tr><td>τ-bench / τ²-bench</td><td>Tool-agent-user</td><td>State-based scoring, pass^k reliability, retail/airline</td><td><a href="https://github.com/sierra-research/tau2-bench">repo</a></td></tr>
+<tr><td>WebArena</td><td>Web agents</td><td>812 tasks on self-hostable reproducible sites</td><td><a href="https://github.com/web-arena-x/webarena">repo</a></td></tr>
+<tr><td>LiveCodeBench</td><td>Living code benchmark</td><td>Timestamped problems for contamination-free eval</td><td><a href="https://livecodebench.github.io/">site</a></td></tr>
+<tr><td>LiveBench</td><td>Living broad benchmark</td><td>Monthly-refreshed, objective, contamination-resistant</td><td><a href="https://github.com/livebench/livebench">repo</a></td></tr>
+<tr><td>GSM1k</td><td>Contamination probe</td><td>Fresh private clone of GSM8k to measure overfitting</td><td><a href="https://arxiv.org/abs/2405.00332">arXiv</a></td></tr>
+<tr><td>BIG-bench</td><td>Broad LM benchmark</td><td>Canary-string convention for contamination</td><td><a href="https://github.com/google/BIG-bench">repo</a></td></tr>
+<tr><td>Min-K% / Min-K%++</td><td>Contamination detection</td><td>Membership-inference / memorization probes</td><td><a href="https://arxiv.org/abs/2310.16789">arXiv</a></td></tr>
+<tr><td>cleanlab</td><td>Label-QA library</td><td>Finds likely label errors automatically</td><td><a href="https://github.com/cleanlab/cleanlab">github.com/cleanlab/cleanlab</a></td></tr>
+<tr><td>Hugging Face Datasets</td><td>Data platform</td><td>Versioned hosting, revisions, dataset cards, Croissant</td><td><a href="https://huggingface.co/datasets">hf.co/datasets</a></td></tr>
+<tr><td>Croissant (MLCommons)</td><td>Metadata standard</td><td>Machine-readable dataset description (JSON-LD)</td><td><a href="https://docs.mlcommons.org/croissant/">docs.mlcommons.org/croissant</a></td></tr>
+<tr><td>scikit-learn</td><td>Library</td><td><code>cohen_kappa_score</code>, metrics</td><td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.metrics.cohen_kappa_score.html">sklearn</a></td></tr>
+<tr><td>statsmodels</td><td>Library</td><td><code>fleiss_kappa</code>, IAA stats</td><td><a href="https://www.statsmodels.org/stable/generated/statsmodels.stats.inter_rater.fleiss_kappa.html">statsmodels</a></td></tr>
+<tr><td>Krippendorff (PyPI)</td><td>Library</td><td>Krippendorff’s ( \alpha ) for any measurement level</td><td><a href="https://pypi.org/project/krippendorff/">pypi.org/project/krippendorff</a></td></tr>
+<tr><td>datasketch</td><td>Library</td><td>MinHash / LSH for scalable overlap scans</td><td><a href="https://github.com/ekzhu/datasketch">datasketch</a></td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="15-interview-mastery"><a class="header" href="#15-interview-mastery">15. Interview mastery</a></h2>
+<p>This section is the drill sheet. First the rapid-fire Q&amp;A, then a 60-second set-piece, then a system-design walkthrough, then the tradeoff tables and the red-flag/green-flag lists that let you audit any benchmark on sight.</p>
+<h3 id="151-rapid-fire-qa"><a class="header" href="#151-rapid-fire-qa">15.1 Rapid-fire Q&amp;A</a></h3>
+<p><strong>Q1. Why did SWE-bench Verified score higher than the original SWE-bench for the same model, and what does that teach you?</strong>
+Because ~68% of original tasks were filtered out for underspecified problem statements or unit tests that reject valid patches; 93 developers triple-annotated 1,699 samples down to 500 clean ones. GPT-4o went from ~16% to ~33% on the <em>same model</em> — the benchmark got more accurate, not the model better. Lesson: label/verifier quality can dominate the score more than model capability.</p>
+<p><strong>Q2. You have 78% raw agreement between two reviewers. Is the benchmark trustworthy?</strong>
+Not from that number alone. Raw agreement ignores chance; on a skewed label distribution you can hit 78% while knowing nothing. Compute Cohen’s ( \kappa ). If ( \kappa ) is ~0.4 (moderate), a meaningful fraction of tasks are ambiguous and you should revise wording/rubrics before publishing scores. And watch the kappa paradox: if labels are 95% one class, even a <em>low</em> kappa may be fine — report raw agreement, marginals, and kappa together.</p>
+<p><strong>Q3. How would you detect that a public benchmark has contaminated the model you’re testing?</strong>
+Multiple signals: (1) recency split — compare tasks created before vs. after the training cutoff; a score cliff is a red flag; (2) n-gram overlap between tasks and any available training corpus; (3) black-box probes — guided completion of a masked task, or preferring the original over perturbed variants; (4) perplexity/Min-K%(++) memorization tests; (5) the GSM1k trick — correlate the model’s probability of <em>generating</em> a benchmark item with its score gap on a fresh clone. No single method is proof; triangulate.</p>
+<p><strong>Q4. When is synthetic eval data appropriate, and how do you keep it honest?</strong>
+For coverage of rare/edge/adversarial cases and for scaling a validated task template — never as the benchmark’s backbone. Keep it honest by: generating with a different, stronger model than any under test; passing every task through human filtering and an independent verifier; verifying gold labels rather than trusting them; keeping synthetic tasks a labeled minority; and reporting the synthetic fraction.</p>
+<p><strong>Q5. Why does τ-bench score by database state instead of an LLM judge, and why introduce pass^k?</strong>
+State comparison is objective, cheap, and drift-free — the ledger either matches the goal or it doesn’t, no judge bias. pass^k measures <em>reliability</em>: the probability that all k independent trials succeed. Average success hides that an agent that passes 60% of the time may pass all 8 tries only 20% of the time — which is what deployment actually cares about.</p>
+<p><strong>Q6. What belongs in a datasheet, and why bother?</strong>
+Motivation, composition, collection process (including who annotated and the IAA achieved), preprocessing, intended and out-of-scope uses, distribution/license, and maintenance/versioning. It bothers because it makes provenance auditable, surfaces license and PII constraints, and lets others reproduce and critique your scores. A dataset without a datasheet is an instrument with no calibration certificate. Pair it with a Croissant record so machines can load and validate it too.</p>
+<p><strong>Q7. How do you calibrate difficulty when building a custom benchmark?</strong>
+Run 2–3 baselines (a weak model, a strong model, and ideally a human) and bucket tasks by observed solve rate into easy/medium/hard. Ensure a spread — if everything solves or nothing does, the benchmark has no discriminative power. Center the mass of medium tasks where you expect frontier systems to sit so the ruler has ticks in the region you care about. The information is in the tasks that <em>split</em> your systems.</p>
+<p><strong>Q8. Your held-out set has been used for prompt tuning over six months. What’s the problem and the fix?</strong>
+It is no longer held out — you’ve turned it into training data by overfitting your prompts/scaffold to it, a self-inflicted contamination. Fix: retire it to the “dev” tier, cut a fresh private test set you look at rarely (ideally with post-cutoff tasks), and enforce a policy that scoring runs on the private set are infrequent and logged. The tell is a growing gap between held-out score and production outcomes.</p>
+<p><strong>Q9. A verifier gives you 100% reproducible pass/fail. Is that enough to trust it?</strong>
+No — reproducible is not the same as correct. A verifier can be reproducibly <em>too strict</em> (rejects valid solutions, as original SWE-bench did) or reproducibly <em>too weak</em> (accepts wrong ones; passing tests that aren’t genuine fixes). Test the verifier in both directions: every known-good solution must pass, every known-bad solution must fail. Reproducibility is table stakes; fidelity is the property you actually need.</p>
+<p><strong>Q10. Your benchmark has 50 tasks and your agent scores 72%. A rival scores 76%. Who’s better?</strong>
+Unknown — 4 points on 50 tasks is almost certainly inside the confidence interval, and agents are stochastic across seeds. Report pass@k/pass^k with confidence intervals and per-slice breakdowns; a single-run aggregate on a small set is an anecdote. Also confirm both numbers used the same dataset revision and harness, or you’re comparing different rulers.</p>
+<p><strong>Q11. Why prefer executable ground truth over an LLM judge when you can?</strong>
+Executable checks (state diffs, tests, exact match) don’t drift, don’t have mood, cost nothing to re-run, and can’t be gamed by persuasive prose. LLM judges are unavoidable for open-ended outputs but are the most fragile ground truth — the “answer” lives in a prompt that can drift and disagree with itself. Hierarchy: state diff &gt; tests &gt; normalized match &gt; human rubric &gt; uncalibrated single judge. Climb as high as the domain allows, and if you must use a judge, pin its version and report judge–human kappa.</p>
+<p><strong>Q12. What’s the difference between a datasheet and Croissant, and do you need both?</strong>
+A datasheet is human-readable prose (motivation, provenance, consent, intended use) that helps a person decide whether to trust and how to use the data. Croissant is machine-readable JSON-LD metadata (files, fields, splits, types) that lets tools and agents load and validate it uniformly. They are complementary — humans read the datasheet, machines read Croissant — and a mature release ships both plus semantic versions and content hashes.</p>
+<p><strong>Q13. How big should a benchmark be?</strong>
+Big enough that the confidence interval on your headline metric is smaller than the differences you need to detect, <em>and</em> big enough that every slice you report (each difficulty tier, each intent) has enough tasks to be non-anecdotal. Power-analyze it: for a proportion, the CI half-width is roughly ( 1.96\sqrt{p(1-p)/N} ), so distinguishing 70% from 75% reliably needs low hundreds of tasks <em>per slice</em>, not in total. Quality and coverage beat raw size — 50 well-guarded fresh tasks can be worth more than 5,000 contaminated ones.</p>
+<p><strong>Q14. A benchmark is saturating — top models all score &gt;95%. What do you conclude and do?</strong>
+Two hypotheses: the models genuinely mastered the capability, or the benchmark leaked/is too easy. Disambiguate with a fresh private clone of the same distribution (the GSM1k move) and a recency slice. If the fresh clone shows a cliff, it was contamination; if not, the benchmark has lost discriminative power and you should retire the saturated tasks and add harder, post-cutoff ones. Either way, a saturated static benchmark is done as a ranking tool.</p>
+<p><strong>Q15. Someone hands you a leaderboard number. What do you ask before believing it?</strong>
+Which dataset revision (hash)? Which split (public/dev/private)? What harness — scaffold, tool set, max turns, retries, timeout? Which model version and decoding settings? How many trials and what variance? Any errata revision applied? Any contamination check for this model’s cutoff? Without the (dataset revision, harness, model, trials) tuple, the number is a claim you can’t reproduce.</p>
+<p><strong>Q16. Your agent passes 90% of tasks but users complain. What data problem might explain it?</strong>
+Distribution mismatch: the benchmark samples the easy/common tail while users hit the messy, adversarial, long-tail cases the benchmark under-covers. Check the coverage matrix (intent × difficulty × tool-count) for empty or thin cells, compare the benchmark’s intent distribution to production logs, and confirm the hard/adversarial cells actually have tasks. High benchmark score plus low production quality is usually a coverage or difficulty-calibration failure, not a metric bug.</p>
+<h3 id="152-the-60-second-set-piece-explain-benchmark-contamination-and-how-youd-detect-it"><a class="header" href="#152-the-60-second-set-piece-explain-benchmark-contamination-and-how-youd-detect-it">15.2 The 60-second set-piece: “explain benchmark contamination and how you’d detect it”</a></h3>
+<blockquote>
+<p>“Contamination is when the eval data — or something close enough, like the fixing PR or a paraphrase — leaked into the model’s training set, so the model <em>recalls</em> answers instead of <em>reasoning</em> to them. That silently inflates scores, and in 2026 I assume every public benchmark is at least partly contaminated. I never trust one signal; I triangulate three. <strong>One, a recency slice</strong>: split tasks by creation date around the model’s training cutoff and compare solve rates — a cliff where old tasks are solved and fresh ones aren’t is the cheapest, most convincing evidence, and it needs no training corpus. <strong>Two, n-gram overlap</strong> against any training text I can reach, scaled with MinHash or a Bloom filter — this catches verbatim copies but misses paraphrase. <strong>Three, a memorization probe</strong> — Min-K%++ on token logprobs, or a black-box guided-completion test where I feed the first half of a task and see if the model reproduces the exact continuation. If all three agree, I have a case; any one alone is a hint. But detection is the consolation prize — the real fix is prevention: a <strong>held-out private set with post-cutoff tasks and a canary GUID</strong>, so I’m measuring capability, not recall. A well-guarded 50-task fresh set beats a 5,000-task benchmark every crawler has seen.”</p>
+</blockquote>
+<h3 id="153-system-design-prompt-design-a-custom-eval-dataset-for-a-domain-agent"><a class="header" href="#153-system-design-prompt-design-a-custom-eval-dataset-for-a-domain-agent">15.3 System-design prompt: “design a custom eval dataset for a domain agent”</a></h3>
+<p><strong>Prompt:</strong> <em>“Design an evaluation dataset for a customer-support agent that handles billing disputes for a SaaS company — it can issue refunds, adjust plans, and place fraud holds, all under a written refund policy.”</em></p>
+<p><strong>A strong answer walks the interviewer through the §5 pipeline, made concrete:</strong></p>
+<p><strong>1. The question (one sentence).</strong> “Can the agent resolve a billing dispute end-to-end — correctly mutating the ledger and subscription state — while obeying the refund policy and escalating when it should?” That fixes the actor (support agent), family (billing disputes), success condition (correct final DB state), and constraints (policy compliance + correct escalation).</p>
+<p><strong>2. Ground-truth shape.</strong> State-based. Each task ships a <strong>seed database</strong> (accounts, invoices, subscriptions, prior tickets), a <strong>policy document</strong>, a <strong>tool/API surface</strong> (<code>refund</code>, <code>change_plan</code>, <code>place_fraud_hold</code>, <code>escalate</code>), and a <strong>goal-state predicate</strong> (the exact ledger/subscription rows that must hold after). Score by DB-state equality plus a policy-compliance assertion — objective, drift-free, no judge. This is the τ-bench pattern.</p>
+<p><strong>3. Sourcing + coverage matrix.</strong> Seed from anonymized production transcripts, stratified by intent, then have domain experts author the edge/adversarial cells. Build an explicit coverage matrix and require ≥N tasks per cell:</p>
+<pre><code>                | happy path | policy-edge | adversarial user | multi-tool | should-escalate
+----------------+------------+-------------+------------------+------------+----------------
+refund          |    N        |     N        |       N           |    N        |      N
+plan change     |    N        |     N        |       N           |    N        |      N
+fraud hold      |    N        |     N        |       N           |    N        |      N
+mixed dispute   |    N        |     N        |       N           |    N        |      N
+</code></pre>
+<p>The adversarial column (user lies, demands out-of-policy refunds, tries prompt injection) and the should-escalate row (agent must <em>refuse</em> and hand off) are where support agents actually fail and where naive benchmarks are empty.</p>
+<p><strong>4. Verifier, tested both ways.</strong> For each task, run a reference “correct” trajectory (must satisfy the goal predicate and policy check) and a known-wrong one (must fail). A verifier that only ever saw the gold path is untested.</p>
+<p><strong>5. Difficulty calibration.</strong> Run a weak model, a strong model, and a human agent; bucket by solve rate into easy/medium/hard; ensure a spread centered where you expect the deployed model to sit.</p>
+<p><strong>6. Reliability, not just average.</strong> Score with <strong>pass^k</strong> — a support agent that refunds correctly 60% of the time is not deployable; you need it to hold across independent trials. Report per-cell and per-difficulty, with confidence intervals.</p>
+<p><strong>7. Contamination + split hygiene.</strong> These are post-cutoff, private-by-construction (real transcripts), which helps. Still: hold out a private scoring slice, embed a canary GUID, timestamp every task, and keep a policy of logged, infrequent private-set runs. Refresh the adversarial cells each cycle as attackers adapt.</p>
+<p><strong>8. Documentation + versioning.</strong> Datasheet (provenance, the anonymization/consent process, IAA achieved) + Croissant record + semantic version + per-task content hashes + errata process.</p>
+<p><strong>The sketch to draw on the whiteboard:</strong></p>
+<pre><code> production logs ──stratify by intent──▶ seed tasks ──experts add edge/adversarial──▶ task pool
+                                                                                          │
+   coverage matrix (intent × difficulty × path)  ◀── require ≥N per cell ────────────────┘
+                                                                                          │
+ each task = { seed DB, policy doc, tools, goal-state predicate }                         │
+                                                                                          ▼
+        verify the verifier (gold passes, known-bad fails) ──▶ calibrate difficulty (3 baselines)
+                                                                                          │
+        triple review + rubric ──▶ IAA gate (κ≥0.7) ──▶ contamination screen ──▶ freeze  │
+                                                                                          ▼
+     datasheet + Croissant + semver + hashes + PRIVATE held-out slice (canary, timestamps)
+                                                                                          │
+                               score with pass^k, per-cell, with CIs ◀────────────────────┘
+</code></pre>
+<p><strong>What separates a senior answer:</strong> naming the ground-truth <em>shape</em> (state-based, not a judge) and why, insisting the verifier is tested in both directions, designing coverage as a <em>matrix</em> with adversarial/escalation cells, scoring for <em>reliability</em> (pass^k) not average, and treating contamination and documentation as first-class from the start — not bolt-ons.</p>
+<h3 id="154-tradeoff-table-human-vs-synthetic-labels"><a class="header" href="#154-tradeoff-table-human-vs-synthetic-labels">15.4 Tradeoff table: human vs. synthetic labels</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Dimension</th><th>Human labels</th><th>Synthetic (LLM-generated) labels</th></tr>
+</thead>
+<tbody>
+<tr><td>Cost / speed</td><td>Slow, expensive</td><td>Fast, cheap</td></tr>
+<tr><td>Coverage of rare/edge cases</td><td>Limited by what you can find/afford</td><td>Excellent — generate on demand</td></tr>
+<tr><td>Correctness of gold</td><td>High if reviewed; still ~few % error</td><td>Frequently wrong; must be verifier-confirmed</td></tr>
+<tr><td>Distribution realism</td><td>Matches real users</td><td>Clusters around generator’s priors</td></tr>
+<tr><td>Contamination risk</td><td>Low (private, post-cutoff)</td><td>High — self-contamination with the generator family</td></tr>
+<tr><td>Diversity</td><td>Naturally messy/varied</td><td>Collapses to near-duplicates without dedup</td></tr>
+<tr><td>Best role</td><td>The validated core of the benchmark</td><td>A reported, verifier-filtered, human-approved minority</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>Verdict:</strong> humans for the core and the gold; synthetic to <em>extend coverage</em> under a verifier gate. Never let synthetic labels stand unverified, and never let the model under test author its own tasks.</p>
+<h3 id="155-tradeoff-table-static-vs-living-datasets"><a class="header" href="#155-tradeoff-table-static-vs-living-datasets">15.5 Tradeoff table: static vs. living datasets</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Dimension</th><th>Static (frozen once)</th><th>Living (refreshed on a cadence)</th></tr>
+</thead>
+<tbody>
+<tr><td>Comparability over time</td><td>Perfect within a version</td><td>Requires careful versioning to compare across refreshes</td></tr>
+<tr><td>Contamination resistance</td><td>Decays fast — crawled within months</td><td>Strong — fresh, timestamped, post-cutoff tasks</td></tr>
+<tr><td>Maintenance cost</td><td>Low after release</td><td>Ongoing (authoring, review, retirement)</td></tr>
+<tr><td>Discriminative lifespan</td><td>Short once frontier saturates it</td><td>Long — saturated tasks retired, harder ones added</td></tr>
+<tr><td>Reproducibility of a number</td><td>Trivial (fixed set)</td><td>Needs per-refresh version + hash to reproduce</td></tr>
+<tr><td>Best for</td><td>A stable, citable baseline within a paper/quarter</td><td>Tracking a moving frontier without re-contaminating</td></tr>
+<tr><td>Named examples</td><td>Original SWE-bench, GSM8k</td><td>LiveCodeBench, LiveBench, GAIA (private split)</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>Verdict:</strong> ship a <strong>static, hashed core</strong> for reproducible comparison <em>and</em> a <strong>living, timestamped extension</strong> for contamination-resistant frontier tracking. They serve different jobs; mature programs run both.</p>
+<h3 id="156-red-flags-vs-green-flags--audit-any-benchmark-on-sight"><a class="header" href="#156-red-flags-vs-green-flags--audit-any-benchmark-on-sight">15.6 Red flags vs. green flags — audit any benchmark on sight</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>🚩 Red flags (be suspicious)</th><th>✅ Green flags (earned trust)</th></tr>
+</thead>
+<tbody>
+<tr><td>No datasheet; unknown provenance</td><td>Datasheet + Croissant + provenance per task</td></tr>
+<tr><td>Single aggregate number, one run, no CI</td><td>Per-slice, per-difficulty, pass^k, confidence intervals</td></tr>
+<tr><td>Verifier never tested against wrong solutions</td><td>Verifier tested both ways (gold passes, bad fails)</td></tr>
+<tr><td>No IAA reported, or raw-agreement only</td><td>Chance-corrected ( \kappa \ge 0.7 ) reported with marginals</td></tr>
+<tr><td>Public, popular, years old, no refresh</td><td>Private held-out slice, canary, timestamped, living</td></tr>
+<tr><td>“SWE-bench: 60%” with no harness stated</td><td>Pinned (dataset revision, harness, model, trials) tuple</td></tr>
+<tr><td>Gold answers authored by an LLM, unchecked</td><td>Executable/human-verified gold; synthetic a reported minority</td></tr>
+<tr><td>Flat difficulty; every system scores alike</td><td>Calibrated easy/medium/hard spread with baselines</td></tr>
+<tr><td>Silent in-place edits to tasks</td><td>Semantic versions, content hashes, published errata</td></tr>
+<tr><td>Coverage “looks fine” (hoped for)</td><td>Coverage matrix with ≥N per cell, adversarial cells filled</td></tr>
+</tbody>
+</table>
+</div>
+<p>If you can run this two-column audit out loud against a benchmark someone hands you, you have demonstrated the judgment this chapter is meant to build.</p>
+<hr>
+<h2 id="16-further-reading"><a class="header" href="#16-further-reading">16. Further reading</a></h2>
+<p><strong>Human-validated &amp; agent benchmarks</strong></p>
+<ul>
+<li>Introducing SWE-bench Verified — OpenAI (Aug 2024): https://openai.com/index/introducing-swe-bench-verified/</li>
+<li>SWE-bench Verified dataset — Hugging Face: https://huggingface.co/datasets/SWE-bench/SWE-bench_Verified</li>
+<li>Are “Solved Issues” in SWE-bench Really Solved Correctly? — arXiv 2503.15223 (2025): https://arxiv.org/html/2503.15223v1</li>
+<li>GAIA: a benchmark for General AI Assistants — arXiv 2311.12983 (2023): https://arxiv.org/abs/2311.12983</li>
+<li>GAIA dataset — Hugging Face: https://huggingface.co/datasets/gaia-benchmark/GAIA</li>
+<li>τ-bench: Tool-Agent-User Interaction — arXiv 2406.12045 (2024): https://arxiv.org/abs/2406.12045</li>
+<li>τ²-bench (Sierra) repo: https://github.com/sierra-research/tau2-bench</li>
+<li>WebArena: A Realistic Web Environment — arXiv 2307.13854 (2023): https://arxiv.org/pdf/2307.13854</li>
+<li>WebArena code: https://github.com/web-arena-x/webarena</li>
+</ul>
+<p><strong>Living / contamination-aware benchmarks</strong></p>
+<ul>
+<li>LiveCodeBench: Holistic and Contamination-Free Evaluation — arXiv 2403.07974 (2024): https://arxiv.org/abs/2403.07974</li>
+<li>LiveCodeBench site: https://livecodebench.github.io/</li>
+<li>LiveBench: A Challenging, Contamination-Free LLM Benchmark: https://github.com/livebench/livebench</li>
+<li>A Careful Examination of LLM Performance on Grade School Arithmetic (GSM1k) — arXiv 2405.00332 (2024): https://arxiv.org/abs/2405.00332</li>
+</ul>
+<p><strong>Contamination detection &amp; membership inference</strong></p>
+<ul>
+<li>A Survey on Data Contamination for LLMs — arXiv 2502.14425 (2025): https://arxiv.org/html/2502.14425v2</li>
+<li>Detecting Pretraining Data from LLMs (Min-K% Prob) — arXiv 2310.16789 (2023): https://arxiv.org/abs/2310.16789</li>
+<li>Min-K%++: Improved Baseline for Detecting Pre-Training Data — arXiv 2404.02936 (ICLR’25): https://arxiv.org/html/2404.02936v2</li>
+<li>BIG-bench (canary string convention): https://github.com/google/BIG-bench</li>
+</ul>
+<p><strong>Label quality &amp; data-centric evaluation</strong></p>
+<ul>
+<li>Pervasive Label Errors in Test Sets Destabilize ML Benchmarks — arXiv 2103.14749 (Northcutt et al., 2021): https://arxiv.org/abs/2103.14749</li>
+<li>Label Errors project page (interactive): https://l7.curtisnorthcutt.com/label-errors</li>
+<li>cleanlab (automatic label-error detection): https://github.com/cleanlab/cleanlab</li>
+</ul>
+<p><strong>Synthetic data for evals</strong></p>
+<ul>
+<li>Self-Instruct: Aligning LMs with Self-Generated Instructions — arXiv 2212.10560 (2022): https://arxiv.org/abs/2212.10560</li>
+</ul>
+<p><strong>Dataset documentation &amp; metadata standards</strong></p>
+<ul>
+<li>Datasheets for Datasets (Gebru et al.) — arXiv 1803.09010 (2018): https://arxiv.org/pdf/1803.09010</li>
+<li>Croissant: A Metadata Format for ML-Ready Datasets — MLCommons announcement (Mar 2024): https://mlcommons.org/2024/03/croissant_metadata_announce/</li>
+<li>Croissant format specification: https://docs.mlcommons.org/croissant/docs/croissant-spec.html</li>
+<li>Croissant meets MCP — MLCommons (Oct 2025): https://mlcommons.org/2025/10/croissant-mcp/</li>
+</ul>
+<p><strong>Agreement statistics</strong></p>
+<ul>
+<li>statsmodels <code>fleiss_kappa</code>: https://www.statsmodels.org/stable/generated/statsmodels.stats.inter_rater.fleiss_kappa.html</li>
+<li>scikit-learn <code>cohen_kappa_score</code>: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.cohen_kappa_score.html</li>
+<li>Krippendorff’s alpha (PyPI): https://pypi.org/project/krippendorff/</li>
+<li>datasketch (MinHash / LSH): https://github.com/ekzhu/datasketch</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../10_benchmark_datasets/index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../11_evaluation_tools/index.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../10_benchmark_datasets/index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../11_evaluation_tools/index.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

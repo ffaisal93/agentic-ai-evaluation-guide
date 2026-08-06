@@ -1,0 +1,1246 @@
+<!DOCTYPE HTML>
+<html lang="en" class="navy sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Tool Use Evaluation Deep Dive - Agentic AI Evaluation — A Practical Guide</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="Frameworks, metrics, benchmarks, tool-use and safety evaluation, and production monitoring for agentic AI systems.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../custom-9222a227.css">
+
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "navy";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-96a8b00f.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-4b3c722b.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('navy')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Agentic AI Evaluation — A Practical Guide</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/ffaisal93/agentic-ai-evaluation-guide" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/ffaisal93/agentic-ai-evaluation-guide/edit/main/./04_tool_use_evaluation/TOOL_USE_EVALUATION_DEEP_DIVE.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="tool-use-evaluation--a-deep-dive"><a class="header" href="#tool-use-evaluation--a-deep-dive">Tool Use Evaluation — A Deep Dive</a></h1>
+<p>Tool use is the seam where a language model stops <em>talking</em> and starts <em>acting</em>. The moment an agent emits a function call, its words become side effects: a database row is written, an email is sent, $4,000 is refunded. This is precisely where agents fail most often and most silently — a plausible-looking call with a wrong argument returns a <code>200 OK</code>, the transcript reads fine, and no one notices until a customer does. Evaluating tool use well means checking not just <em>whether</em> the agent called a tool, but whether it called the <strong>right</strong> tool, with the <strong>right</strong> arguments, in the <strong>right</strong> order, recovered when the tool <strong>failed</strong>, and — just as important — <strong>refrained</strong> from calling a tool when none applied. This chapter gives you a taxonomy, ground-truth construction methods, precise metrics, working scoring code, and a tour of the 2025–2026 benchmarks (BFCL, τ-bench, ToolBench, API-Bank) that define the state of the art.</p>
+<hr>
+<h2 id="1-core-intuition-why-tool-use-is-where-agents-silently-fail"><a class="header" href="#1-core-intuition-why-tool-use-is-where-agents-silently-fail">1. Core intuition: why tool use is where agents silently fail</a></h2>
+<p>A chat model that hallucinates a fact produces text a human can read and doubt. A tool-using agent that hallucinates an <em>argument</em> produces an API call that a machine executes without doubt. The failure surface is different in three ways:</p>
+<ol>
+<li><strong>Errors are structured, not prose.</strong> A wrong <code>account_id</code> is not “a bad sentence” — it is a valid-looking token in a valid-looking JSON object. Text-quality metrics (BLEU, “does it sound right”) are blind to it.</li>
+<li><strong>Success signals are misleading.</strong> Tools return status codes, not correctness. <code>refund(order="A123", amount=500)</code> may succeed at the HTTP level while being the wrong order and the wrong amount. Execution success ≠ task success.</li>
+<li><strong>The failure compounds downstream.</strong> In a chain — <code>search → pick_id → fetch_details → book</code> — a subtly wrong <code>id</code> at step 2 poisons every step after it. The agent then confidently narrates a correct-sounding summary of a wrong result.</li>
+</ol>
+<p>The consequence: <strong>you cannot evaluate tool use by reading transcripts or scoring final answers alone.</strong> You must inspect the <em>structured call trace</em> — the sequence of <code>(tool_name, arguments)</code> tuples the agent emitted — and compare it against a specification of what correct behavior looks like. Everything in this chapter is about how to build that comparison rigorously.
+One more property makes tool-use failures uniquely corrosive: <strong>they are asymmetric in cost.</strong> A read that returns the wrong row wastes a few cents of tokens; a write that mutates the wrong row can cost a refund, a reputation, or a compliance breach. A good evaluation harness therefore does not treat all calls as equal-weight classification targets — it weights the loss by the <em>blast radius</em> of the tool. Reading <code>get_weather("Paris")</code> wrong and calling <code>wire_transfer(amount=50000)</code> wrong are not the same event and must not average into the same scalar. This is the through-line of the chapter: measure per-dimension, and weight by consequence.</p>
+<hr>
+<h2 id="2-what-to-evaluate--a-taxonomy"><a class="header" href="#2-what-to-evaluate--a-taxonomy">2. What to evaluate — a taxonomy</a></h2>
+<p>Tool-use quality decomposes into seven distinct capabilities. Evaluate them <strong>separately</strong>, because an agent can be strong on one and catastrophic on another, and a single blended score hides that.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>#</th><th>Dimension</th><th>Question it answers</th><th>Canonical failure</th></tr>
+</thead>
+<tbody>
+<tr><td>1</td><td><strong>Selection</strong></td><td>Did the agent pick the correct tool(s) for the task?</td><td>Uses <code>web_search</code> when the answer needs <code>sql_query</code></td></tr>
+<tr><td>2</td><td><strong>Argument construction</strong></td><td>Are the parameters correct, well-typed, and schema-valid?</td><td>Right tool, <code>date="tomorrow"</code> instead of <code>2026-08-04</code></td></tr>
+<tr><td>3</td><td><strong>Execution-result handling</strong></td><td>Does the agent read the tool’s output correctly and act on it?</td><td>Tool returns <code>error: not_found</code>, agent proceeds as if success</td></tr>
+<tr><td>4</td><td><strong>Chaining / ordering</strong></td><td>Are dependent calls issued in a valid order with data flowing correctly?</td><td>Calls <code>book(flight_id)</code> before <code>search_flights</code> returns the id</td></tr>
+<tr><td>5</td><td><strong>Error recovery</strong></td><td>On failure, does the agent retry sensibly, adjust, or escalate?</td><td>Repeats the identical failing call 5×; or gives up on a transient 503</td></tr>
+<tr><td>6</td><td><strong>Efficiency</strong></td><td>Did it reach the goal without redundant, wasteful, or looping calls?</td><td>Re-fetches unchanged data every turn; 3 tools where 1 sufficed</td></tr>
+<tr><td>7</td><td><strong>Safety / irrelevance</strong></td><td>Does it avoid destructive or unwarranted calls, and <em>not</em> call when it shouldn’t?</td><td>Calls <code>delete_account</code> on an ambiguous “clean up my stuff”; invents a tool</td></tr>
+</tbody>
+</table>
+</div>
+<p>Definitions worth pinning down:</p>
+<ul>
+<li><strong>Selection</strong> is a <em>classification</em> problem over the tool set (including the null tool “answer directly”). <strong>Irrelevance detection</strong> — recognizing that <em>no</em> tool applies — is a first-class selection sub-case that most naive agents fail by over-calling.</li>
+<li><strong>Argument construction</strong> splits into <strong>schema validity</strong> (does it parse against the JSON Schema — right keys, types, enums, required fields?) and <strong>semantic correctness</strong> (is <code>amount=500</code> the <em>right</em> value given the task?). Schema validity is cheap and mechanical; semantic correctness needs ground truth.</li>
+<li><strong>Chaining</strong> introduces <strong>data-dependency ordering</strong>: call B consumes an output of call A, so B must follow A <em>and</em> use A’s actual returned value, not a hallucinated one. This is where “the id it booked doesn’t match any id search returned” bugs live.</li>
+<li><strong>Safety</strong> covers <strong>non-idempotent / destructive</strong> operations (writes, deletes, payments, sends) where a spurious or duplicated call causes irreversible harm — a stricter bar than read-only tools.
+For destructive tools this taxonomy needs a fourth safety sub-case beyond irrelevance, over-call, and under-call: <strong>duplication under retry.</strong> When a <code>charge_card</code> or <code>send_email</code> call times out, the <em>result</em> is unknown but the <em>effect</em> may already have happened. A correct agent either uses an idempotency key so a retry is a no-op, or reads state (<code>get_recent_charges</code>) before re-issuing. An evaluation that only checks “did the final charge exist” will pass an agent that charged twice; you must count <strong>effect multiplicity</strong> — how many times the side effect actually fired — not just whether it fired at least once.</li>
+</ul>
+<hr>
+<h2 id="3-ground-truth-for-tools"><a class="header" href="#3-ground-truth-for-tools">3. Ground truth for tools</a></h2>
+<p>To score a call trace you need a reference. There are three families of ground truth, in increasing order of flexibility (and cost).</p>
+<h3 id="31-exact-match-on-calls-ast-comparison"><a class="header" href="#31-exact-match-on-calls-ast-comparison">3.1 Exact-match on calls (AST comparison)</a></h3>
+<p>The reference is one or more expected <code>(tool_name, args)</code> objects. You compare the agent’s emitted call to the reference <strong>structurally</strong>, not as a string. This is what the <strong>Berkeley Function-Calling Leaderboard</strong> calls <em>AST accuracy</em>: parse the model’s output into an abstract syntax tree of the function call, then check the function name, then check each argument against allowed values — ignoring formatting, key order, and whitespace. String matching would fail on <code>f(a=1, b=2)</code> vs <code>f(b=2, a=1)</code>; AST comparison treats them as equal.</p>
+<p>Two refinements make exact-match usable in practice:</p>
+<ul>
+<li><strong>Value sets, not single values.</strong> A reference argument is often a <em>set</em> of acceptable values: <code>{"units": ["metric", "celsius"]}</code> because either is a correct rendering. BFCL’s checker accepts a call if each argument matches any allowed value for that parameter.</li>
+<li><strong>Optional vs required parameters.</strong> The reference marks which parameters must be present and which are optional; supplying an omittable default is not an error.</li>
+</ul>
+<h3 id="32-executable--state-based-checks"><a class="header" href="#32-executable--state-based-checks">3.2 Executable / state-based checks</a></h3>
+<p>Instead of matching the call <em>text</em>, you <strong>run</strong> it and check the <em>effect</em>. Two variants:</p>
+<ul>
+<li><strong>Executable accuracy</strong> (BFCL “executable” categories): actually invoke the function against a live or mock API and assert the <em>return value</em> matches an expected result. Robust to multiple call phrasings that produce the same output.</li>
+<li><strong>State-based evaluation</strong> (BFCL V3 multi-turn, τ-bench): after the episode, compare the <strong>final backend state</strong> (database rows, object fields) to an annotated golden end-state. This is the gold standard for write/delete operations: it does not care <em>how</em> the agent got there, only that the world ended up correct. τ-bench computes reward by diffing the database against the expected state <em>and</em> checking that required information appears in the agent’s reply.</li>
+</ul>
+<p>State-based checks elegantly solve the <strong>“any valid path” problem</strong> (§3.4) for writes — but they say nothing about <em>efficiency</em> or <em>read-only</em> correctness, so you pair them with trajectory checks.
+Multi-turn state deserves special emphasis because it is where 2025–2026 benchmarks moved the goalposts. In single-turn evaluation the world is stateless: you score one call against one reference and reset. In multi-turn evaluation (BFCL V3, τ-bench, τ²-bench) the backend is a <em>persistent database</em> that the agent mutates across many turns, and the reference is the <strong>end-state of that database plus the set of facts the agent must have surfaced to the user.</strong> Scoring becomes: run the whole episode against a sandboxed backend seeded to a known initial state, then diff the final state against the golden end-state with a canonicalizing comparator (sort collections, ignore auto-generated timestamps/ids, normalize money to minor units). Two things make this hard in practice — <strong>hidden coupling</strong> (a write in turn 3 invalidates an assumption the agent made in turn 1) and <strong>user-simulator noise</strong> (the LLM playing the user may volunteer or withhold information inconsistently, so you must run many seeds and report variance, not a point estimate).</p>
+<h3 id="33-golden-trajectories"><a class="header" href="#33-golden-trajectories">3.3 Golden trajectories</a></h3>
+<p>For chaining and process quality, the reference is an entire <strong>golden trajectory</strong>: an ordered (or partially-ordered) list of calls with their expected arguments and expected returns. You score the agent’s trajectory against it with alignment metrics (§5): how many reference steps were hit, in a valid order, with correct args. Golden trajectories are the most informative and the most expensive to author and maintain.</p>
+<h3 id="34-the-any-valid-path-problem"><a class="header" href="#34-the-any-valid-path-problem">3.4 The “any valid path” problem</a></h3>
+<p>The central difficulty: <strong>many correct trajectories exist.</strong> To answer “what’s the weather in Paris and Tokyo,” <code>[weather(Paris), weather(Tokyo)]</code> and <code>[weather(Tokyo), weather(Paris)]</code> are both correct — parallel, order-insensitive. Some tasks admit genuinely different tool <em>choices</em> (search-then-filter vs. a single richer query) that are equally valid. Over-strict exact-match punishes correct agents; over-loose matching passes wrong ones.</p>
+<p>Practical resolutions, in order of preference:</p>
+<ol>
+<li><strong>Match on outcome, not path</strong> (state-based) whenever the task has an observable end-state.</li>
+<li><strong>Encode the reference as a partial order + value sets</strong> — mark independent calls as order-insensitive, dependent calls as ordered, and each argument as a set of acceptable values. Score with order-insensitive matching (the code in §6 does this).</li>
+<li><strong>Use a rubric/LLM-judge</strong> for the residual genuinely-open cases, with the schema and task as context — but treat judge scores as noisy and calibrate against human labels.</li>
+</ol>
+<hr>
+<h2 id="4-metrics"><a class="header" href="#4-metrics">4. Metrics</a></h2>
+<p>Notation: an episode produces a list of <em>predicted</em> calls ( P = [p_1, \dots, p_m] ) and a reference ( G = [g_1, \dots, g_n] ). Each call is a pair ( (\text{name}, \text{args}) ).</p>
+<h3 id="41-tool-selection-accuracy"><a class="header" href="#41-tool-selection-accuracy">4.1 Tool-selection accuracy</a></h3>
+<p>Fraction of episodes (or steps) where the predicted tool name matches the reference, treating “no call” as a valid label:</p>
+<p>[
+\text{SelAcc} = \frac{1}{N}\sum_{i=1}^{N} \mathbb{1}!\left[\text{name}(p_i) = \text{name}(g_i)\right]
+]</p>
+<p>For irrelevance detection, report it as a <strong>confusion matrix</strong> instead of a single number — you care about both false calls (called when it should not) and missed calls. Define:</p>
+<p>[
+\text{IrrelevanceAcc} = \frac{#{\text{correctly emitted no tool}}}{#{\text{tasks where no tool applies}}}
+]</p>
+<p><em>Micro-example.</em> Over 4 tasks the reference tools are <code>[sql, none, search, none]</code> and the agent emits <code>[sql, search, search, none]</code>. Selection accuracy = 3/4 = 0.75. On the two irrelevance tasks (positions 2,4) the agent got 1 right → IrrelevanceAcc = 0.5 (it over-called on task 2).</p>
+<h3 id="42-argument-accuracy"><a class="header" href="#42-argument-accuracy">4.2 Argument accuracy</a></h3>
+<p>Given the tool name is correct, the fraction of arguments that match the reference value set. For a single call with reference args ( g ):</p>
+<p>[
+\text{ArgAcc}(p, g) = \frac{1}{|K_g|}\sum_{k \in K_g} \mathbb{1}!\left[p[k] \in \text{allowed}_g(k)\right]
+]</p>
+<p>where ( K_g ) is the set of reference parameter keys. Report both <strong>per-argument</strong> accuracy (partial credit) and <strong>exact-call accuracy</strong> (all arguments correct — the stricter, more honest number for high-stakes tools).</p>
+<p><em>Micro-example.</em> Reference <code>book(date=2026-08-04, seats={1,2})</code>; prediction <code>book(date=2026-08-04, seats=3)</code>. Per-arg = 1/2 = 0.5; exact-call = 0.</p>
+<h3 id="43-execution-success-rate"><a class="header" href="#43-execution-success-rate">4.3 Execution success rate</a></h3>
+<p>Fraction of emitted calls that execute without error (schema-valid, no exception, non-error status):</p>
+<p>[
+\text{ExecSuccess} = \frac{#{\text{calls returning non-error}}}{#{\text{calls emitted}}}
+]</p>
+<p>Crucial caveat: <strong>high ExecSuccess with low ArgAcc means the agent is confidently calling the wrong thing successfully.</strong> Always read the two together.</p>
+<h3 id="44-chain-completion-trajectory-success"><a class="header" href="#44-chain-completion-trajectory-success">4.4 Chain completion (trajectory success)</a></h3>
+<p>Did the agent complete the full dependency chain and reach the goal? Binary per episode, averaged:</p>
+<p>[
+\text{ChainCompletion} = \frac{1}{N}\sum_{i=1}^{N} \mathbb{1}!\left[\text{all required steps of } G_i \text{ satisfied in valid order}\right]
+]</p>
+<p>A softer version is <strong>step recall</strong> — fraction of reference steps hit — which gives partial credit and helps localize <em>where</em> chains break.</p>
+<h3 id="45-recovery-rate"><a class="header" href="#45-recovery-rate">4.5 Recovery rate</a></h3>
+<p>Of the episodes that hit at least one tool error, the fraction where the agent subsequently reached task success:</p>
+<p>[
+\text{RecoveryRate} = \frac{#{\text{episodes with an error that still succeeded}}}{#{\text{episodes that encountered} \geq 1 \text{ tool error}}}
+]</p>
+<p>Complement with <strong>maladaptive-retry rate</strong>: fraction of errors followed by an <em>identical</em> retry (same name + args) — a sign the agent is not learning from the error message.</p>
+<h3 id="46-redundant-call-rate-efficiency"><a class="header" href="#46-redundant-call-rate-efficiency">4.6 Redundant-call rate (efficiency)</a></h3>
+<p>[
+\text{RedundantRate} = \frac{m - u}{m}, \quad m = #\text{calls emitted}, ; u = #\text{calls that were necessary}
+]</p>
+<p>where “necessary” calls are those whose removal would change the outcome (approximated by: not a duplicate of an earlier call with identical args and unchanged state, and on the path to the goal). A related headline number is <strong>call efficiency</strong> ( = n_{\text{golden}} / m ) — reference call count over actual — capped at 1.</p>
+<p><em>Micro-example.</em> Agent emits 5 calls; two are identical repeats of an earlier <code>get_balance()</code> with no state change. ( u = 3 ), RedundantRate ( = (5-3)/5 = 0.4 ).</p>
+<h3 id="47-reliability-passk-vs-passk"><a class="header" href="#47-reliability-passk-vs-passk">4.7 Reliability: pass@k vs pass^k</a></h3>
+<p>A single run hides variance. τ-bench introduced <strong>pass^k</strong>, the probability that <strong>all</strong> ( k ) i.i.d. trials of a task succeed — a reliability (consistency) measure — versus the familiar <strong>pass@k</strong>, the probability that <strong>at least one</strong> of ( k ) succeeds. With ( c ) successes out of ( n ) trials for a task:</p>
+<p>[
+\text{pass@}k = \mathbb{E}!\left[,1 - \frac{\binom{n-c}{k}}{\binom{n}{k}}\right], \qquad
+\text{pass}^{k} = \mathbb{E}!\left[\frac{\binom{c}{k}}{\binom{n}{k}}\right]
+]</p>
+<p>pass@k <em>rewards</em> lucky single successes; pass^k <em>punishes</em> inconsistency. For production tool agents, pass^k is the honest metric: τ-bench found strong models whose pass@1 looked healthy but whose pass^8 collapsed below 25% in the retail domain — i.e., they rarely do the same task correctly eight times running.</p>
+<hr>
+<h2 id="5-a-fully-worked-scoring-example"><a class="header" href="#5-a-fully-worked-scoring-example">5. A fully worked scoring example</a></h2>
+<p>The code below scores an agent’s emitted tool calls against an expected specification. It does <strong>structured</strong> comparison (not string match), supports <strong>value sets</strong> and <strong>optional</strong> parameters, and handles <strong>order-insensitive parallel calls</strong> via a greedy best-match assignment. It returns per-dimension metrics from §4.</p>
+<pre><code class="language-python">"""
+tool_trace_scorer.py — structured scoring of agent tool calls.
+
+Reference spec ("golden") is a list of expected calls. Each expected call:
+  {
+    "name": "book_flight",
+    "args": {                       # only reference keys are graded
+        "flight_id": {"allowed": ["F100"]},        # value set
+        "seats":     {"allowed": [1, 2]},
+        "notify":    {"allowed": [True], "optional": True},  # omittable
+    },
+    "order_group": 1,   # calls in the same group are order-insensitive (parallel);
+                        # a higher group must come strictly after a lower one.
+  }
+
+Prediction is a list of emitted calls: {"name": str, "args": dict}.
+"""
+from __future__ import annotations
+from dataclasses import dataclass, field
+from typing import Any
+
+
+def _norm(v: Any) -&gt; Any:
+    """Normalize a scalar for tolerant comparison (dates, casing, numerics)."""
+    if isinstance(v, str):
+        return v.strip().lower()
+    if isinstance(v, float) and v.is_integer():
+        return int(v)
+    return v
+
+
+def _arg_matches(pred_val: Any, spec: dict) -&gt; bool:
+    allowed = [_norm(a) for a in spec["allowed"]]
+    return _norm(pred_val) in allowed
+
+
+def score_call(pred: dict, ref: dict) -&gt; dict:
+    """Score one predicted call against one reference call."""
+    name_ok = pred.get("name") == ref["name"]
+    ref_args: dict = ref.get("args", {})
+    pred_args: dict = pred.get("args", {})
+
+    graded = correct = 0
+    missing_required, wrong_value, hallucinated_arg = [], [], []
+
+    for key, spec in ref_args.items():
+        optional = spec.get("optional", False)
+        if key not in pred_args:
+            if not optional:
+                graded += 1
+                missing_required.append(key)
+            continue
+        graded += 1
+        if _arg_matches(pred_args[key], spec):
+            correct += 1
+        else:
+            wrong_value.append(key)
+
+    # arguments the agent invented that the schema/reference did not define
+    hallucinated_arg = [k for k in pred_args if k not in ref_args]
+
+    per_arg = correct / graded if graded else 1.0
+    exact = name_ok and per_arg == 1.0 and not hallucinated_arg
+    return {
+        "name_ok": name_ok,
+        "per_arg_acc": per_arg,
+        "exact_call": exact,
+        "missing_required": missing_required,
+        "wrong_value": wrong_value,
+        "hallucinated_arg": hallucinated_arg,
+    }
+
+
+def _match_group(preds: list[dict], refs: list[dict]) -&gt; list[tuple]:
+    """Order-insensitive greedy assignment within one parallel group.
+
+    Pairs each reference call with the still-unused predicted call that
+    scores best against it (name match first, then arg accuracy). Returns
+    (ref, matched_pred_or_None, score_dict) tuples plus leftovers.
+    """
+    used = [False] * len(preds)
+    pairs = []
+    for ref in refs:
+        best_i, best_score, best_key = None, None, (-1, -1.0)
+        for i, pred in enumerate(preds):
+            if used[i]:
+                continue
+            s = score_call(pred, ref)
+            key = (int(s["name_ok"]), s["per_arg_acc"])
+            if key &gt; best_key:
+                best_key, best_i, best_score = key, i, s
+        if best_i is not None and best_score["name_ok"]:
+            used[best_i] = True
+            pairs.append((ref, preds[best_i], best_score))
+        else:                      # no acceptable prediction -&gt; missed call
+            pairs.append((ref, None, score_call({"name": None, "args": {}}, ref)))
+    extra = [preds[i] for i in range(len(preds)) if not used[i]]  # spurious calls
+    return pairs, extra
+
+
+@dataclass
+class TraceReport:
+    n_ref: int = 0
+    selection_hits: int = 0
+    exact_calls: int = 0
+    arg_acc_sum: float = 0.0
+    spurious: int = 0            # emitted calls with no reference match
+    hallucinated_tools: int = 0  # names not in the tool registry
+    missed: int = 0
+    details: list = field(default_factory=list)
+
+    @property
+    def selection_acc(self): return self.selection_hits / self.n_ref if self.n_ref else 1.0
+    @property
+    def arg_acc(self):       return self.arg_acc_sum / self.n_ref if self.n_ref else 1.0
+    @property
+    def exact_call_acc(self): return self.exact_calls / self.n_ref if self.n_ref else 1.0
+    @property
+    def redundant_rate(self):
+        emitted = self.n_ref - self.missed + self.spurious
+        return self.spurious / emitted if emitted else 0.0
+
+
+def score_trace(pred_calls: list[dict], golden: list[dict],
+                registry: set[str]) -&gt; TraceReport:
+    """Score a full trajectory: group by order_group, match within groups."""
+    rep = TraceReport(n_ref=len(golden))
+
+    # split predictions into groups by reference order structure.
+    groups = sorted({g.get("order_group", idx) for idx, g in enumerate(golden)})
+    # naive positional slicing of predictions across groups by reference size:
+    refs_by_group = {gid: [g for g in golden if g.get("order_group", i) == gid]
+                     for i, gid in enumerate(groups)}
+
+    cursor = 0
+    for gid in groups:
+        refs = refs_by_group[gid]
+        preds = pred_calls[cursor: cursor + len(refs)]
+        cursor += len(refs)
+        pairs, extra = _match_group(preds, refs)
+        for ref, pred, s in pairs:
+            if pred is None:
+                rep.missed += 1
+            else:
+                rep.selection_hits += int(s["name_ok"])
+                rep.exact_calls += int(s["exact_call"])
+                rep.arg_acc_sum += s["per_arg_acc"]
+            rep.details.append((ref["name"], s))
+        for e in extra:
+            rep.spurious += 1
+            if e.get("name") not in registry:
+                rep.hallucinated_tools += 1
+
+    # any predictions beyond the last group are spurious too
+    for e in pred_calls[cursor:]:
+        rep.spurious += 1
+        if e.get("name") not in registry:
+            rep.hallucinated_tools += 1
+    return rep
+
+
+if __name__ == "__main__":
+    registry = {"search_flights", "book_flight", "send_email"}
+    golden = [
+        {"name": "search_flights",
+         "args": {"origin": {"allowed": ["SFO"]}, "dest": {"allowed": ["JFK"]}},
+         "order_group": 0},
+        {"name": "book_flight",
+         "args": {"flight_id": {"allowed": ["F100"]},
+                  "seats": {"allowed": [1, 2]}},
+         "order_group": 1},
+    ]
+    # Agent booked the right flight but wrong seat count, and invented a tool.
+    pred = [
+        {"name": "search_flights", "args": {"origin": "sfo", "dest": "JFK"}},
+        {"name": "book_flight",    "args": {"flight_id": "F100", "seats": 3}},
+        {"name": "delete_booking", "args": {"id": "F100"}},   # hallucinated tool
+    ]
+    r = score_trace(pred, golden, registry)
+    print(f"selection_acc   = {r.selection_acc:.2f}")   # 1.00
+    print(f"arg_acc         = {r.arg_acc:.2f}")          # 0.75
+    print(f"exact_call_acc  = {r.exact_call_acc:.2f}")   # 0.50
+    print(f"redundant_rate  = {r.redundant_rate:.2f}")   # 0.33
+    print(f"hallucinated    = {r.hallucinated_tools}")   # 1
+</code></pre>
+<p>Running it prints selection 1.00, arg 0.75 (3 of 4 graded args correct), exact-call 0.50 (the <code>book</code> call had a wrong <code>seats</code>), a redundant rate of 0.33 (the spurious <code>delete_booking</code>), and one hallucinated tool. Note the design choices that matter: <strong>AST-style value-set matching</strong> (<code>SFO</code>/<code>sfo</code> normalize equal), <strong>partial credit per argument</strong> alongside a <strong>strict exact-call</strong> number, <strong>order-insensitive matching within a parallel group</strong>, and explicit accounting of <strong>spurious/hallucinated</strong> calls. For production use you would layer in state-based checks (§3.2) and a data-flow validator that confirms <code>flight_id</code> passed to <code>book_flight</code> actually appeared in a prior <code>search_flights</code> result.</p>
+<hr>
+<h2 id="6-hard-cases"><a class="header" href="#6-hard-cases">6. Hard cases</a></h2>
+<p><strong>Hallucinated tools.</strong> The agent calls a function that does not exist in the registry (<code>delete_booking</code> above). Detect by validating every emitted name against the declared tool set; a nonzero hallucinated-tool count is a hard failure regardless of other scores. Well-designed harnesses also test <em>tool-name confusability</em> — two similarly named tools (<code>get_user</code> vs <code>get_users</code>) to see if the model disambiguates.</p>
+<p><strong>Wrong-but-plausible arguments.</strong> The most dangerous case: right tool, schema-valid args, wrong <em>value</em>. <code>transfer(amount=1000)</code> when the task said $100; <code>date="2026-08-03"</code> when it meant next month. These pass schema validation and execution, so only <strong>semantic ground truth</strong> (value sets, or state-based checks) catches them. This is why ArgAcc must be reported next to ExecSuccess — a gap between them is exactly this failure.</p>
+<p><strong>Irrelevance / should-NOT-call.</strong> Many tasks are answerable directly, or the available tools simply do not fit (“What’s the capital of France?” with only a <code>weather</code> tool). A well-calibrated agent answers without calling. BFCL and its “relevance/irrelevance” splits score this explicitly; over-calling (“tool-happy” agents) is a common, penalized failure. Always include no-tool tasks in your suite, or you will only measure the easy half of selection.</p>
+<p><strong>Non-idempotent and destructive tools.</strong> For <code>send_email</code>, <code>charge_card</code>, <code>delete_*</code>, a <em>duplicated</em> or <em>spurious</em> call is not a minor inefficiency — it is real harm. Evaluate these with stricter rules: any extra destructive call is a critical failure; the agent should prefer read-then-confirm patterns; and idempotency keys (if the API supports them) should be checked. Reliability metrics (pass^k) matter most here because “usually correct” is not good enough when the tail event charges a customer twice.</p>
+<p><strong>Uncertain writes / underspecified requests.</strong> “Cancel my order” when the user has three orders. The correct behavior is often to <strong>ask a clarifying question, not to call a write tool</strong> on a guess. Ground truth for these cases should reward the <em>no-op-plus-question</em> trajectory and penalize a confident wrong write — which means your reference format must be able to express “the correct action here is to ask, not to act.”</p>
+<hr>
+<h2 id="7-benchmark-tour"><a class="header" href="#7-benchmark-tour">7. Benchmark tour</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Benchmark</th><th>What it measures</th><th>How it scores</th><th>Notable limitations</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>BFCL</strong> (Berkeley Function-Calling Leaderboard; Gorilla, UC Berkeley)</td><td>Single-turn <em>simple / multiple / parallel / parallel-multiple</em> calls; <strong>irrelevance detection</strong>; V3 <strong>multi-turn / multi-step</strong> with missing-parameter, missing-function, long-context, composite splits; V4 adds agentic (web search, memory, format sensitivity)</td><td><strong>AST accuracy</strong> (structural call match against value sets) + <strong>executable accuracy</strong> (run and compare returns) + <strong>state-based</strong> eval for multi-turn writes; irrelevance as accuracy on no-call tasks</td><td>AST checks can be brittle on genuinely open tasks; static API snapshots; strong contamination pressure as it is widely trained against</td></tr>
+<tr><td><strong>τ-bench / τ2-bench</strong> (Sierra)</td><td>Realistic <strong>tool-agent-user</strong> dialogue in <em>retail</em> and <em>airline</em> domains; policy adherence; multi-turn info-gathering</td><td><strong>DB final-state</strong> comparison to golden end-state + required-info check in reply; reliability via <strong>pass^k</strong></td><td>Two domains only; user is LLM-simulated (its own noise); labor-intensive to author policies</td></tr>
+<tr><td><strong>ToolBench / ToolLLM</strong> (OpenBMB, ICLR’24)</td><td>Real-world tool use over 16k+ RapidAPI tools; single- and multi-tool instructions</td><td><strong>ToolEval</strong>: <strong>pass rate</strong> (task solved) + <strong>win rate</strong> (LLM judge vs. a reference solution); DFSDT solver</td><td>Live-API instability makes runs non-reproducible (→ <strong>StableToolBench</strong> adds a cached API simulator); LLM-judge noise</td></tr>
+<tr><td><strong>API-Bank</strong> (EMNLP’23)</td><td>Graded tool abilities: <strong>Call</strong>, <strong>Retrieve+Call</strong>, and <strong>Plan+Retrieve+Call</strong>; when-to-call and how-to-call</td><td>Correctness of API calls and of the model’s response given returns; leveled by difficulty</td><td>Smaller, older API set; less agentic/multi-turn than BFCL V3+</td></tr>
+<tr><td><strong>NexusRaven V2</strong> (Nexusflow)</td><td>Open, commercially-permissive function-calling model + its evaluation on <strong>nested / composite</strong> and multi-function calls</td><td>Correctness of (possibly nested) generated calls vs. reference</td><td>It is primarily a model + targeted eval, not a broad standardized leaderboard</td></tr>
+<tr><td><strong>MCP</strong> (Model Context Protocol; Anthropic, open spec)</td><td><em>Not a benchmark</em> — a standard <strong>interface</strong> for exposing tools/resources/prompts to models over JSON-RPC</td><td>N/A (evaluation implication: standardized schemas + tool descriptions become the object under test)</td><td>Standardizes plumbing, not quality; recent work shows tool-<em>description</em> quality strongly affects selection accuracy</td></tr>
+</tbody>
+</table>
+</div>
+<p>How to read this tour: <strong>BFCL</strong> is your microscope for call-level correctness and irrelevance; <strong>τ-bench</strong> is your microscope for <em>reliability</em> and policy-following in multi-turn service settings; <strong>ToolBench</strong> stresses breadth and real APIs (with reproducibility caveats); <strong>API-Bank</strong> cleanly separates the <em>decision to call</em> from the <em>ability to call</em>. <strong>MCP</strong> is the interface layer — increasingly what your tools are actually described in, and therefore what your evaluation harness should ingest natively.</p>
+<hr>
+<h2 id="8-failure-modes--pitfalls-in-evaluating-tool-use"><a class="header" href="#8-failure-modes--pitfalls-in-evaluating-tool-use">8. Failure modes &amp; pitfalls in evaluating tool use</a></h2>
+<ul>
+<li><strong>String-matching function calls.</strong> <code>f(a=1,b=2)</code> ≠ <code>f(b=2,a=1)</code> under string match but they are identical. Always parse to a structured form (AST) and compare with value sets. This is the single most common home-grown-eval bug.</li>
+<li><strong>Scoring only the final answer.</strong> A correct-sounding summary over a wrong tool result passes end-to-end checks and hides the failure. Inspect the call trace.</li>
+<li><strong>Conflating execution success with correctness.</strong> <code>200 OK</code> on the wrong <code>order_id</code> is a “successful” disaster. Report ArgAcc alongside ExecSuccess.</li>
+<li><strong>Forgetting irrelevance tasks.</strong> A suite with only tool-required tasks measures half of selection and rewards over-calling. Include no-tool and wrong-tool-available cases.</li>
+<li><strong>Over-strict single golden path.</strong> Punishing valid alternate orderings/choices depresses scores of good agents. Use partial orders, value sets, or outcome-based checks.</li>
+<li><strong>Single-run reporting.</strong> Tool agents are high-variance; one lucky run is not a capability. Report pass^k or at least variance over ≥5 seeds, especially for destructive tools.</li>
+<li><strong>Benchmark contamination &amp; staleness.</strong> Popular leaderboards leak into training data and static API snapshots drift. Rotate held-out private tasks; prefer state-based checks that are harder to game than fixed reference strings.</li>
+<li><strong>LLM-judge without calibration.</strong> Using a model to grade calls is convenient but noisy and biased; calibrate against human labels and report agreement before trusting it.</li>
+<li><strong>Ignoring cost/latency.</strong> An agent that “succeeds” with 12 calls and $0.40 per task may be unusable. Track calls-per-task and dollars-per-task next to accuracy.</li>
+</ul>
+<hr>
+<h2 id="9-what-an-interviewer-or-reviewer-will-probe"><a class="header" href="#9-what-an-interviewer-or-reviewer-will-probe">9. What an interviewer or reviewer will probe</a></h2>
+<p><strong>Q1. Why not just check the agent’s final answer?</strong>
+Because tool errors are silent: a wrong <code>id</code> produces a valid result and a fluent, wrong summary. End-to-end scoring cannot localize <em>where</em> the trajectory broke, cannot catch a correct answer reached through an unsafe or duplicated write, and cannot measure efficiency. You must score the structured call trace, not the prose.</p>
+<p><strong>Q2. How do you compare tool calls without brittle string matching?</strong>
+Parse each call into a structured form (name + arg dict), then compare via AST-style rules: exact name match, and each reference argument matched against a <em>set</em> of allowed values with type/format normalization. Order-insensitive for parallel/independent calls; ordered for data-dependent ones. This is what BFCL’s AST accuracy does.</p>
+<p><strong>Q3. There are many correct ways to solve the task. How do you avoid punishing valid alternates?</strong>
+Prefer <strong>outcome/state-based</strong> evaluation — diff the final backend state against a golden end-state, ignoring path. Where the path matters, encode the reference as a <strong>partial order with value sets</strong> so independent calls can appear in any order, and reserve an LLM-judge (calibrated) only for genuinely open residuals.</p>
+<p><strong>Q4. What’s the difference between pass@k and pass^k, and which do you report?</strong>
+pass@k is the probability at least one of k trials succeeds (rewards luck); pass^k is the probability all k succeed (measures consistency). For production tool agents — especially with destructive tools — report <strong>pass^k</strong>, because a model that succeeds once in eight tries is not deployable even if pass@8 looks great. τ-bench showed strong models with pass^8 under 25%.</p>
+<p><strong>Q5. How do you evaluate whether an agent <em>shouldn’t</em> have called a tool?</strong>
+Include irrelevance tasks where no tool applies or the answer is direct, and score the no-call as the correct action (BFCL relevance/irrelevance splits). Report it separately as a confusion matrix — over-calling (false tool invocations) and under-calling are different, and destructive over-calls are critical.</p>
+<p><strong>Q6. How do you test error recovery specifically?</strong>
+Inject failures — 5xx errors, timeouts, empty results, malformed returns — and measure recovery rate (errored episodes that still reach success) plus maladaptive-retry rate (identical retries after an error). A good agent reads the error message and <em>changes</em> the call or escalates; a bad one loops the same failing call or ignores the error and proceeds.</p>
+<p><strong>Q7. How do you handle destructive / non-idempotent tools in evaluation?</strong>
+Stricter rules: any spurious or duplicated write/charge/delete is a critical failure, not an efficiency ding; check for idempotency keys and read-then-confirm patterns; require a clarifying question on underspecified writes; and weight reliability (pass^k) heavily because tail-event double-charges are the real risk.</p>
+<p><strong>Q8. Your BFCL score is high but production tool use is unreliable — reconcile this.</strong>
+Leaderboard scores are single-turn, static-snapshot, and contamination-prone; production is multi-turn, stateful, and adversarial. Bridge the gap with state-based multi-turn evals (BFCL V3, τ-bench), private held-out tasks, reliability metrics over many seeds, injected-failure recovery tests, and live production monitoring of call traces — not a single leaderboard number.</p>
+<hr>
+<h2 id="10-the-20252026-landscape"><a class="header" href="#10-the-20252026-landscape">10. The 2025–2026 landscape</a></h2>
+<p>The benchmark tour in §7 is the map; this section is the <em>territory as it stands in 2025–2026</em>. Tool-use evaluation moved fast in this window along three axes: (1) from single-turn call matching to <strong>multi-turn, stateful, agentic</strong> evaluation; (2) from bespoke per-vendor function-calling schemas to a <strong>standard tool interface (MCP)</strong>; and (3) from “did it call the right function” to “did it behave reliably and safely across a whole <em>session</em> with a <em>real user in the loop</em>.” Know these by name and date — an interviewer will expect it.</p>
+<h3 id="101-bfcl-v3-multi-turn--v4-agentic"><a class="header" href="#101-bfcl-v3-multi-turn--v4-agentic">10.1 BFCL: V3 (multi-turn) → V4 (agentic)</a></h3>
+<p>The <strong>Berkeley Function-Calling Leaderboard</strong> (Gorilla group, UC Berkeley) is the most-cited call-level benchmark, and it is a moving target.</p>
+<ul>
+<li>
+<p><strong>BFCL V1 (early 2024)</strong> established <strong>AST accuracy</strong> and <strong>executable accuracy</strong> over <em>simple / multiple / parallel / parallel-multiple</em> single-turn calls, plus a <strong>relevance/irrelevance</strong> split for should-not-call behavior.</p>
+</li>
+<li>
+<p><strong>BFCL V2 · “Live” (Aug 2024)</strong> replaced synthetic prompts with <strong>live, user-contributed</strong> function-calling data to fight contamination and better reflect real distributions.</p>
+</li>
+<li>
+<p><strong>BFCL V3 (Sep 2024)</strong> introduced <strong>multi-turn and multi-step</strong> evaluation with <strong>state-based checking</strong>: the agent operates across turns against a stateful backend (file system, trading, travel-booking APIs), and scoring diffs the <strong>final backend state</strong> against a golden end-state. V3 added the categories that matter most for agents: <strong>missing-parameter</strong> (the agent must ask, not guess), <strong>missing-function</strong> (the needed tool isn’t provided, so the agent must recognize it can’t proceed), <strong>long-context</strong>, and <strong>composite</strong>. Blog: <a href="https://gorilla.cs.berkeley.edu/blogs/13_bfcl_v3_multi_turn.html">https://gorilla.cs.berkeley.edu/blogs/13_bfcl_v3_multi_turn.html</a>.</p>
+</li>
+<li>
+<p><strong>BFCL V4 · “Agentic” (July 2025 onward)</strong> is the current frontier and adds three agentic tracks:</p>
+<ul>
+<li><strong>Web search (released 2025-07-17):</strong> ~100 multi-hop questions where the agent must issue real search queries (DuckDuckGo API) and fetch/parse web pages, scored by exact-match on normalized answers. Blog: <a href="https://gorilla.cs.berkeley.edu/blogs/15_bfcl_v4_web_search.html">https://gorilla.cs.berkeley.edu/blogs/15_bfcl_v4_web_search.html</a>.</li>
+<li><strong>Memory (released 2025-07-17):</strong> the agent must read/write persistent memory through tool calls across five domains (advising, support, productivity, healthcare, finance), tested against three backends — <strong>key-value (BM25+)</strong>, <strong>vector store (all-MiniLM-L6-v2 embeddings)</strong>, and <strong>recursive summarization (a bounded text buffer the model must compress)</strong>. This directly evaluates whether an agent can <em>use a memory tool correctly</em>, a capability MCP servers increasingly expose. Blog: <a href="https://gorilla.cs.berkeley.edu/blogs/16_bfcl_v4_memory.html">https://gorilla.cs.berkeley.edu/blogs/16_bfcl_v4_memory.html</a>.</li>
+<li><strong>Format sensitivity (2025):</strong> the same tasks under 26 perturbations of return format, function-doc style, and prompt formatting — measuring how brittle selection/argument accuracy is to cosmetic changes. Blog: <a href="https://gorilla.cs.berkeley.edu/blogs/17_bfcl_v4_prompt_variation.html">https://gorilla.cs.berkeley.edu/blogs/17_bfcl_v4_prompt_variation.html</a>.</li>
+</ul>
+<p>V4’s headline score is a weighted blend (Agentic ~40%, Multi-Turn ~30%, Live ~10%, Non-Live ~10%, Hallucination ~10%), and the project was written up at <strong>ICML 2025</strong> (“The Berkeley Function-Calling Leaderboard: From Tool Use to Agentic Evaluation,” <a href="https://openreview.net/forum?id=2GmDdhBdDk">https://openreview.net/forum?id=2GmDdhBdDk</a>). The trajectory — V1 call-matching → V3 state-based → V4 agentic web/memory — is itself the story of where the field went. Leaderboard: <a href="https://gorilla.cs.berkeley.edu/leaderboard.html">https://gorilla.cs.berkeley.edu/leaderboard.html</a>.</p>
+</li>
+</ul>
+<p><strong>Evaluation implication.</strong> If you cite “we hit X% on BFCL,” an interviewer will ask <em>which version and which split</em>. V4 web/memory is a different animal from V1 AST accuracy; a model can top V1 and be mediocre at V3 multi-turn state.</p>
+<h3 id="102-τ-bench--τ²-bench-tool-agent-user-reliability-and-dual-control"><a class="header" href="#102-τ-bench--τ²-bench-tool-agent-user-reliability-and-dual-control">10.2 τ-bench → τ²-bench: tool-agent-user, reliability, and dual control</a></h3>
+<p><strong>τ-bench</strong> (Sierra, June 2024; “A Benchmark for Tool-Agent-User Interaction in Real-World Domains,” arXiv:2406.12045) evaluates agents in <strong>realistic multi-turn dialogue</strong> in <em>retail</em> and <em>airline</em> domains. Its two enduring contributions:</p>
+<ol>
+<li><strong>State-based reward with an info check.</strong> An episode passes only if (a) the backend database’s final state matches the golden end-state <strong>and</strong> (b) the agent surfaced the required information to the user. This kills “right words, wrong action” and “right action, silent about it” simultaneously.</li>
+<li><strong>pass^k reliability.</strong> τ-bench popularized reporting <strong>pass^k</strong> (probability <em>all</em> k i.i.d. trials succeed) alongside pass@k, exposing that agents strong on a single try are often inconsistent. Frontier models showed pass^8 collapsing well below pass^1 in retail — the single most quoted “agents aren’t reliable yet” datapoint. Repo: <a href="https://github.com/sierra-research/tau-bench">https://github.com/sierra-research/tau-bench</a>.</li>
+</ol>
+<p><strong>τ²-bench</strong> (Sierra, June 2025; “τ²-Bench: Evaluating Conversational Agents in a Dual-Control Environment,” arXiv:2506.07982, submitted 2025-06-09) raises the bar to <strong>dual control</strong>: in a <strong>telecom</strong> troubleshooting domain, <em>both the agent and the user</em> can act on the shared environment with tools (the user can reboot their own router, toggle a setting), modeled as a <strong>Dec-POMDP</strong>. The agent must not just call tools but <em>guide the user to call theirs</em> — coordinating, instructing, and verifying. Key finding: agents that do fine in the “no-user-action” setting <strong>drop sharply</strong> when the user is also an actor, isolating <em>communication/coordination</em> failure from <em>reasoning</em> failure. τ²-bench also ships a <strong>compositional task generator</strong> (verifiable tasks from atomic components) and a tightly-coupled user simulator. Repo: <a href="https://github.com/sierra-research/tau2-bench">https://github.com/sierra-research/tau2-bench</a>; paper: <a href="https://arxiv.org/abs/2506.07982">https://arxiv.org/abs/2506.07982</a>. Note the community follow-ups: <strong>τ²-bench-verified</strong> (Amazon AGI) corrects task/policy/DB misalignments in the original set (<a href="https://github.com/amazon-agi/tau2-bench-verified">https://github.com/amazon-agi/tau2-bench-verified</a>) — a reminder that even flagship benchmarks carry annotation bugs you should audit before trusting a number.</p>
+<p><strong>Why this matters for building.</strong> τ-bench/τ²-bench are the reference design for a <em>product-grade</em> tool-use eval: sandboxed stateful backend, LLM user-simulator, state-diff reward, reliability over many seeds, and policy-adherence checks. When you design your own harness (§11, §12), you are essentially building a domain-specific τ-bench.</p>
+<h3 id="103-toolbench--stabletoolbench-and-api-bank-breadth-and-graded-ability"><a class="header" href="#103-toolbench--stabletoolbench-and-api-bank-breadth-and-graded-ability">10.3 ToolBench / StableToolBench and API-Bank: breadth and graded ability</a></h3>
+<ul>
+<li><strong>ToolLLM / ToolBench</strong> (OpenBMB, ICLR 2024; arXiv:2307.16789) covers <strong>16k+ real RapidAPI tools</strong> with single- and multi-tool instructions, solved with a DFSDT search and scored by <strong>ToolEval</strong> (<strong>pass rate</strong> + LLM-judge <strong>win rate</strong> vs. a reference). Its weakness is <em>reproducibility</em>: live third-party APIs go down or change, so runs aren’t comparable over time. Repo: <a href="https://github.com/OpenBMB/ToolBench">https://github.com/OpenBMB/ToolBench</a>.</li>
+<li><strong>StableToolBench</strong> (2024; arXiv:2403.07714) fixes that by replacing live APIs with a <strong>cached, LLM-simulated API server</strong>, trading a little realism for reproducible, always-on evaluation — the pattern you should copy for your own CI (a recorded/mock tool sandbox, not live prod APIs). Repo/paper: <a href="https://arxiv.org/abs/2403.07714">https://arxiv.org/abs/2403.07714</a>.</li>
+<li><strong>API-Bank</strong> (EMNLP 2023; arXiv:2304.08244) cleanly separates the <strong>decision to call</strong> from the <strong>ability to call</strong> with graded levels — <strong>Call</strong>, <strong>Retrieve+Call</strong>, <strong>Plan+Retrieve+Call</strong> — and remains the crispest framework for diagnosing <em>which</em> sub-skill an agent lacks (knowing <em>when</em>, knowing <em>which</em>, knowing <em>how</em>). Older/smaller API set, but conceptually clarifying.</li>
+</ul>
+<h3 id="104-mcp-the-tool-interface-is-standardizing--and-it-changes-what-you-evaluate"><a class="header" href="#104-mcp-the-tool-interface-is-standardizing--and-it-changes-what-you-evaluate">10.4 MCP: the tool interface is standardizing — and it changes what you evaluate</a></h3>
+<p>The <strong>Model Context Protocol (MCP)</strong> — introduced by Anthropic in <strong>November 2024</strong>, open-specced at <a href="https://modelcontextprotocol.io/">https://modelcontextprotocol.io/</a> and <a href="https://spec.modelcontextprotocol.io/">https://spec.modelcontextprotocol.io/</a> — is not a benchmark. It is a <strong>standard JSON-RPC interface</strong> for exposing <strong>tools, resources, and prompts</strong> to a model, the “USB-C port for AI tools.” By late 2025 it is the de-facto standard: the <strong>November 25, 2025 spec revision (<code>2025-11-25</code>)</strong> added <strong>task-based/async workflows</strong> (SEP-1686: states <code>working / input_required / completed / failed / cancelled</code> with polling), <strong>simplified OAuth</strong> via Client ID Metadata Documents (SEP-991), an <strong>extensions framework</strong>, <strong>sampling-with-tools</strong> so a server can run its own agentic loop (SEP-1577), and standardized tool naming (SEP-986). Adoption spans <strong>OpenAI, Google, Microsoft, AWS, GitHub, Hugging Face, Block, Okta</strong>, and the <strong>MCP Registry</strong> grew ~407% since September 2025 to roughly 2,000 servers (anniversary post, 2025-11-25: <a href="https://blog.modelcontextprotocol.io/posts/2025-11-25-first-mcp-anniversary/">https://blog.modelcontextprotocol.io/posts/2025-11-25-first-mcp-anniversary/</a>).</p>
+<p>Why an evaluation chapter cares about a <em>plumbing</em> standard — four concrete shifts:</p>
+<ol>
+<li><strong>The tool schema becomes the object under test.</strong> MCP tools ship a structured name, JSON-Schema input, and a <strong>natural-language description</strong> the model reads to decide <em>whether and how</em> to call. Empirically, <strong>tool-description quality dominates selection accuracy</strong> — the same underlying function with a vague description gets mis-selected far more often. So your eval must treat the <em>description text</em> as a variable, not a constant: A/B test descriptions, and include BFCL-V4-style <em>format-sensitivity</em> perturbations. When selection regresses after someone “cleaned up” a tool doc, this is why.</li>
+<li><strong>Server-side tools you don’t control become part of your trust boundary.</strong> With MCP, an agent may load tools from a third-party server at runtime. Evaluation must now cover <strong>tool-poisoning / prompt-injection via tool descriptions and results</strong> (a malicious server can embed instructions in a description or return field), <strong>name collisions</strong> across servers (two servers both expose <code>search</code>), and <strong>over-broad scopes</strong>. “Does the agent refuse a tool whose description tries to redirect it” is a first-class safety eval in an MCP world.</li>
+<li><strong>Async / long-running tools break turn-synchronous scoring.</strong> The 2025-11 task model means a tool call may return <code>input_required</code> or stay <code>working</code> across turns. Your scorer can no longer assume one call → one immediate result; it must model pending tasks, polling, and cancellation, and evaluate whether the agent <em>waits, polls, and handles <code>failed</code>/<code>cancelled</code></em> correctly.</li>
+<li><strong>Standardized schemas make harnesses portable.</strong> Because MCP normalizes the tool contract, an evaluation harness that ingests MCP tool definitions natively can point at <em>any</em> MCP server — your scorer, your golden traces, and your sandbox all speak one schema. This is the practical reason to build your §11 scorer around the MCP tool shape (<code>name</code>, <code>inputSchema</code>, <code>description</code>) rather than a vendor-specific one.</li>
+</ol>
+<p><strong>Update — the 2026-07-28 spec superseded several of the mechanics above.</strong> MCP dropped the stateful session/handshake model entirely (no more <code>initialize</code>/session IDs — every request is now self-contained), which is squarely good news for eval infrastructure: point 3 above (“async tools break turn-synchronous scoring”) gets easier, not harder, because a stateless core means your harness can parallelize tool-call evaluations across workers without session-affinity bugs corrupting results. The new spec also adds <strong>Multi Round-Trip Requests (MRTR)</strong> — a cleaner mechanism than the old task-polling model for “the server needs more input mid-call” — and moves the 2025-11-25 Tasks feature into a formal extension framework rather than the core spec. Two more evaluation-relevant details: tool/method names now travel in HTTP headers (<code>Mcp-Method</code>, <code>Mcp-Name</code>), which matters if your harness sniffs traffic rather than instrumenting the client directly; and Dynamic Client Registration is being superseded by Client ID Metadata Documents for auth, tightening the security-eval surface from point 2. Roots, Sampling, and Logging are deprecated on a 12-month sunset — if your eval harness depends on any of those subsystems, that’s a migration to plan now, not later. <a href="https://blog.modelcontextprotocol.io/posts/2026-07-28/">2026-07-28 spec</a>.</p>
+<p><strong>One-line summary for an interview:</strong> <em>“BFCL is the call-level microscope, τ-bench/τ²-bench is the multi-turn reliability and dual-control microscope, ToolBench/StableToolBench is breadth-with-reproducibility, API-Bank separates when/which/how, and MCP is the interface layer that turns tool descriptions and async task-handling into things you must evaluate — not just plumbing.”</em></p>
+<hr>
+<h2 id="11-build-it-in-practice-a-runnable-tool-call-scorer"><a class="header" href="#11-build-it-in-practice-a-runnable-tool-call-scorer">11. Build it in practice: a runnable tool-call scorer</a></h2>
+<p>The §5 scorer teaches the idea. This section is the <em>thing you would actually ship in CI</em> — it ingests real provider payloads (OpenAI <code>tool_calls</code> <strong>and</strong> MCP/generic shapes), does AST-style structured comparison with value sets, handles <strong>order-insensitive parallel calls</strong> as a partial order, runs a <strong>data-flow (chain) check</strong> that an argument traces to a prior call’s output, flags <strong>hallucinated tools and args</strong>, scores <strong>irrelevance / should-not-call</strong> tasks, folds in an <strong>execution log</strong> for exec-success and <strong>error-recovery</strong>, and aggregates a dataset with <strong>pass@k vs pass^k</strong>. It is dependency-free (Python 3.10+ stdlib) and the <code>__main__</code> block runs four illustrative tasks.</p>
+<p>Design decisions worth defending in an interview:</p>
+<ul>
+<li><strong>Parse first, compare second.</strong> <code>parse_tool_calls</code> normalizes provider quirks (arguments arriving as a JSON <em>string</em>, MCP <code>arguments</code> vs. legacy <code>args</code>) into a uniform <code>ToolCall</code>. Malformed JSON is <em>recorded</em> (<code>__unparsable__</code>), never silently dropped — a call the model emitted but you couldn’t parse is a finding, not a non-event.</li>
+<li><strong>Value sets + three matchers.</strong> Each reference argument may specify <code>allowed</code> (a set of acceptable values), <code>from_call</code> (must trace to a prior output — the data-flow/chain check), and/or <code>predicate</code> (an arbitrary callable, e.g. “is a valid ISO date”). This spans exact-match, semantic, and structural checks in one grammar.</li>
+<li><strong>Partial order, not a single golden path.</strong> Calls carry a <code>group</code>; same-group calls are order-insensitive (parallel), and a matched call in a later group that appears <em>before</em> an earlier group’s calls is an <code>order_violation</code>. This is how you avoid punishing <code>weather(Tokyo), weather(Paris)</code>.</li>
+<li><strong>Consequence-aware accounting.</strong> Hallucinated tools (name not in the registry) and destructive over-calls are surfaced as their own counters, not blended into arg accuracy — because §2’s blast-radius point demands it.</li>
+<li><strong>Reliability is first-class.</strong> <code>pass_at_k</code> rewards luck; <code>pass_pow_k</code> measures consistency. The demo prints both for a task that succeeded 5 of 8 runs, and you can see pass@3 (0.98) look great while pass^3 (0.18) tells the deployable truth.</li>
+</ul>
+<pre><code class="language-python">"""
+tool_eval.py -- production-shaped tool-call scorer.
+
+Ingests an agent's emitted tool calls (OpenAI-style or MCP-style), compares
+them structurally (AST-style) against a per-task reference spec, and reports
+selection / argument / execution / chain / recovery metrics. Handles:
+  * order-insensitive parallel calls (partial order via `group`)
+  * value-set + optional + predicate argument matching
+  * data-flow (chain) checks: an arg must trace to a prior call's output
+  * hallucinated tools (name not in registry) and hallucinated args
+  * irrelevance / should-not-call tasks (empty reference == must not call)
+  * execution success and error-recovery from an execution log
+"""
+from __future__ import annotations
+import json
+from dataclasses import dataclass, field
+from typing import Any, Callable, Optional
+
+
+# --------------------------------------------------------------------------- #
+# 1. Parsing: normalize provider payloads into ToolCall objects.
+# --------------------------------------------------------------------------- #
+@dataclass
+class ToolCall:
+    name: Optional[str]
+    args: dict
+    call_id: Optional[str] = None
+
+
+def parse_tool_calls(raw: list[dict]) -&gt; list[ToolCall]:
+    """Accept OpenAI-style ({'function':{'name','arguments'}}) or MCP/generic
+    ({'name','arguments'|'args'}). Arguments may be a JSON string or a dict."""
+    out: list[ToolCall] = []
+    for item in raw:
+        if "function" in item:                       # OpenAI tool_call shape
+            fn = item["function"]
+            name = fn.get("name")
+            a = fn.get("arguments", {})
+            cid = item.get("id")
+        else:                                        # MCP / generic shape
+            name = item.get("name")
+            a = item.get("arguments", item.get("args", {}))
+            cid = item.get("id") or item.get("call_id")
+        if isinstance(a, str):                       # arguments came as JSON text
+            try:
+                a = json.loads(a) if a.strip() else {}
+            except json.JSONDecodeError:
+                a = {"__unparsable__": a}            # malformed args are recorded
+        out.append(ToolCall(name=name, args=a or {}, call_id=cid))
+    return out
+
+
+# --------------------------------------------------------------------------- #
+# 2. Argument matching (AST-style, tolerant normalization + value sets).
+# --------------------------------------------------------------------------- #
+def _norm(v: Any) -&gt; Any:
+    if isinstance(v, str):
+        return v.strip().lower()
+    if isinstance(v, bool):
+        return v
+    if isinstance(v, float) and v.is_integer():
+        return int(v)
+    return v
+
+
+def _arg_matches(pred_val: Any, spec: dict, produced: set) -&gt; bool:
+    """A reference arg-spec supports three matchers (any present =&gt; must pass):
+       allowed:   value must be in a set of acceptable values
+       from_call: value must trace to an earlier call's output (data flow)
+       predicate: a callable returning bool."""
+    if "allowed" in spec:
+        if _norm(pred_val) not in {_norm(a) for a in spec["allowed"]}:
+            return False
+    if "from_call" in spec:
+        if _norm(pred_val) not in produced:          # hallucinated / broken chain
+            return False
+    if "predicate" in spec:
+        if not spec["predicate"](pred_val):
+            return False
+    return True
+
+
+def score_call(pred: ToolCall, ref: dict, produced: set) -&gt; dict:
+    name_ok = pred.name == ref["name"]
+    ref_args: dict = ref.get("args", {})
+    pred_args: dict = pred.args
+    graded = correct = 0
+    missing_required, wrong_value, chain_broken = [], [], []
+    for key, spec in ref_args.items():
+        if key not in pred_args:
+            if not spec.get("optional", False):
+                graded += 1
+                missing_required.append(key)
+            continue
+        graded += 1
+        if _arg_matches(pred_args[key], spec, produced):
+            correct += 1
+        else:
+            wrong_value.append(key)
+            if "from_call" in spec and _norm(pred_args[key]) not in produced:
+                chain_broken.append(key)
+    hallucinated_arg = [k for k in pred_args if k not in ref_args]
+    per_arg = correct / graded if graded else 1.0
+    exact = name_ok and per_arg == 1.0 and not hallucinated_arg
+    return dict(name_ok=name_ok, per_arg=per_arg, exact=exact,
+                missing_required=missing_required, wrong_value=wrong_value,
+                hallucinated_arg=hallucinated_arg, chain_broken=chain_broken)
+
+
+# --------------------------------------------------------------------------- #
+# 3. Order-insensitive matching within a partial order (`group`).
+# --------------------------------------------------------------------------- #
+def _match(preds: list[ToolCall], refs: list[dict], produced: set):
+    """Greedy best-match assignment (name-match first, then arg accuracy).
+    Returns matched pairs (ref, pred|None, score, pred_index) and spurious preds."""
+    used = [False] * len(preds)
+    pairs = []
+    for ref in refs:
+        best = (-1, -1.0)   # (name_ok, per_arg)
+        best_i = None
+        for i, p in enumerate(preds):
+            if used[i]:
+                continue
+            s = score_call(p, ref, produced)
+            key = (int(s["name_ok"]), s["per_arg"])
+            if key &gt; best:
+                best, best_i, best_s = key, i, s
+        if best_i is not None and best_s["name_ok"]:
+            used[best_i] = True
+            pairs.append((ref, preds[best_i], best_s, best_i))
+        else:
+            miss = score_call(ToolCall(None, {}), ref, produced)
+            pairs.append((ref, None, miss, None))
+    spurious = [(i, preds[i]) for i in range(len(preds)) if not used[i]]
+    return pairs, spurious
+
+
+# --------------------------------------------------------------------------- #
+# 4. Full-trace report.
+# --------------------------------------------------------------------------- #
+@dataclass
+class TraceReport:
+    task_id: str
+    should_not_call: bool = False
+    over_called: bool = False              # irrelevance task but agent called
+    n_ref: int = 0
+    selection_hits: int = 0
+    arg_acc_sum: float = 0.0
+    exact_calls: int = 0
+    missed: int = 0
+    spurious: int = 0
+    hallucinated_tools: int = 0
+    hallucinated_args: int = 0
+    order_violations: int = 0
+    chain_ok: bool = True
+    exec_calls: int = 0
+    exec_ok: int = 0
+    hit_error: bool = False
+    recovered: bool = False
+
+    @property
+    def selection_acc(self): return self.selection_hits / self.n_ref if self.n_ref else 1.0
+    @property
+    def arg_acc(self):       return self.arg_acc_sum / self.n_ref if self.n_ref else 1.0
+    @property
+    def exact_call_acc(self): return self.exact_calls / self.n_ref if self.n_ref else 1.0
+    @property
+    def exec_success(self):  return self.exec_ok / self.exec_calls if self.exec_calls else 1.0
+
+
+def collect_produced(exec_log: list[dict]) -&gt; set:
+    """Flatten every scalar reachable in tool outputs into a set of normalized
+    values -- the pool a later argument may legitimately have come from."""
+    produced: set = set()
+    def walk(x):
+        if isinstance(x, dict):
+            for v in x.values(): walk(v)
+        elif isinstance(x, (list, tuple)):
+            for v in x: walk(v)
+        else:
+            produced.add(_norm(x))
+    for e in exec_log:
+        walk(e.get("output"))
+    return produced
+
+
+def score_trace(task_id, pred_raw, spec_calls, registry, exec_log=None) -&gt; TraceReport:
+    exec_log = exec_log or []
+    preds = parse_tool_calls(pred_raw)
+    produced = collect_produced(exec_log)
+    rep = TraceReport(task_id=task_id, n_ref=len(spec_calls))
+
+    # --- irrelevance / should-not-call task: reference is empty ---
+    if not spec_calls:
+        rep.should_not_call = True
+        rep.over_called = len(preds) &gt; 0
+        rep.spurious = len(preds)
+        rep.hallucinated_tools = sum(1 for p in preds if p.name not in registry)
+        # execution/recovery still computed below
+    else:
+        groups = sorted({c.get("group", i) for i, c in enumerate(spec_calls)})
+        cursor = 0
+        last_max_idx = -1
+        for gid in groups:
+            refs = [c for i, c in enumerate(spec_calls) if c.get("group", i) == gid]
+            window = preds[cursor: cursor + len(refs)]
+            pairs, spurious = _match(window, refs, produced)
+            group_pred_idxs = []
+            for ref, pred, s, local_i in pairs:
+                if pred is None:
+                    rep.missed += 1
+                    rep.chain_ok = False if ref.get("args") else rep.chain_ok
+                else:
+                    rep.selection_hits += int(s["name_ok"])
+                    rep.exact_calls += int(s["exact"])
+                    rep.arg_acc_sum += s["per_arg"]
+                    rep.hallucinated_args += len(s["hallucinated_arg"])
+                    if s["chain_broken"]:
+                        rep.chain_ok = False
+                    group_pred_idxs.append(cursor + local_i)
+            # ordering: every matched call in this group must come after the
+            # last call of all earlier groups.
+            for gi in group_pred_idxs:
+                if gi &lt; last_max_idx:
+                    rep.order_violations += 1
+            if group_pred_idxs:
+                last_max_idx = max(last_max_idx, max(group_pred_idxs))
+            for _, p in spurious:
+                rep.spurious += 1
+                if p.name not in registry:
+                    rep.hallucinated_tools += 1
+            cursor += len(refs)
+        for p in preds[cursor:]:
+            rep.spurious += 1
+            if p.name not in registry:
+                rep.hallucinated_tools += 1
+
+    # --- execution + recovery ---
+    rep.exec_calls = len(exec_log)
+    rep.exec_ok = sum(1 for e in exec_log if e.get("ok"))
+    err_seen = False
+    for e in exec_log:
+        if not e.get("ok"):
+            rep.hit_error = True
+            err_seen = True
+        elif err_seen:
+            rep.recovered = True            # a success followed a prior error
+    return rep
+
+
+# --------------------------------------------------------------------------- #
+# 5. Dataset aggregation + pass^k / pass@k over repeated trials.
+# --------------------------------------------------------------------------- #
+from math import comb
+
+def pass_at_k(n, c, k):
+    if n - c &lt; k: return 1.0
+    return 1.0 - comb(n - c, k) / comb(n, k)
+
+def pass_pow_k(n, c, k):
+    if c &lt; k: return 0.0
+    return comb(c, k) / comb(n, k)
+
+
+def aggregate(reports: list[TraceReport]) -&gt; dict:
+    rel = [r for r in reports if not r.should_not_call]
+    irr = [r for r in reports if r.should_not_call]
+    errd = [r for r in reports if r.hit_error]
+    def mean(xs): return sum(xs) / len(xs) if xs else 1.0
+    return {
+        "selection_acc":   mean([r.selection_acc for r in rel]),
+        "arg_acc":         mean([r.arg_acc for r in rel]),
+        "exact_call_acc":  mean([r.exact_call_acc for r in rel]),
+        "chain_completion": mean([1.0 if (r.chain_ok and r.missed == 0
+                                          and r.order_violations == 0) else 0.0
+                                  for r in rel]),
+        "exec_success":    mean([r.exec_success for r in reports]),
+        "recovery_rate":   (mean([1.0 if r.recovered else 0.0 for r in errd])
+                            if errd else float("nan")),
+        "irrelevance_acc": (mean([0.0 if r.over_called else 1.0 for r in irr])
+                            if irr else float("nan")),
+        "hallucinated_tools": sum(r.hallucinated_tools for r in reports),
+        "spurious_calls":     sum(r.spurious for r in reports),
+    }
+
+
+# --------------------------------------------------------------------------- #
+# 6. Demo: four tasks -- parallel-correct, wrong-arg, chain+recovery, irrelevance.
+# --------------------------------------------------------------------------- #
+if __name__ == "__main__":
+    registry = {"search_flights", "book_flight", "get_weather", "send_email"}
+
+    # Task A: order-insensitive parallel reads, both correct (OpenAI shape).
+    specA = [
+        {"name": "get_weather", "args": {"city": {"allowed": ["Paris"]}}, "group": 0},
+        {"name": "get_weather", "args": {"city": {"allowed": ["Tokyo"]}}, "group": 0},
+    ]
+    predA = [
+        {"id": "1", "function": {"name": "get_weather",
+                                 "arguments": '{"city": "tokyo"}'}},
+        {"id": "2", "function": {"name": "get_weather",
+                                 "arguments": '{"city": "PARIS"}'}},
+    ]
+    rA = score_trace("A_parallel", predA, specA, registry)
+
+    # Task B: right tool, wrong argument value, plus an invented tool call.
+    specB = [
+        {"name": "book_flight",
+         "args": {"flight_id": {"allowed": ["F100"]}, "seats": {"allowed": [1, 2]}},
+         "group": 0},
+    ]
+    predB = [
+        {"name": "book_flight", "args": {"flight_id": "F100", "seats": 3}},
+        {"name": "delete_booking", "args": {"id": "F100"}},   # hallucinated tool
+    ]
+    rB = score_trace("B_wrong_arg", predB, specB, registry)
+
+    # Task C: chained search-&gt;book with a data-flow check, and error+recovery.
+    specC = [
+        {"name": "search_flights",
+         "args": {"origin": {"allowed": ["SFO"]}, "dest": {"allowed": ["JFK"]}},
+         "group": 0},
+        {"name": "book_flight",
+         "args": {"flight_id": {"from_call": "search_flights"},
+                  "seats": {"allowed": [1]}},
+         "group": 1},
+    ]
+    predC = [
+        {"name": "search_flights", "args": {"origin": "SFO", "dest": "JFK"}},
+        {"name": "book_flight",    "args": {"flight_id": "F777", "seats": 1}},
+    ]
+    execC = [
+        {"ok": False, "error": "503 upstream", "output": None},          # first try fails
+        {"ok": True, "output": {"results": [{"id": "F777"}, {"id": "F778"}]}},  # retry ok
+        {"ok": True, "output": {"confirmation": "OK"}},
+    ]
+    rC = score_trace("C_chain_recovery", predC, specC, registry, execC)
+
+    # Task D: irrelevance -- no tool applies, correct behavior is to NOT call.
+    predD = [{"name": "get_weather", "args": {"city": "Paris"}}]  # over-called!
+    rD = score_trace("D_irrelevance", predD, [], registry)
+
+    reports = [rA, rB, rC, rD]
+    for r in reports:
+        print(f"[{r.task_id:&gt;16}] sel={r.selection_acc:.2f} arg={r.arg_acc:.2f} "
+              f"exact={r.exact_call_acc:.2f} chain_ok={r.chain_ok} "
+              f"order_viol={r.order_violations} halluc_tool={r.hallucinated_tools} "
+              f"over_called={r.over_called} recovered={r.recovered}")
+
+    print("\n--- aggregate ---")
+    agg = aggregate(reports)
+    for k, v in agg.items():
+        print(f"{k:&gt;20}: {v}")
+
+    # reliability over repeated trials of one task: 8 runs, 5 successes
+    print("\n--- reliability (n=8, c=5) ---")
+    print("pass@1 =", round(pass_at_k(8, 5, 1), 3),
+          " pass@3 =", round(pass_at_k(8, 5, 3), 3))
+    print("pass^1 =", round(pass_pow_k(8, 5, 1), 3),
+          " pass^3 =", round(pass_pow_k(8, 5, 3), 3))
+</code></pre>
+<p>Running it produces (verified output):</p>
+<pre><code class="language-text">[      A_parallel] sel=1.00 arg=1.00 exact=1.00 chain_ok=True order_viol=0 halluc_tool=0 over_called=False recovered=False
+[     B_wrong_arg] sel=1.00 arg=0.50 exact=0.00 chain_ok=True order_viol=0 halluc_tool=1 over_called=False recovered=False
+[C_chain_recovery] sel=1.00 arg=1.00 exact=1.00 chain_ok=True order_viol=0 halluc_tool=0 over_called=False recovered=True
+[   D_irrelevance] sel=1.00 arg=1.00 exact=1.00 chain_ok=True order_viol=0 halluc_tool=0 over_called=True recovered=False
+
+--- aggregate ---
+       selection_acc: 1.0
+             arg_acc: 0.8333333333333334
+      exact_call_acc: 0.6666666666666666
+    chain_completion: 1.0
+        exec_success: 0.9166666666666666
+       recovery_rate: 1.0
+     irrelevance_acc: 0.0
+  hallucinated_tools: 1
+      spurious_calls: 2
+
+--- reliability (n=8, c=5) ---
+pass@1 = 0.625  pass@3 = 0.982
+pass^1 = 0.625  pass^3 = 0.179
+</code></pre>
+<p>Read the numbers the way you would in a review. <code>B_wrong_arg</code> has <code>selection=1.00</code> but <code>arg=0.50</code> and <code>exact=0.00</code> — the agent picked the right tool and confidently passed the wrong <code>seats</code>, exactly the wrong-but-plausible failure of §6; the invented <code>delete_booking</code> shows up as <code>halluc_tool=1</code>, not as a silent efficiency ding. <code>C_chain_recovery</code> passes its data-flow check because the booked <code>flight_id</code> (<code>F777</code>) actually appeared in the <code>search_flights</code> output, and <code>recovered=True</code> because a success followed the injected <code>503</code>. <code>D_irrelevance</code> scores <code>over_called=True</code> and drives aggregate <code>irrelevance_acc</code> to <code>0.0</code> — the suite refuses to let a tool-happy agent hide. And the reliability block is the punchline: <strong>pass@3 = 0.98 vs pass^3 = 0.18</strong> for the same 5-of-8 task. In production you would swap the in-memory <code>execC</code> for a real <strong>sandbox</strong> (§12): seed a database, let the agent act, and diff final state instead of trusting the reference call text.</p>
+<hr>
+<h2 id="12-production-case-studies--war-stories"><a class="header" href="#12-production-case-studies--war-stories">12. Production case studies &amp; war stories</a></h2>
+<p>Benchmarks tell you where a model sits on a leaderboard. They do not tell you how a <em>team</em> keeps a shipping agent from writing the wrong row at 3 a.m. This section is the practitioner layer: how real agent products actually evaluate tool use, and a couple of concrete failure incidents (composited from common, widely-reported patterns) with the lesson each burned in.</p>
+<h3 id="121-how-real-agent-products-evaluate-tool-use"><a class="header" href="#121-how-real-agent-products-evaluate-tool-use">12.1 How real agent products evaluate tool use</a></h3>
+<p>The teams that run tool-using agents in production converge on a small set of practices, regardless of vertical:</p>
+<ul>
+<li><strong>Golden trajectories mined from production, not hand-written.</strong> The cheapest source of realistic tasks is your own logs. Pick sessions a human confirmed as successful, freeze the <code>(user_request → tool calls → final state)</code> triple as a <strong>golden trajectory</strong>, and scrub PII. Over time you accumulate a regression suite that reflects <em>your</em> traffic distribution, not a benchmark’s. Hand-authored tasks fill the gaps (rare tools, dangerous edge cases) but the backbone is mined.</li>
+<li><strong>State-based checks against a sandbox, not string-matching the calls.</strong> The dominant production pattern (and the one τ-bench formalized) is a <strong>hermetic sandbox</strong>: a copy of the backend — order DB, ledger, CRM — seeded to a known initial state. Run the agent against it, then <strong>diff the final state</strong> against the golden end-state with a canonicalizing comparator. This is robust to the “any valid path” problem and is the only honest way to grade writes. Crucially the sandbox must be <em>hermetic and reset per run</em> — a test that mutates shared state poisons the next test.</li>
+<li><strong>A tiered eval pyramid.</strong> (1) <strong>Unit-level</strong>: schema validation and AST checks on single calls, run on every commit, milliseconds each. (2) <strong>Trajectory-level</strong>: golden-trajectory + state-diff on a few hundred tasks, run pre-merge, minutes. (3) <strong>Reliability</strong>: pass^k over many seeds on a smaller, high-stakes subset (anything that writes/charges/sends), run nightly. (4) <strong>Online</strong>: shadow/canary in production with live monitoring of the call trace. Each tier catches what the tier below cannot, at increasing cost.</li>
+<li><strong>LLM-as-judge only where structure runs out — and calibrated.</strong> For genuinely open steps (was this clarifying question reasonable?), a rubric-driven judge is used, but <em>gated</em>: teams measure the judge’s agreement with human labels on a holdout, report it, and re-check it when the judge model changes. A judge whose agreement isn’t measured is a random-number generator with good manners.</li>
+<li><strong>Read/write asymmetry baked into scoring.</strong> Read tools get partial credit and semantic tolerance. Write/charge/delete tools get <strong>binary, strict, and heavily weighted</strong> scoring plus a <strong>safety gate</strong> that can fail the whole episode on a single spurious destructive call regardless of task success.</li>
+<li><strong>Injected-failure suites.</strong> A dedicated set where the sandbox is rigged to return 5xx, timeouts, empty results, and malformed payloads, purely to measure recovery and maladaptive-retry — because you cannot wait for prod to supply enough failures to characterize the behavior.</li>
+</ul>
+<h3 id="122-war-story-1-the-wrong-but-plausible-argument-that-shipped-a-bad-write"><a class="header" href="#122-war-story-1-the-wrong-but-plausible-argument-that-shipped-a-bad-write">12.2 War story #1: the wrong-but-plausible argument that shipped a bad write</a></h3>
+<p><em>The incident.</em> A customer-support agent handled “I was double-charged for order 8842, please refund the duplicate.” The catalog had two orders that day, <strong>8842</strong> and <strong>8842-R</strong> (a return-shipping fee). The agent called:</p>
+<pre><code class="language-text">issue_refund(order_id="8842-R", amount=payment.total, reason="duplicate charge")
+</code></pre>
+<p>Every layer said green. The tool was <strong>correct</strong> (<code>issue_refund</code>). The arguments were <strong>schema-valid</strong> (a real order id, a valid amount, a non-empty reason). Execution returned <strong><code>200 OK</code></strong>. The final summary to the user read fluently: <em>“I’ve refunded your duplicate charge of $128.40.”</em> The offline eval — which scored the <em>final answer</em> for helpfulness — <strong>passed it</strong>. Only three days later did reconciliation flag that the <em>wrong order</em> was refunded for the <em>wrong amount</em> (the full payment, not the duplicate line).</p>
+<p><em>Why every guardrail missed it.</em> This is the canonical §6 failure: <strong>right tool, schema-valid args, wrong value.</strong> Nothing textual or structural was off. Execution success was actively misleading — the disaster <em>succeeded</em> at the HTTP layer. And because the eval scored prose, the confident, wrong summary sailed through.</p>
+<p><em>What caught it in the postmortem — and became permanent eval.</em> Three changes:</p>
+<ol>
+<li><strong>State-diff ground truth.</strong> The golden reference became the <em>ledger end-state</em> (<code>refund on order 8842 for the duplicate line amount</code>), not the call text or the summary. Under a state-diff comparator, <code>8842-R</code> for <code>total</code> fails instantly — the world ended up wrong.</li>
+<li><strong>A value-provenance check.</strong> <code>amount</code> must trace (via <code>from_call</code>, as in §11) to a <em>specific line item</em> returned by a prior <code>get_order</code> call, not to <code>payment.total</code>. A refund amount that doesn’t match any retrieved line is a hard fail.</li>
+<li><strong>Confirm-before-write on ambiguity.</strong> With two orders matching “8842”, the <em>correct</em> behavior was to ask “Do you mean order 8842 or the 8842-R return fee?” The reference for underspecified writes was rewritten to reward the clarifying question and <strong>penalize a confident write on a guess</strong> — you cannot express that unless your reference format can say “the right action here is to ask, not act” (§6).</li>
+</ol>
+<p><em>The lesson, in one line:</em> <strong>a <code>200 OK</code> on a schema-valid call is not a success signal; it is the absence of a syntax error.</strong> Grade the <em>effect on the world</em>, and make ambiguous writes ask.</p>
+<h3 id="123-war-story-2-the-timeout-that-charged-the-customer-twice"><a class="header" href="#123-war-story-2-the-timeout-that-charged-the-customer-twice">12.3 War story #2: the timeout that charged the customer twice</a></h3>
+<p><em>The incident.</em> A billing agent called <code>charge_card(customer, amount=4999)</code>. The payment processor was slow; the call <strong>timed out</strong> at the agent’s HTTP layer <em>after</em> the charge had actually posted. The agent, seeing a timeout (which reads like a failure), did the “sensible” thing: <strong>retried the identical call.</strong> The customer was charged <strong>twice</strong>. Worse, the offline eval had a <em>recovery</em> test that <em>rewarded</em> retry-after-error — so it had actively trained the team to think this agent’s retry behavior was good.</p>
+<p><em>Why it slipped through.</em> The recovery metric (§4.5) as first written measured “did a success follow an error” — and a double-charge <em>does</em> produce a trailing success. The eval conflated <strong>retry</strong> with <strong>safe retry</strong>. For a non-idempotent tool, a blind retry on an <em>ambiguous</em> outcome (timeout ≠ known failure) is precisely the wrong move.</p>
+<p><em>The fix that became eval policy.</em></p>
+<ol>
+<li><strong>Effect-multiplicity scoring.</strong> The sandbox counts <em>how many times the side effect fired</em>, not whether it fired ≥1 time. Two <code>charge</code> effects for a one-charge task is a <strong>critical failure</strong>, overriding task success (§2’s destructive sub-case).</li>
+<li><strong>Idempotency-key checks.</strong> The reference now requires that a retry of a write carry the <em>same idempotency key</em> as the original, so the backend collapses duplicates. An agent that retries without one fails the safety gate.</li>
+<li><strong>Read-before-retry on ambiguous outcomes.</strong> On a timeout (unknown result), the golden trajectory is <code>get_recent_charges → decide</code>, not <code>charge again</code>. The injected-failure suite specifically distinguishes <em>timeout</em> (unknown) from <em>explicit 5xx with a body confirming no-op</em> (safe to retry).</li>
+</ol>
+<p><em>The lesson:</em> <strong>“recovered” is not a virtue for destructive tools unless it is <em>safe</em> recovery.</strong> Measure the number of real side effects, require idempotency, and treat <em>unknown</em> outcomes differently from <em>known failures</em>.</p>
+<h3 id="124-war-story-3-the-tool-description-edit-that-quietly-tanked-selection"><a class="header" href="#124-war-story-3-the-tool-description-edit-that-quietly-tanked-selection">12.4 War story #3: the tool-description edit that quietly tanked selection</a></h3>
+<p><em>The incident.</em> Selection accuracy on a subset of tasks dropped ~9 points overnight with <strong>no model change</strong>. The cause: someone “tidied” an MCP tool’s description, shortening <code>search_orders</code> — <em>“Find orders by customer, date range, status, or SKU; use this before any refund or cancellation”</em> — to a terse <em>“Search orders.”</em> The model stopped reaching for it before refunds and started guessing order ids.</p>
+<p><em>Why it matters.</em> In an MCP world (§10.4) the <strong>tool description is part of the prompt the model reasons over</strong>, and its quality dominates selection. A “cosmetic” doc edit is a <em>behavioral</em> change. The team had no eval gate on tool-description edits because they thought of descriptions as documentation, not as model inputs.</p>
+<p><em>The fix.</em> Tool descriptions were put <strong>under version control with a selection-eval gate</strong>: any change to a tool’s <code>description</code> or <code>inputSchema</code> triggers the §11 selection/irrelevance suite in CI, and a regression blocks the merge. They also added <strong>format-sensitivity</strong> runs (BFCL-V4 style, §10.1) so they’d know how brittle each tool’s selection was to wording before it bit them in prod.</p>
+<p><em>The lesson:</em> <strong>treat tool descriptions and schemas as code.</strong> In an MCP ecosystem they are load-bearing model inputs; gate them with the same eval you gate the model with.</p>
+<h3 id="125-the-composite-takeaway-from-the-war-stories"><a class="header" href="#125-the-composite-takeaway-from-the-war-stories">12.5 The composite takeaway from the war stories</a></h3>
+<p>Every incident above shares a shape: <strong>a layer reported success while the world was wrong.</strong> HTTP said OK; the summary read fine; the retry “recovered”; the description “looked cleaner.” Production tool-use evaluation is the discipline of <em>not trusting local green signals</em> — grading the end-state, counting real side effects, gating the inputs (descriptions/schemas) as well as the outputs, and weighting everything by blast radius.</p>
+<hr>
+<h2 id="13-interview-mastery"><a class="header" href="#13-interview-mastery">13. Interview mastery</a></h2>
+<p>§9 covered eight probes an interviewer will open with. This section is the rest of the kit: a crisp 60-second answer to the field’s signature question, a full system-design walkthrough, decision tables you can draw on a whiteboard, a longer Q&amp;A bank, and the red-flag/green-flag heuristics that let a reviewer smell a weak eval in thirty seconds.</p>
+<h3 id="131-explain-in-60-seconds-why-tool-use-is-where-agents-silently-fail"><a class="header" href="#131-explain-in-60-seconds-why-tool-use-is-where-agents-silently-fail">13.1 “Explain in 60 seconds why tool use is where agents silently fail”</a></h3>
+<blockquote>
+<p>Tool use is the moment the model stops producing <em>text a human can doubt</em> and starts producing <em>a structured call a machine executes without doubt</em>. Three things make it fail silently. First, the errors are <strong>structured, not prose</strong>: a wrong <code>account_id</code> is a valid-looking token in valid JSON, invisible to any text-quality metric. Second, the success signals <strong>lie</strong>: tools return status codes, so <code>refund(wrong_order, wrong_amount)</code> comes back <code>200 OK</code> and execution success gets mistaken for correctness. Third, the damage <strong>compounds and gets narrated away</strong>: one wrong id early in a chain poisons every downstream step, and the model then writes a fluent, confident summary of a wrong result. So you cannot evaluate tool use by reading transcripts or scoring final answers — you have to inspect the structured call trace and grade the <em>effect on the world</em>, weighted by how much damage each tool can do. That’s the whole game: reads are cheap to get wrong, writes are not, and the eval has to know the difference.</p>
+</blockquote>
+<p>That is deliberately memorizable: <em>structured-not-prose, signals-lie, damage-compounds → grade the trace and the end-state, weighted by blast radius.</em></p>
+<h3 id="132-system-design-prompt-design-tool-use-evaluation-for-a-payments-agent"><a class="header" href="#132-system-design-prompt-design-tool-use-evaluation-for-a-payments-agent">13.2 System-design prompt: “Design tool-use evaluation for a payments agent”</a></h3>
+<p>A payments agent can <code>get_balance</code>, <code>list_transactions</code>, <code>get_payee</code>, <code>create_payee</code>, <code>send_payment</code>, and <code>cancel_payment</code>. Design its evaluation. A strong answer moves through five layers; here is the sketch.</p>
+<p><strong>1. Threat-model the tools first (blast radius).</strong> Split the tool set by consequence before writing a single metric:</p>
+<ul>
+<li><strong>Read</strong> (<code>get_balance</code>, <code>list_transactions</code>, <code>get_payee</code>): wrong = wasted tokens. Partial credit, semantic tolerance.</li>
+<li><strong>Non-idempotent write</strong> (<code>send_payment</code>, <code>create_payee</code>): wrong or duplicated = irreversible money movement. Binary, strict, safety-gated.</li>
+<li><strong>Compensating</strong> (<code>cancel_payment</code>): matters for recovery paths and must itself be evaluated for correctness.</li>
+</ul>
+<p><strong>2. Ground truth = sandbox end-state, not call text.</strong> Stand up a hermetic ledger sandbox seeded per task. The reference for each task is the <strong>final ledger state</strong> (balances, a payment row with exact payee + minor-unit amount + idempotency key) plus <strong>required facts surfaced to the user</strong> (confirmation number, new balance). Diff with a canonicalizing comparator (money in minor units, ignore auto ids/timestamps). This is the τ-bench pattern applied to money.</p>
+<p><strong>3. Metrics, per dimension, consequence-weighted.</strong></p>
+<ul>
+<li>Selection accuracy + <strong>irrelevance</strong> (must <em>not</em> pay on “what’s my balance?”).</li>
+<li>Argument accuracy with a hard <strong>value-provenance</strong> rule: <code>payee</code> and <code>amount</code> must trace to a prior <code>get_payee</code> / <code>list_transactions</code> output — never fabricated.</li>
+<li><strong>Effect multiplicity</strong> on <code>send_payment</code>: exactly-once. Two payments for a one-payment task = critical fail, overrides everything.</li>
+<li>Chain completion (get_payee → send_payment) and order violations.</li>
+<li>Recovery vs. <strong>safe</strong> recovery: on a <code>send_payment</code> timeout, the golden path is <code>list_transactions</code>/status-check → decide, <em>not</em> re-send; retries must carry the same idempotency key.</li>
+</ul>
+<p><strong>4. Safety gates and confirmation policy.</strong> Any spurious/duplicated <code>send_payment</code>, any payment to a payee not confirmed by the user, or any write on an ambiguous request (“pay John” with two Johns) <strong>fails the episode</strong> regardless of task-level success. Underspecified payments must ask a clarifying question — the reference rewards the no-op-plus-question.</p>
+<p><strong>5. Reliability + online.</strong> Report <strong>pass^k (k≥5)</strong> on the payment subset — “usually pays correctly” is not deployable when the tail double-pays. Add an injected-failure suite (processor 5xx/timeouts) for recovery, and in production, <strong>shadow-mode</strong> the agent with live call-trace monitoring and an amount-threshold human-in-the-loop before real money moves.</p>
+<p>ASCII sketch of the harness:</p>
+<pre><code class="language-text">  task (seed) ──► [ hermetic ledger sandbox ] ◄── agent tool calls
+                          │
+        ┌─────────────────┼──────────────────────────┐
+        ▼                 ▼                           ▼
+  state-diff vs      call-trace scorer          injected-failure
+  golden end-state   (§11: sel/arg/chain/        rig (5xx/timeout)
+  + required facts    provenance/halluc)               │
+        │                 │                            ▼
+        └───────► safety gate (effect-multiplicity,  recovery /
+                  provenance, confirm-on-ambiguity)   safe-retry
+                          │
+                          ▼
+                 per-dim metrics + pass^k(k≥5)  ──►  ship / block
+</code></pre>
+<p>The single most important sentence to say out loud: <em>“For a payments agent I grade the ledger end-state and count real side effects, not the call text or the summary — and a single spurious payment fails the run no matter how good the rest looks.”</em></p>
+<h3 id="133-tradeoff-tables"><a class="header" href="#133-tradeoff-tables">13.3 Tradeoff tables</a></h3>
+<p><strong>Ground-truth strategy: exact-match vs. semantic vs. state-based</strong></p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th></th><th>Exact/AST match on calls</th><th>Semantic (value-set / judge)</th><th>State-based (end-state diff)</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>What it grades</strong></td><td>The call text, structurally</td><td>Whether values <em>mean</em> the right thing</td><td>The effect on the world</td></tr>
+<tr><td><strong>“Any valid path” robustness</strong></td><td>Poor (one golden path)</td><td>Medium</td><td>Excellent (path-agnostic)</td></tr>
+<tr><td><strong>Catches wrong-but-plausible args</strong></td><td>Only if value in reference set</td><td>Yes</td><td>Yes (world ends up wrong)</td></tr>
+<tr><td><strong>Cost to author/maintain</strong></td><td>Low</td><td>Medium (judge calibration)</td><td>High (sandbox + seeds)</td></tr>
+<tr><td><strong>Reproducible in CI</strong></td><td>Yes</td><td>Judge-dependent</td><td>Yes, if sandbox is hermetic</td></tr>
+<tr><td><strong>Best for</strong></td><td>Single-turn call correctness, fast unit gates</td><td>Open steps, phrasing-tolerant reads</td><td>Writes/deletes/payments, multi-turn</td></tr>
+<tr><td><strong>Blind spot</strong></td><td>Alternate valid calls; efficiency</td><td>Judge noise/bias</td><td>Read-only correctness; efficiency</td></tr>
+</tbody>
+</table>
+</div>
+<p><em>Rule of thumb:</em> AST for the unit tier, state-based for anything that writes, semantic/judge only for the open residual — and never rely on one alone.</p>
+<p><strong>Single-turn vs. multi-turn evaluation</strong></p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th></th><th>Single-turn</th><th>Multi-turn (stateful)</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>World model</strong></td><td>Stateless; one call, reset</td><td>Persistent backend mutated across turns</td></tr>
+<tr><td><strong>Reference</strong></td><td>Expected call(s)</td><td>End-state + required-info + policy adherence</td></tr>
+<tr><td><strong>Failures exposed</strong></td><td>Selection, arg construction</td><td>+ coordination, memory, recovery, drift, coupling</td></tr>
+<tr><td><strong>Reliability</strong></td><td>pass@1 often fine</td><td>pass^k essential (variance explodes)</td></tr>
+<tr><td><strong>Representative of</strong></td><td>Wrapped-API calls</td><td>Real agents / assistants</td></tr>
+<tr><td><strong>Cost &amp; flakiness</strong></td><td>Low</td><td>High (user-simulator noise, seeds)</td></tr>
+<tr><td><strong>Benchmarks</strong></td><td>BFCL V1/V2 (Live), API-Bank (Call)</td><td>BFCL V3, τ-bench, τ²-bench</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="134-qa-bank-interview-ready"><a class="header" href="#134-qa-bank-interview-ready">13.4 Q&amp;A bank (interview-ready)</a></h3>
+<p><strong>Q9. When would you <em>prefer</em> AST/exact-match over state-based eval?</strong> For fast unit gates on single calls where standing up a sandbox is overkill, and where the space of correct calls is genuinely narrow (a well-specified read with one right shape). It runs in milliseconds on every commit and localizes arg/selection bugs precisely. You just never let it be your <em>only</em> gate for writes.</p>
+<p><strong>Q10. How do you catch a hallucinated tool vs. a hallucinated argument?</strong> A hallucinated <em>tool</em> is a name not in the declared registry — validate every emitted <code>name</code> against the tool set; nonzero count is a hard fail. A hallucinated <em>argument</em> is a key not in the tool’s schema, or a value with no provenance (a <code>flight_id</code> that appears in no prior tool output). The §11 scorer surfaces both as separate counters; they have different fixes (tighter tool-listing prompt vs. provenance checks).</p>
+<p><strong>Q11. An agent asks a clarifying question instead of acting. Right or wrong?</strong> It depends on whether the request was underspecified. For an ambiguous <em>write</em> (“cancel my order” with three orders), asking is the <em>correct</em> action and a confident guess-write is a failure — your reference must be able to reward the no-op-plus-question. For a fully-specified request, asking is an unnecessary turn and a mild efficiency ding. So this is not a bug or a virtue in the abstract; it’s graded against whether ground truth says the request was answerable.</p>
+<p><strong>Q12. How do you evaluate an agent that uses tools you don’t control (third-party MCP servers)?</strong> Add a trust-boundary layer: test resistance to <strong>tool-poisoning</strong> (a malicious description or return field trying to redirect the agent), <strong>name collisions</strong> across servers, and <strong>over-broad scope</strong> use. Grade “does it refuse a tool whose description contains injected instructions” as a first-class safety task, and pin/version the server’s tool manifest so a silent upstream change to a description can’t move behavior unnoticed.</p>
+<p><strong>Q13. How do async / long-running tools change your scorer?</strong> They break one-call-one-result. Under the MCP 2025-11 task model a call may return <code>input_required</code> or stay <code>working</code> across turns, so the scorer must model pending tasks, polling, cancellation, and terminal <code>failed</code>/<code>completed</code>. You evaluate whether the agent <em>waits and polls</em> rather than assuming instant completion, handles <code>cancelled</code>, and doesn’t fire a duplicate side effect while a task is still <code>working</code>.</p>
+<p><strong>Q14. Your judge and your state-diff disagree on a task. Who wins?</strong> State-diff, for anything with an observable end-state — it’s deterministic and grades reality. The judge is for open steps the state can’t capture (tone, whether a clarifying question was reasonable). If they disagree on a <em>write</em>, the judge is wrong or the task is mis-specified; investigate rather than average them.</p>
+<p><strong>Q15. How do you keep an eval suite from going stale or getting contaminated?</strong> Rotate a <strong>private held-out</strong> set that never ships to a leaderboard or training corpus; refresh golden trajectories from recent production traffic; prefer <strong>state-based</strong> references (harder to memorize than fixed call strings); and periodically re-audit that “passing” tasks still exercise the tool (a schema change can turn a real test into a no-op).</p>
+<p><strong>Q16. What’s the single number you’d put on a dashboard for a destructive-tool agent, and why?</strong> <strong>pass^k (k≈5–8) on the write subset</strong>, with a hard <strong>safety-gate failure rate</strong> next to it. Averages and pass@1 hide the tail, and the tail is where a customer gets double-charged. If forced to one number, it’s the reliability of the dangerous subset, not the mean over everything.</p>
+<p><strong>Q17. How do you measure efficiency without punishing legitimate exploration?</strong> Compare against the golden call count for <em>necessary</em> calls only (dedupe identical calls with unchanged state), and report <code>call_efficiency = n_golden / m</code> capped at 1 alongside dollars- and latency-per-task. Exploration that changes state or gathers required info counts as necessary; a re-fetch of unchanged data or a duplicate write does not.</p>
+<p><strong>Q18. How would you detect that an agent read a tool’s error but ignored it?</strong> Pair the error-injection suite with a check that the <em>next</em> action changed in response: after an <code>error: not_found</code>, did the agent adjust the call / escalate / stop, or did it proceed as if success (or repeat the identical failing call)? Track <strong>maladaptive-retry rate</strong> (identical name+args after an error) as the tell for “ignored the error message.”</p>
+<p><strong>Q19. Interviewer says “we just use an LLM to grade the whole trajectory.” What’s your pushback?</strong> Convenient but under-specified: LLM judges are noisy, biased toward fluent narration (the exact failure mode of a wrong-but-plausible call), and drift when the judge model changes. I’d keep the judge only for open residual steps, gate it on measured agreement with human labels, and put deterministic state-diff + provenance checks under everything that writes. A judge you haven’t calibrated is not a metric.</p>
+<p><strong>Q20. How do you evaluate memory/tool use over a long session?</strong> Treat the memory backend as a tool and score read/write correctness through it (BFCL V4 memory pattern): can the agent <em>store</em> the right fact, <em>retrieve</em> it later against a rephrased query, and not <em>hallucinate</em> a memory that was never written? Run multi-session tasks where a fact set early must resurface turns later, and report accuracy per backend (key-value vs. vector vs. summarization) since the failure profiles differ.</p>
+<h3 id="135-red-flags-vs-green-flags"><a class="header" href="#135-red-flags-vs-green-flags">13.5 Red flags vs. green flags</a></h3>
+<p>An interviewer (or a code reviewer) reads the <em>shape</em> of your eval, not just the score. Signals they weigh:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Red flag (weak eval)</th><th>Green flag (strong eval)</th></tr>
+</thead>
+<tbody>
+<tr><td>Scores only the final answer / summary</td><td>Grades the structured call trace <strong>and</strong> the end-state</td></tr>
+<tr><td>String-matches function calls</td><td>AST/structured comparison with value sets</td></tr>
+<tr><td><code>200 OK</code> treated as success</td><td>Exec-success reported <em>next to</em> arg accuracy and state-diff</td></tr>
+<tr><td>One golden path per task</td><td>Partial orders, value sets, or outcome-based checks</td></tr>
+<tr><td>No should-not-call / irrelevance tasks</td><td>Explicit irrelevance suite scored as a confusion matrix</td></tr>
+<tr><td>All tools weighted equally</td><td>Consequence-weighted; writes strict + safety-gated</td></tr>
+<tr><td>Single run / pass@1 headline</td><td>pass^k over many seeds on the high-stakes subset</td></tr>
+<tr><td>Retry-after-error rewarded blindly</td><td><em>Safe</em> recovery: effect-multiplicity, idempotency keys</td></tr>
+<tr><td>Tool descriptions treated as docs</td><td>Descriptions/schemas version-controlled + eval-gated</td></tr>
+<tr><td>Live third-party APIs in CI</td><td>Hermetic, reset-per-run sandbox (StableToolBench pattern)</td></tr>
+<tr><td>Uncalibrated LLM judge as the metric</td><td>Judge gated on measured human agreement, open steps only</td></tr>
+<tr><td>One leaderboard number cited as “capability”</td><td>Version/split named; private held-out set; online monitoring</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="14-further-reading"><a class="header" href="#14-further-reading">14. Further reading</a></h2>
+<p><strong>Berkeley Function-Calling Leaderboard (BFCL)</strong></p>
+<ul>
+<li>Leaderboard (currently V4) and category docs: <a href="https://gorilla.cs.berkeley.edu/leaderboard.html">https://gorilla.cs.berkeley.edu/leaderboard.html</a></li>
+<li>BFCL V3 multi-turn / multi-step blog (state-based eval, missing params/functions): <a href="https://gorilla.cs.berkeley.edu/blogs/13_bfcl_v3_multi_turn.html">https://gorilla.cs.berkeley.edu/blogs/13_bfcl_v3_multi_turn.html</a></li>
+<li>BFCL V4 web-search track (2025-07-17): <a href="https://gorilla.cs.berkeley.edu/blogs/15_bfcl_v4_web_search.html">https://gorilla.cs.berkeley.edu/blogs/15_bfcl_v4_web_search.html</a></li>
+<li>BFCL V4 memory track (key-value / vector / summarization, 2025-07-17): <a href="https://gorilla.cs.berkeley.edu/blogs/16_bfcl_v4_memory.html">https://gorilla.cs.berkeley.edu/blogs/16_bfcl_v4_memory.html</a></li>
+<li>BFCL V4 format-sensitivity track (26 perturbations): <a href="https://gorilla.cs.berkeley.edu/blogs/17_bfcl_v4_prompt_variation.html">https://gorilla.cs.berkeley.edu/blogs/17_bfcl_v4_prompt_variation.html</a></li>
+<li>BFCL paper, “From Tool Use to Agentic Evaluation” (ICML 2025): <a href="https://openreview.net/forum?id=2GmDdhBdDk">https://openreview.net/forum?id=2GmDdhBdDk</a></li>
+<li>BFCL dataset on Hugging Face: <a href="https://huggingface.co/datasets/gorilla-llm/Berkeley-Function-Calling-Leaderboard">https://huggingface.co/datasets/gorilla-llm/Berkeley-Function-Calling-Leaderboard</a></li>
+</ul>
+<p><strong>τ-bench / τ²-bench (Sierra)</strong></p>
+<ul>
+<li>τ-bench paper, “A Benchmark for Tool-Agent-User Interaction in Real-World Domains” (arXiv:2406.12045): <a href="https://arxiv.org/abs/2406.12045">https://arxiv.org/abs/2406.12045</a></li>
+<li>τ-bench code: <a href="https://github.com/sierra-research/tau-bench">https://github.com/sierra-research/tau-bench</a></li>
+<li>τ²-bench paper, “Evaluating Conversational Agents in a Dual-Control Environment” (arXiv:2506.07982, 2025-06-09): <a href="https://arxiv.org/abs/2506.07982">https://arxiv.org/abs/2506.07982</a></li>
+<li>τ²-bench code: <a href="https://github.com/sierra-research/tau2-bench">https://github.com/sierra-research/tau2-bench</a></li>
+<li>τ²-bench-verified (Amazon AGI corrected dataset): <a href="https://github.com/amazon-agi/tau2-bench-verified">https://github.com/amazon-agi/tau2-bench-verified</a></li>
+<li>Sierra blog — τ-bench overview and pass^k motivation: <a href="https://sierra.ai/blog/tau-bench-shaping-development-evaluation-agents">https://sierra.ai/blog/tau-bench-shaping-development-evaluation-agents</a></li>
+</ul>
+<p><strong>ToolBench / StableToolBench / API-Bank / NexusRaven</strong></p>
+<ul>
+<li>ToolLLM / ToolBench (OpenBMB, ICLR 2024, arXiv:2307.16789): <a href="https://arxiv.org/abs/2307.16789">https://arxiv.org/abs/2307.16789</a> · code: <a href="https://github.com/OpenBMB/ToolBench">https://github.com/OpenBMB/ToolBench</a></li>
+<li>StableToolBench — reproducible tool-use benchmarking via API simulator (arXiv:2403.07714): <a href="https://arxiv.org/abs/2403.07714">https://arxiv.org/abs/2403.07714</a></li>
+<li>API-Bank — “A Comprehensive Benchmark for Tool-Augmented LLMs” (EMNLP 2023, arXiv:2304.08244): <a href="https://arxiv.org/abs/2304.08244">https://arxiv.org/abs/2304.08244</a></li>
+<li>NexusRaven V2 (Nexusflow) — commercially-permissive function-calling model: <a href="https://openreview.net/pdf?id=5lcPe6DqfI">https://openreview.net/pdf?id=5lcPe6DqfI</a></li>
+</ul>
+<p><strong>Model Context Protocol (MCP)</strong></p>
+<ul>
+<li>MCP spec and docs: <a href="https://modelcontextprotocol.io/">https://modelcontextprotocol.io/</a> · versioned spec: <a href="https://spec.modelcontextprotocol.io/">https://spec.modelcontextprotocol.io/</a></li>
+<li>MCP first-anniversary / November 2025 spec release (<code>2025-11-25</code>: async tasks, OAuth, extensions, sampling-with-tools): <a href="https://blog.modelcontextprotocol.io/posts/2025-11-25-first-mcp-anniversary/">https://blog.modelcontextprotocol.io/posts/2025-11-25-first-mcp-anniversary/</a></li>
+<li>Anthropic — “Code execution with MCP: building more efficient AI agents”: <a href="https://www.anthropic.com/engineering/code-execution-with-mcp">https://www.anthropic.com/engineering/code-execution-with-mcp</a></li>
+<li>Anthropic — introducing MCP (Nov 2024): <a href="https://www.anthropic.com/news/model-context-protocol">https://www.anthropic.com/news/model-context-protocol</a></li>
+</ul>
+<hr>
+<p><em>Practitioner’s takeaway:</em> evaluate tool use on the <strong>structured call trace</strong>, not the prose; score selection, arguments, chaining, recovery, efficiency, and safety <strong>separately</strong>; prefer <strong>state/outcome-based</strong> ground truth to escape the “any valid path” trap; always include <strong>irrelevance</strong> and <strong>injected-failure</strong> cases; and report <strong>reliability (pass^k)</strong>, not a single lucky run — especially anywhere a tool can write, charge, send, or delete.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../04_tool_use_evaluation/index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../05_reasoning_evaluation/index.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../04_tool_use_evaluation/index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../05_reasoning_evaluation/index.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

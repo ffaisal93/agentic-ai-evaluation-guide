@@ -1,0 +1,491 @@
+<!DOCTYPE HTML>
+<html lang="en" class="navy sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Pattern 13: Human-in-the-Loop - Agentic AI Evaluation — A Practical Guide</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="Frameworks, metrics, benchmarks, tool-use and safety evaluation, and production monitoring for agentic AI systems.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../custom-9222a227.css">
+
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "navy";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-96a8b00f.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-4b3c722b.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('navy')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Agentic AI Evaluation — A Practical Guide</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/ffaisal93/agentic-ai-evaluation-guide" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/ffaisal93/agentic-ai-evaluation-guide/edit/main/./agentic-design-pattern/13-human-in-the-loop.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="pattern-13-human-in-the-loop--knowing-when-the-machine-should-raise-its-hand"><a class="header" href="#pattern-13-human-in-the-loop--knowing-when-the-machine-should-raise-its-hand">Pattern 13: Human-in-the-Loop — Knowing When the Machine Should Raise Its Hand</a></h1>
+<h2 id="the-interview-scenario"><a class="header" href="#the-interview-scenario">The interview scenario</a></h2>
+<p>You’ll hear this pattern hiding inside prompts like these:</p>
+<ul>
+<li>“Design an agent that drafts contract clauses for our legal team — but the lawyers
+must stay in control of anything that gets sent to a client.”</li>
+<li>“We want an agent that can issue refunds and account credits automatically. How do you
+make sure it never gives away money it shouldn’t?”</li>
+<li>“Build a content moderation system that handles millions of posts a day, but where
+humans still make the judgment calls on the hard cases.”</li>
+</ul>
+<p>The common thread: the agent is capable, the action is consequential, and somebody with
+a job title is accountable for the outcome. The moment you hear words like “lawyers must
+approve,” “irreversible,” “compliance,” or “we can’t afford a mistake,” you should be
+thinking Human-in-the-Loop.</p>
+<h2 id="what-this-pattern-is-in-plain-words"><a class="header" href="#what-this-pattern-is-in-plain-words">What this pattern is, in plain words</a></h2>
+<p>Human-in-the-Loop — everyone shortens it to HITL — is the design decision that an AI
+agent should not act completely alone. Somewhere in its workflow, a real person gets to
+look at what the agent wants to do, and either wave it through, change it, or stop it.</p>
+<p>The best mental model is a junior employee with a smart manager. You don’t watch a good
+junior employee type every keystroke — that would defeat the purpose of hiring them. But
+you also don’t let them wire $2 million out of the company account on their first week.
+You give them standing permission for routine work, and you ask them to come to your
+desk before doing anything risky, expensive, or hard to undo. HITL is exactly that
+arrangement, formalized in software.</p>
+<p>There are a few flavors, and interviewers love it when you name them. In the <em>reviewer</em>
+flavor, the agent does the work and a human checks the output before it ships — think a
+human editor reviewing AI-drafted marketing copy. In the <em>approval gate</em> flavor, the
+agent pauses before a specific risky action — sending an email, executing a trade,
+deleting data — and waits for a thumbs-up. In the <em>escalation</em> flavor, the agent handles
+the easy cases end-to-end and only hands off the hard or ambiguous ones, the way a
+chatbot transfers an angry customer to a human support rep. And in the <em>collaboration</em>
+flavor, human and agent work side by side: the agent crunches data and drafts options,
+the human makes the final call — sometimes called decision augmentation, because the AI
+is informing a human decision rather than making it.</p>
+<p>There’s also a cousin worth one sentence in an interview: <em>human-on-the-loop</em>, where the
+human doesn’t approve individual actions but instead sets the policy — “never invest
+more than 5% in one stock, auto-sell anything down 10%” — and the agent executes at
+machine speed within those guardrails. Humans write the rules slowly and carefully; the
+machine applies them fast.</p>
+<p>One more idea underneath all of this: the human input isn’t just a safety brake, it’s a
+learning signal. Every time a person corrects the agent, you’ve generated a labeled
+example of what “right” looks like. Fed back into the system — through fine-tuning,
+better prompts, or preference training — those corrections make the agent need less
+supervision over time. That’s the same idea behind reinforcement learning from human
+feedback, where human preferences literally shape how the model behaves.</p>
+<h2 id="how-the-design-actually-works"><a class="header" href="#how-the-design-actually-works">How the design actually works</a></h2>
+<p>Let me walk through the machinery you’d actually build, because “a human checks it”
+hides a surprising amount of engineering.</p>
+<p><strong>Risk tiers first.</strong> You can’t put a human in front of everything — people are slow and
+expensive, and if you ask them to approve ten thousand trivial actions a day they’ll
+stop reading and just click “approve” on everything, which is worse than no review at
+all (reviewers call this rubber-stamping, and it’s the death of any HITL system). So the
+first design move is classifying actions by risk. Reading data: low risk, fully
+automatic. Drafting a document that a human will send: low-to-medium. Sending money,
+signing contracts, deleting records, emailing customers: high risk, gated. The general
+rule I’d state in an interview: <em>gate the actions that are irreversible or expensive,
+automate the ones that are cheap to undo.</em></p>
+<p><strong>Confidence-based escalation second.</strong> Risk isn’t the only trigger — uncertainty is the
+other one. The agent should estimate how sure it is (via a confidence score from a
+classifier, a self-assessment, or simply detecting that a case matches known-ambiguous
+patterns) and interrupt a human only when it’s unsure or the stakes are high. That
+single sentence — “the agent only interrupts a human when it’s unsure or the stakes are
+high” — is the heart of the pattern, and it’s worth saying verbatim in an interview.
+Everything else is plumbing around it.</p>
+<p><strong>The interrupt/resume mechanic.</strong> Here’s the part interviewers probe because it’s
+genuinely tricky: what does it mean, mechanically, for an agent to “pause and ask”? The
+agent is mid-run — it has context, partial work, a plan. You can’t just kill the process
+and start over when the human answers three hours later. So the framework has to
+<em>checkpoint</em> the run: serialize the agent’s state (its conversation history, working
+memory, and the pending action) to durable storage, emit a review request into a queue,
+and go dormant. When the human decides — approve, edit, or reject — the run is
+rehydrated from the checkpoint and continues as if the pause never happened, with the
+human’s decision injected as a new input. Modern agent frameworks (LangGraph’s
+interrupts, ADK’s escalation tools) build this in, but you should be able to describe it
+framework-free: pause, persist, notify, decide, resume.</p>
+<p><strong>The review queue.</strong> Human decisions need a workplace. That’s a review queue: a
+dashboard where pending items line up, each showing the agent’s proposed action, its
+reasoning, the relevant context, and buttons for approve / edit / reject / escalate
+further. Good queues are triaged (highest risk and oldest items first), have SLAs —
+service-level agreements, promises like “every item reviewed within 4 hours” — and route
+items to the <em>right</em> human, because a paralegal shouldn’t be approving what needs a
+partner’s signature. The book’s caveat matters here: HITL is only as good as the humans
+in it. A skilled reviewer catches the subtle error in generated code; an untrained one
+adds latency and false confidence.</p>
+<p><strong>The audit trail.</strong> Every gated action, every approval, every edit, every rejection
+gets logged: who decided, when, what they saw, what changed. This is non-negotiable in
+regulated domains — when the auditor asks “why did the system send this clause to the
+client?”, the answer must be “the agent proposed it at 2:14pm, attorney Chen edited
+paragraph two and approved at 3:02pm,” not a shrug. The audit trail is also your
+training-data goldmine: it’s a perfectly labeled record of agent proposals and expert
+corrections.</p>
+<p><strong>The tension you must name: safety versus throughput.</strong> Every human gate you add makes
+the system safer and slower. Humans don’t scale — that’s the pattern’s fundamental
+caveat. One reviewer can handle maybe a few hundred decisions a day; your agent can
+propose a million. So the design is always a hybrid: automation for volume, humans for
+judgment, and a dial you can turn. As the agent proves itself — measured by how often
+humans approve without edits — you raise the autonomy threshold and gate less. If
+quality slips, you turn the dial back. Frame HITL as a <em>dial, not a switch</em>, and you’ll
+sound like someone who has run one of these in production.</p>
+<p>One honest caveat to volunteer: privacy. Putting a human in the loop means showing that
+human real user data, which may need anonymizing or masking first — another pipeline
+stage, more complexity. Mentioning that unprompted signals real-world experience.</p>
+<h2 id="the-complete-interview-answer-spoken"><a class="header" href="#the-complete-interview-answer-spoken">The complete interview answer, spoken</a></h2>
+<p>Here’s how I’d handle “Design an agent that drafts contract clauses — lawyers must stay
+in control,” out loud, start to finish.</p>
+<p>“Before I design anything, let me pin down three things. First, what’s the volume — are
+we drafting ten clauses a day or ten thousand? That decides how much human review we can
+afford. Second, what’s the blast radius of a mistake — is a bad clause caught
+internally, or could it reach a client and bind the company? Third, who are the humans —
+a handful of senior attorneys, or a larger team with paralegals who can do first-pass
+review?”</p>
+<p><em>(Interviewer: say a mid-size firm, a few hundred clauses a day, and yes, a bad clause
+reaching a client is the nightmare scenario.)</em></p>
+<p>“Great — a few hundred a day is squarely in ‘humans can review everything that matters’
+territory, and the nightmare scenario is irreversible harm, so I’m going to design this
+as a Human-in-the-Loop system where the agent is a fast, tireless first-drafter and the
+lawyers are the deciders. The agent never sends anything to a client. Ever. That’s my
+first invariant, and I’d state it in the design doc in bold.</p>
+<p>Let me sketch the flow on the whiteboard:</p>
+<pre><code>  Request ("draft an indemnification clause for the Acme deal")
+      |
+      v
+  +-----------+     retrieves firm templates,
+  |   Agent   |---- precedent clauses, deal context
+  +-----------+
+      |
+      v  drafts clause + self-assessed confidence + cited precedents
+  +---------------------+
+  |    Risk &amp; confidence |----- low risk + high confidence ---&gt; lawyer's
+  |      classifier      |                                      inbox (async)
+  +---------------------+
+      |
+      | high risk OR low confidence
+      v
+  +----------------+   approve / edit / reject
+  |  Review queue  | &lt;------------------------- attorney
+  |  (checkpointed |
+  |   agent runs)  |------ decision ------&gt; agent RESUMES from checkpoint
+  +----------------+                              |
+      |                                           v
+      +---- every event ----&gt; [ Audit log ]   final clause -&gt; document system
+</code></pre>
+<p>Walking through it: a lawyer asks for a clause. The agent retrieves relevant firm
+templates and precedent language, drafts the clause, and — this is important — attaches
+its receipts: which precedents it drew from, and a self-assessment of how confident it
+is. Novel deal structure it’s never seen? Low confidence. Boilerplate indemnification
+it’s drafted five hundred times? High confidence.</p>
+<p>Then a classification step sorts the draft into two lanes. Routine, high-confidence
+drafts go straight into the requesting lawyer’s inbox as a normal work product — the
+lawyer was always going to read it before using it, so that human review comes for free.
+But anything risky — unusual liability terms, deviations from firm-approved templates,
+low agent confidence, or high-value deals — gets gated: the agent’s run is checkpointed,
+meaning we save its full state to storage, and a review item appears in a queue for a
+senior attorney.</p>
+<p>Let me be concrete about that pause, because it’s the mechanical heart of HITL. The
+agent isn’t killed; it’s suspended mid-run. Its conversation state, retrieved documents,
+and the pending draft are persisted. The attorney might respond in five minutes or
+tomorrow morning. When they do — approve as-is, edit the language, or reject with a note
+— we rehydrate the run from the checkpoint, feed the decision in as new input, and the
+agent continues: incorporating edits, regenerating if rejected, and finalizing if
+approved. Interrupt, decide, resume. The human is a step <em>inside</em> the workflow, not a
+wall at the end of it.</p>
+<p>Now the review queue itself, because that’s where this succeeds or dies. Each item shows
+the draft, a diff against the nearest firm-approved template — lawyers review diffs far
+faster than raw text — the agent’s reasoning and cited precedents, and one-click
+actions. The queue is triaged by deal value and deadline. And I’d set an explicit SLA,
+say four business hours, because an unbounded review queue quietly becomes the
+bottleneck for the whole firm.</p>
+<p>The failure mode I’m most worried about isn’t the agent — it’s the humans. If I gate too
+much, attorneys see two hundred items a day, stop reading, and rubber-stamp. That’s the
+worst of both worlds: all the latency of review with none of the safety. So I’d watch
+two metrics from day one: median review time per item — if it drops toward two seconds,
+people aren’t reading — and edit rate, the fraction of gated items that reviewers
+actually change. If the edit rate on a category falls below a few percent for weeks,
+that category has earned auto-approval and I move it to the fast lane. This is the
+safety-versus-throughput dial: I start conservative, gating maybe 40% of drafts, and let
+the data earn the agent more autonomy over time.</p>
+<p>Other failure handling: if the classifier itself errs — calls a risky clause routine —
+the requesting lawyer is still a human backstop, since no clause reaches a client
+without an attorney attaching it. Defense in depth: two human touchpoints for the scary
+path, one for the routine path, zero fully-autonomous paths to the outside world. If the
+agent goes down entirely, lawyers just draft manually — the system degrades to the
+status quo, which is the gentlest failure mode you can ask for. And if a reviewer is out
+sick, items past SLA re-route to a backup reviewer automatically.</p>
+<p>Everything writes to an immutable audit log: prompt, retrieved sources, draft,
+classifier verdict, reviewer identity, edits, timestamps. Two reasons. Compliance — when
+a client dispute happens, we can reconstruct exactly who approved what. And improvement
+— every attorney edit is a free, expert-labeled training example. Monthly, we mine the
+edits: if attorneys keep fixing the same limitation-of-liability phrasing, that goes
+into the templates or the agent’s instructions, and next month’s edit rate drops. The
+humans aren’t just a safety net; they’re the teachers.</p>
+<p>Evaluation: I’d track approval-without-edit rate as the headline quality number,
+escalation precision — of the items we gated, how many actually needed human judgment —
+and escalation recall, which we estimate by sampling the fast lane and having attorneys
+audit whether anything risky slipped through. Plus time-to-final-clause versus the old
+manual baseline, because the business case is speed.</p>
+<p>On cost: a few hundred drafts a day is maybe $150 a day in model calls at strong-model
+prices — a rounding error against attorney time. The real cost is reviewer hours, which
+is exactly why the autonomy dial matters: every point of edit-rate improvement converts
+directly into recovered attorney time, and ‘senior attorney hours saved per month’ is
+the number I’d put on the executive dashboard.</p>
+<p>So to summarize the design in three sentences: the agent drafts everything and sends
+nothing — humans own the send button. Risk and confidence decide which drafts get an
+extra senior review, with interrupt-and-resume mechanics so review is a pause in the
+workflow, not a dead end. And the audit trail plus edit-mining turns every human
+correction into training signal, so the system needs less supervision every quarter.“</p>
+<h2 id="follow-ups-they-will-ask"><a class="header" href="#follow-ups-they-will-ask">Follow-ups they will ask</a></h2>
+<p><strong>“Won’t the reviewers just rubber-stamp everything?”</strong> Yes, if you let them — that’s
+alert fatigue, the biggest practical failure of HITL. Answer with countermeasures: gate
+less (only genuinely risky items), triage well, show diffs instead of walls of text,
+monitor median review time and edit rates to detect rubber-stamping, and occasionally
+inject known-bad items as a canary — if reviewers approve a planted error, your review
+layer has decayed and you need to reduce volume or rotate reviewers.</p>
+<p><strong>“How does the system scale if humans are the bottleneck?”</strong> State the trade honestly:
+humans don’t scale, so the design must shrink the fraction needing review over time.
+Tiered review (cheap first-pass reviewers, experts for the top tier), confidence
+thresholds that tighten as the agent proves out, and human-on-the-loop policies
+replacing per-item approval for categories with sustained near-zero edit rates.</p>
+<p><strong>“Where does the confidence score come from? Can you trust an LLM saying it’s
+confident?”</strong> Be skeptical — self-reported confidence from a language model is poorly
+calibrated. Prefer converging signals: a separate trained classifier on features like
+deviation-from-template, novelty of the request, self-consistency (sample the answer
+several times; disagreement means uncertainty), and hard business rules (deal value over
+a threshold always gates regardless of any score).</p>
+<p><strong>“What exactly happens to the agent’s state while it waits a day for approval?”</strong>
+They’re testing interrupt/resume. Answer: the run is checkpointed — state serialized to
+durable storage, a review request emitted, compute released. On decision, the run is
+rehydrated and the decision enters as new input. Bonus points for edge cases: expiring
+stale checkpoints if the world changed underneath (the deal terms were renegotiated),
+and idempotency so a double-clicked “approve” doesn’t execute twice.</p>
+<p><strong>“How is human feedback used to improve the model?”</strong> Edits and rejections are expert-
+labeled data. Short term, they drive prompt and template fixes; medium term, fine-tuning
+on before/after pairs; long term, preference-style training where the human choice
+teaches the model which outputs experts prefer. Note the caveat: correctors may need
+training themselves to give corrections that make clean training data.</p>
+<p><strong>“When would you <em>not</em> use HITL?”</strong> When actions are cheap and reversible (drafting
+internal notes), when volume makes review impossible and per-item risk is tiny (ranking
+millions of feed items — use sampling and monitoring instead), or when latency is so
+tight no human could respond (real-time bidding). Knowing when a pattern doesn’t apply
+is half the interview.</p>
+<h2 id="say-it-in-one-breath"><a class="header" href="#say-it-in-one-breath">Say it in one breath</a></h2>
+<p>“Human-in-the-Loop means the agent does the heavy lifting but a person keeps the
+judgment: risky or irreversible actions hit an approval gate, the agent checkpoints mid-
+run and resumes after the human decides, ambiguous cases escalate on low confidence —
+the agent only interrupts a person when it’s unsure or the stakes are high — everything
+lands in an audited review queue, and every human correction becomes training data, so
+the safety-versus-throughput dial keeps shifting toward autonomy as the agent earns it.”</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../agentic-design-pattern/12a-part4-intro.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../agentic-design-pattern/14-rag.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../agentic-design-pattern/12a-part4-intro.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../agentic-design-pattern/14-rag.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

@@ -1,0 +1,522 @@
+<!DOCTYPE HTML>
+<html lang="en" class="navy sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Pattern 6: Planning - Agentic AI Evaluation — A Practical Guide</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="Frameworks, metrics, benchmarks, tool-use and safety evaluation, and production monitoring for agentic AI systems.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../custom-9222a227.css">
+
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "navy";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-96a8b00f.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-4b3c722b.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('navy')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Agentic AI Evaluation — A Practical Guide</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/ffaisal93/agentic-ai-evaluation-guide" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/ffaisal93/agentic-ai-evaluation-guide/edit/main/./agentic-design-pattern/06-planning.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="pattern-6-planning--deciding-the-steps-before-and-while-taking-them"><a class="header" href="#pattern-6-planning--deciding-the-steps-before-and-while-taking-them">Pattern 6: Planning — deciding the steps before (and while) taking them</a></h1>
+<h2 id="the-interview-scenario"><a class="header" href="#the-interview-scenario">The interview scenario</a></h2>
+<p>Planning questions usually sound like one of these:</p>
+<ul>
+<li>“Design a deep-research agent: the user asks a broad question and gets back a structured, cited report
+an hour later.”</li>
+<li>“Design an agent that automates employee onboarding — accounts, training assignments, equipment,
+coordination across three departments.”</li>
+<li>“Our agent handles simple requests fine but falls apart on anything multi-step. It does the first thing
+it thinks of and quits. How would you fix that?”</li>
+</ul>
+<p>The tell is a goal that cannot be satisfied by any single action — something with stages, dependencies,
+and an outcome that has to be assembled rather than fetched.</p>
+<h2 id="what-this-pattern-is-in-plain-words"><a class="header" href="#what-this-pattern-is-in-plain-words">What this pattern is, in plain words</a></h2>
+<p>Planning is the ability to look at a big goal and work out a sequence of steps that gets you from here to
+there — before, or while, actually doing them.</p>
+<p>The analogy the book leans on, and the one I’d use in an interview, is delegating to a capable specialist.
+When you tell an event planner “organize a team offsite,” you’re specifying the <em>what</em> — the goal and its
+constraints: budget, headcount, rough dates. You are absolutely not specifying the <em>how</em>. The planner’s
+whole job is to discover the how: understand the starting conditions, understand what “done” looks like,
+and chart the sequence of actions connecting them.</p>
+<p>Crucially, the plan doesn’t exist before the request arrives. It’s synthesized in response to it. That’s
+what separates a planning agent from a workflow — a workflow is a route someone already mapped; a plan is
+a route being drawn for the first time.</p>
+<p>And a real plan is a living thing. If the preferred venue is booked, a good planner doesn’t declare
+failure — they absorb the new constraint, re-evaluate, and propose an alternative. That adaptability is
+the hallmark of the pattern: the initial plan is a starting hypothesis, not a rigid script.</p>
+<p>For a language model, planning means taking a high-level objective and generating an explicit, ordered
+list of sub-goals — “first gather sources, then extract claims, then reconcile disagreements, then draft,
+then cite” — and then executing against that list, revising it when reality pushes back.</p>
+<p>The problem it solves is exactly the one in the third interview prompt above: a reactive agent, given a
+big goal, does one plausible-looking thing and stops, because nothing forced it to think about the whole
+arc. Planning is the forcing function.</p>
+<h2 id="how-the-design-actually-works"><a class="header" href="#how-the-design-actually-works">How the design actually works</a></h2>
+<p>There are two ways to run the pattern, and interviewers expect you to know both and to pick one
+deliberately.</p>
+<p><strong>Decompose-then-execute.</strong> The agent’s first act is to produce the complete plan as an artifact — a
+numbered list of steps, written down before any step runs. Then an executor works through the steps in
+order, feeding each step’s output into the next.</p>
+<p>This is what the CrewAI example in the source chapter does in miniature: a single agent is instructed to
+first write a bulleted plan for a summary, then write the summary following its own plan. The plan
+literally appears in the output before the prose does.</p>
+<p>The huge advantage of this mode is that <em>the plan is a checkable artifact</em>. Because it exists as text
+before execution, you can inspect it, lint it with rules (“does any step call a tool we don’t have?”),
+estimate its cost, and — most valuably — show it to a human for approval. Google’s Gemini Deep Research
+does exactly this: it deconstructs your prompt into a multi-point research plan and presents it to you for
+review and editing <em>before</em> running it, so you and the agent agree on the trajectory before any budget is
+spent.</p>
+<p>A plan artifact for a research task might look like this — deliberately boring, deliberately inspectable:</p>
+<pre><code>GOAL: Assess the economic impact of semaglutide
+      on global healthcare systems.
+
+PLAN:
+ 1. [pending] Identify major healthcare markets and
+              current spending baselines.        -&gt; web_search
+ 2. [pending] Gather cost/outcome studies on
+              semaglutide adoption.              -&gt; web_search
+ 3. [pending] Extract and reconcile claims;
+              flag contradictions.               -&gt; extract_claims
+ 4. [pending] Project system-level impact;
+              note uncertainty.                  -&gt; synthesize
+ 5. [pending] Draft cited report per outline.    -&gt; synthesize
+
+BUDGET: max 40 searches, 3 replans, 30 min
+</code></pre>
+<p>Notice what’s checkable at a glance: every step names a capability that exists, step 3 consumes what steps
+1–2 produce, the length is sane, and there’s a budget line. None of that is verifiable when the “plan”
+lives only in the model’s head.</p>
+<p><strong>Plan-as-you-go.</strong> The agent decides the next step, executes it, looks at the result, and only then
+decides the following step. The plan never fully exists; it’s discovered incrementally.</p>
+<p>This mode shines when the environment is unknowable up front. Deep-research systems run their search phase
+this way: each round of results reveals knowledge gaps, contradictions to resolve, and leads to chase, so
+the next queries are formulated from what just came back — you couldn’t have listed them in advance.</p>
+<p>The mature answer is usually a hybrid: a coarse upfront plan for structure and checkability, with adaptive
+execution inside each step. That’s precisely how the deep-research products are built — an approved
+outline on the outside, an iterative search-evaluate-refine loop on the inside.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th></th><th>Decompose-then-execute</th><th>Plan-as-you-go</th></tr>
+</thead>
+<tbody>
+<tr><td>Plan exists as</td><td>Full artifact before execution</td><td>One step at a time</td></tr>
+<tr><td>Best when</td><td>Steps are foreseeable</td><td>Each step’s result shapes the next</td></tr>
+<tr><td>Checkable / approvable</td><td>Yes — review before spending</td><td>Only step-by-step</td></tr>
+<tr><td>Main risk</td><td>Plan goes stale mid-flight</td><td>Wandering, no global view, cost creep</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>The state being passed around.</strong> Three things flow through a planning system. First, the plan itself —
+the step list, with per-step status: pending, running, done, failed. Second, the accumulated results of
+completed steps. Third, the original goal plus constraints, which must stay visible the whole time so
+replanning has something to aim at.</p>
+<p>Lose any of the three and the system degrades in a characteristic way. Lose the goal and replanning drifts
+toward whatever the recent context suggests. Lose the results and steps get repeated, doubling cost. Lose
+the plan status and you can’t resume after a crash — every failure becomes a full restart.</p>
+<p><strong>Replanning when a step fails.</strong> This is the paragraph interviewers wait for. A step will fail — an API
+dies, a search comes back empty, the caterer is booked. The naive designs either abort the whole run or
+blindly barrel into the next step with a hole in the middle.</p>
+<p>The right design treats failure as new information. The executor reports the failure into context, and the
+planner is re-invoked with four things: the goal, the plan so far, the completed results, and the failure.
+It emits a revised plan — maybe substituting a step, maybe reordering, maybe concluding the goal is
+unreachable and saying so with reasons, which is itself a successful outcome, not a crash.</p>
+<p>You bound this with a replan budget — a counter, say three replans per run — because the ugliest failure
+mode here is the infinite replan loop, where the agent keeps rearranging steps around an obstacle it can
+never pass.</p>
+<p><strong>Where it breaks.</strong> Name these plainly:</p>
+<p><em>Bad decomposition.</em> The plan misses a necessary step, orders steps so a later one needs data an earlier
+one never produced, or includes steps no available tool can perform. Defense: validate the plan as an
+artifact before executing — check tool references, check data dependencies — and keep a human review gate
+for expensive runs.</p>
+<p><em>Stale plans.</em> In decompose-then-execute, the world can change between planning and step six. Defense:
+cheap precondition checks before each step, escalating to a replan when one fails.</p>
+<p><em>Error cascades.</em> Step three quietly returns garbage, and steps four through eight faithfully build on it.
+Defense: lightweight verification between steps — even a one-line “does this output look like what step
+four needs?” check — so bad output stops at the boundary instead of propagating.</p>
+<p><em>Hallucinated completion.</em> The model marks a step done without the evidence existing — claims it gathered
+sources it never fetched. Defense: step completion is judged by the orchestrator from actual tool outputs,
+never by the model’s say-so.</p>
+<p><em>Over-planning.</em> Twenty-step plans for three-step problems: slower, costlier, more failure surface, no
+better output. Defense: cap plan length and push back in the planner prompt toward the fewest steps that
+work.</p>
+<p><em>Cost blowups.</em> Open-ended loops — especially research loops — can run indefinitely. Defense: budgets on
+every axis: steps, tool calls, tokens, wall-clock time.</p>
+<p><strong>When to use it, and when not.</strong> The book’s rule of thumb is a single question, and it’s a great
+interview line: <em>does the “how” need to be discovered, or is it already known?</em> If every request follows
+the same known route — password resets, standard document processing — a fixed workflow beats a planner on
+every metric that matters: predictability, cost, debuggability. You deliberately constrain the agent’s
+autonomy to buy reliability. Reach for planning only when the route genuinely varies per request and
+foresight across multiple interdependent steps is required.</p>
+<p><strong>Neighboring patterns.</strong> Versus chaining: a chain is a sequence the <em>developer</em> wrote at design time; a
+plan is a sequence the <em>model</em> writes at run time — chaining is the known-how case, planning the
+discovered-how case. Versus tool use: planning decides <em>which</em> tool calls and in <em>what order</em>; tool use is
+the mechanics of any single call. Versus multi-agent: a plan’s steps can all be executed by one agent;
+hand different steps to different specialists and you’ve crossed into the next pattern.</p>
+<h2 id="the-complete-interview-answer-spoken"><a class="header" href="#the-complete-interview-answer-spoken">The complete interview answer, spoken</a></h2>
+<p>The prompt: “Design a deep-research agent — a user asks a broad question and gets a structured, cited
+report.” Here’s the 15–20 minute version, spoken.</p>
+<p>“Let me scope it first. How fresh does the information need to be — is this web research, internal
+documents, or both? I’ll design for web-first with optional user-provided documents, since that’s the
+common product shape. Is the user willing to wait? I’ll assume yes — minutes to an hour, this is an
+offline job, not chat. And is there a cost ceiling per report? I’ll assume we want a knob for that, say a
+few dollars of model and search spend per run.</p>
+<p>The defining property of this problem is that no single action solves it. ‘Research the economic impact of
+drug X on healthcare systems’ decomposes into finding sources, extracting claims, noticing gaps,
+reconciling contradictions, and synthesizing — with dependencies between those. So the backbone of my
+design is the Planning pattern, and I’ll use a hybrid: an explicit upfront plan for the skeleton, adaptive
+execution inside the research phase.</p>
+<p>Here’s the architecture I’d draw.</p>
+<pre><code> User query + optional docs
+        |
+        v
++---------------+     plan (text artifact)
+|  Planner LLM  | ------------------------+
++---------------+                         v
+        ^                        +-----------------+
+        | approve / edit  &lt;----- |  User review    |
+        |                        +-----------------+
+        v
++-------------------------------------------------+
+|  Orchestrator (owns plan state + budgets)       |
+|                                                 |
+|   step: search --&gt; read --&gt; assess gaps --+     |
+|            ^                              |     |
+|            +----- refine queries &lt;--------+     |
+|                (loop until covered              |
+|                 or budget hit)                  |
++-------------------------------------------------+
+        |                         |
+        v                         v
++---------------+        +----------------+
+|  Search tool  |        |  Findings store|
++---------------+        |  (claims + src)|
+                         +----------------+
+                                  |
+                                  v
+                         +----------------+
+                         | Synthesis LLM  |
+                         | -&gt; cited report|
+                         +----------------+
+</code></pre>
+<p>Phase one, planning. The user’s question goes to a planner — a model call whose only job is to emit a
+research plan: the sub-questions to answer, roughly in order, with the angle each one covers. This plan is
+a text artifact, and I’d surface it to the user for approval and editing before execution, which is
+exactly what Google’s Deep Research product does. That gate earns its keep three ways: the user catches
+misunderstandings before we spend money, editing the plan is the cheapest possible steering mechanism, and
+the approved plan becomes our contract for what ‘done’ means.</p>
+<p>Even without a human in the loop, I’d still generate the plan as an artifact, because I can check it
+mechanically — every step maps to a capability we have, no step consumes data no earlier step produces,
+length is under my cap. A plan that fails lint gets regenerated with the lint errors in the prompt, which
+usually fixes it in one round.</p>
+<p>Phase two, execution — and this is where I switch modes. The outer plan is fixed, but inside the research
+step I run plan-as-you-go, because search is fundamentally iterative: I can’t know query number four until
+I’ve read the results of query number two.</p>
+<p>Concretely, the orchestrator — a plain program, not a model — owns the loop. For each sub-question:
+formulate queries, run the search tool, pull the promising pages, and have a model extract claims with
+their sources into a findings store — just a structured scratchpad accumulating claim, source URL, and
+confidence.</p>
+<p>Then a gap-assessment call: given the sub-question and the findings so far, what’s missing, what’s
+contradicted, what needs corroboration? Its output drives the next round of queries. This is the
+dynamic-refinement behavior the real deep-research systems describe — chasing gaps, corroborating data
+points, resolving discrepancies — rather than firing a fixed list of searches.</p>
+<p>The loop exits on either of two conditions: the gap assessor says coverage is sufficient, or the budget
+for this sub-question — searches, tokens, minutes — runs out. Budget exhaustion isn’t failure; the report
+will note thinner sourcing for that section. Every open-ended loop in this system has a budget, because
+the worst failure mode of research agents is the infinite rabbit hole, and the second worst is a surprise
+five-hundred-dollar run.</p>
+<p>Phase three, synthesis. With all sub-questions covered, a synthesis model gets the approved plan as the
+outline and the findings store as the only permitted source material. Its instruction is strict: every
+claim in the report must trace to a finding, and every finding carries its source, so citations fall out
+naturally. Synthesizing from the curated store rather than from raw pages is my main hallucination defense
+— the model’s job narrows from ‘know things’ to ‘organize these things.’</p>
+<p>Now failure handling, because a run this long <em>will</em> hit failures. Search API down: retry with backoff —
+meaning increasing pauses between attempts so we don’t hammer a struggling service — then continue with
+other sub-questions and circle back. A sub-question that comes up genuinely dry: that’s a replanning
+trigger. The orchestrator re-invokes the planner with the plan, the results so far, and the failure, and
+the planner revises — splits the step, reframes it, or drops it with a note. I cap replans at three per
+run; past that, finish what’s finishable and flag the rest. And the whole run checkpoints its state — plan
+status plus findings store — after every step, so a crash at minute forty resumes instead of restarting.
+Since the job is minutes-to-hours, it runs asynchronously and notifies the user on completion, which also
+means one flaky step never takes down the whole investigation.</p>
+<p>A word on the user’s own documents, since I scoped those in: they enter the findings store through the
+same extraction path as web pages, just tagged with their origin. That gives us the blend the real
+products offer — private sources and public research in one report — without a separate pipeline, and the
+tagging means citations still say exactly where each claim came from.</p>
+<p>I’d also log every intermediate step — the plan, each query, each extraction, each replan — the way the
+OpenAI Deep Research API exposes its reasoning steps and executed searches. That transparency is how you
+debug a bad report: was it a bad plan, bad retrieval, or bad synthesis? Without the trace you’re guessing.</p>
+<p>For live monitoring, I’d watch four numbers per run and in aggregate: replans per run (rising means plans
+are getting worse or the world is getting harder), budget-exhaustion rate per sub-question (rising means
+budgets are mis-set or retrieval is degrading), average searches per finding (efficiency of the loop), and
+citation-check pass rate on the sampled audits. Each of those points at a different component when it
+moves, which is the whole point of a metric.</p>
+<p>Evaluation is honestly the hard part, and I’d say so out loud. Three layers. Citation faithfulness is
+checkable automatically: sample claims from the report and verify the cited source actually supports them
+— a model can grade this, humans audit the grader. Coverage: did the report address every step of the
+approved plan — mechanically checkable against the artifact. Overall quality needs humans: a rubric —
+accuracy, organization, source quality — scored on a sampled set of reports, tracked over time so I notice
+regressions when we change prompts or models.</p>
+<p>Cost per report is dominated by the research loop — dozens of model calls plus search fees. The knobs:
+sub-question count, search rounds per sub-question, and which models run where. Extraction is high-volume
+and simple, so a small cheap model; planning and synthesis are low-volume and judgment-heavy, so the big
+model. I’d expose a quick-versus-thorough setting to the user, which just scales those budgets.</p>
+<p>The tradeoff to volunteer: this design front-loads structure — plan artifact, approval gate, budgets — at
+the price of some autonomy and speed. For a research product, I’ll take that trade every time: the plan
+gate is what keeps a thirty-minute, multi-dollar run pointed at what the user actually asked.“</p>
+<h2 id="follow-ups-they-will-ask"><a class="header" href="#follow-ups-they-will-ask">Follow-ups they will ask</a></h2>
+<p><strong>“Why generate a full plan upfront if you’re going to deviate anyway?”</strong> Because the artifact pays for
+itself even when it changes: it’s the thing I can lint, cost-estimate, and get approved before spending,
+it defines “done,” and deviations from it are logged, reviewable events rather than silent drift. Cheap
+insurance, high leverage.</p>
+<p><strong>“What if the model’s plan is just bad?”</strong> Layers: a planner prompt with good examples of plan shape,
+mechanical lint (unknown tools, broken dependencies, over-length), regeneration with lint feedback, and
+the human gate for expensive runs. Plus an eval set of goal → known-reasonable-plan pairs so plan quality
+is a measured number, not vibes.</p>
+<p><strong>“How is this different from just chaining prompts together?”</strong> A chain is a fixed sequence I wrote at
+design time — the how is known, and honestly, when the how is known a chain is the <em>better</em> tool: cheaper,
+predictable, debuggable. Planning earns its complexity only when the sequence must be discovered per
+request. The book’s one-line test: does the how need to be discovered? No — chain it. Yes — plan it.</p>
+<p><strong>“When a mid-plan step fails, restart or patch?”</strong> Patch, almost always: keep completed results,
+re-invoke the planner with goal, plan state, and the failure, and get a revised remainder. Restarting
+throws away paid-for work and re-rolls the dice on steps that already succeeded. But cap replans, and make
+“this goal is unreachable, here’s why” a legitimate planner output — an agent that can conclude
+impossibility is more trustworthy than one that thrashes.</p>
+<p><strong>“How do you keep an autonomous research loop from running forever or costing a fortune?”</strong> Budgets on
+every axis — steps, tool calls, tokens, wall-clock — enforced by the orchestrator, not requested of the
+model. And diminishing-returns detection: when a search round adds almost nothing new to the findings
+store, that sub-question is done regardless of remaining budget.</p>
+<p><strong>“Could you do all this with one giant prompt instead — ‘research X and write a cited report’?”</strong> For a
+narrow question with a strong model, sometimes, and it’s a fair baseline. But it fails exactly where
+planning shines: no intermediate artifacts to check, no place to resume after a crash, no per-phase
+budgets, citations you can’t trace to a retrieval step, and one context window holding an hour’s worth of
+material. Decomposition is what makes the job inspectable, resumable, and billable.</p>
+<h2 id="say-it-in-one-breath"><a class="header" href="#say-it-in-one-breath">Say it in one breath</a></h2>
+<p>Planning is the agent writing its own route: decompose a big goal into ordered steps, execute them, and
+revise the route when a step fails or the world changes. Generate the plan as a text artifact whenever you
+can, because an artifact can be linted, cost-estimated, approved by a human, and used as the definition of
+done. And apply the one-line test before reaching for it: if the how is already known, use a fixed
+workflow — planning is only for when the how must be discovered.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../agentic-design-pattern/05-tool-use.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../agentic-design-pattern/07-multi-agent.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../agentic-design-pattern/05-tool-use.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../agentic-design-pattern/07-multi-agent.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

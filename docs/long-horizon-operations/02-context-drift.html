@@ -1,0 +1,434 @@
+<!DOCTYPE HTML>
+<html lang="en" class="navy sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Context drift - Agentic AI Evaluation — A Practical Guide</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="Frameworks, metrics, benchmarks, tool-use and safety evaluation, and production monitoring for agentic AI systems.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../custom-9222a227.css">
+
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "navy";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-96a8b00f.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-4b3c722b.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('navy')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Agentic AI Evaluation — A Practical Guide</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/ffaisal93/agentic-ai-evaluation-guide" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/ffaisal93/agentic-ai-evaluation-guide/edit/main/./long-horizon-operations/02-context-drift.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="context-drift-why-turn-40-is-a-different-animal-than-turn-4"><a class="header" href="#context-drift-why-turn-40-is-a-different-animal-than-turn-4">Context drift: why turn 40 is a different animal than turn 4</a></h1>
+<h2 id="start-with-a-kitchen-counter"><a class="header" href="#start-with-a-kitchen-counter">Start with a kitchen counter</a></h2>
+<p>Picture a small kitchen counter at the start of a long cook.</p>
+<p>It’s clean, you’ve got the recipe propped up where you can see it, and everything you touch is exactly where you left it.</p>
+<p>Two hours later that same counter is a disaster.</p>
+<p>There are four dirty pans, three bowls of things you prepped and forgot about, a puddle of something, two empty packets you meant to throw away, and the recipe is under all of it.</p>
+<p>You haven’t gotten dumber over those two hours.</p>
+<p>Your <em>workspace</em> got worse, and working in a bad workspace makes you worse.</p>
+<p>That’s the whole idea behind context drift, and if you hold onto the counter image you’ll have most of the intuition you need.</p>
+<p>An agent’s context window — the fixed-size block of text the model reads before every single response, which holds the instructions, the conversation so far, and everything the tools returned — is that counter.</p>
+<p>At turn 4 it’s tidy.</p>
+<p>At turn 40 it’s got forty turns of debris on it, and the recipe is buried somewhere in the middle.</p>
+<p>Here’s the part that surprises people: the model isn’t <em>forgetting</em> in the human sense.</p>
+<p>Every token is still sitting right there, perfectly legible.</p>
+<p>The problem is attention — the mechanism by which a transformer model decides how much weight to give each piece of its input when producing the next word.</p>
+<p>Attention is a finite budget spread across everything present.</p>
+<p>Anthropic’s engineering team describes this directly in their writing on context engineering: models have “an attention budget that they draw on when parsing large volumes of context,” and every token you add draws down that budget a little.</p>
+<p>So the instruction you wrote at the top — “always ask before deleting anything” — isn’t gone at turn 40.</p>
+<p>It’s just competing with thirty-nine thousand tokens of other stuff for the model’s attention, and it’s losing.</p>
+<p>That gradual loss is what the industry has started calling <strong>context rot</strong>: as the number of tokens in the window goes up, the model’s ability to reliably use any particular one of them goes down.</p>
+<p>Chroma’s 2025 technical report on context rot tested eighteen models across Anthropic, OpenAI, Google, and Alibaba, and found the same shape everywhere — performance “grows increasingly unreliable as input length grows,” even on tasks that are trivially easy at short lengths.</p>
+<p>Not a cliff at the context limit.</p>
+<p>A slope, starting much earlier than you’d like.</p>
+<h2 id="whats-actually-piling-up-on-the-counter"><a class="header" href="#whats-actually-piling-up-on-the-counter">What’s actually piling up on the counter</a></h2>
+<p>If you’re going to manage the mess, you should know what the mess is made of.</p>
+<p>Six things accumulate in a long-running agent’s context, and they are not equal in size.</p>
+<p><strong>The system prompt and the original goal.</strong> This is the smallest and most important piece, and it’s usually written once, at position zero, and then never touched again for the rest of the run. Hold that thought — it matters later.</p>
+<p><strong>Every tool call the agent made.</strong> The actual invocation: <code>read_file("/app/src/billing/invoice.py")</code>. Cheap, a few dozen tokens each.</p>
+<p><strong>Every tool <em>result</em>.</strong> This is the monster. That file read might come back as 900 lines. A database query might return 4,000 rows. A web fetch returns an entire page of navigation chrome and cookie banners. Nobody wrote these; a machine did, and machines are verbose. In most long-running agents I’ve looked at, tool results are somewhere between sixty and ninety percent of the context by turn 30, and they’re the least deliberately managed part of the whole thing.</p>
+<p><strong>The model’s own reasoning.</strong> Every “let me think about this — the user wants X, so first I should…” stays in the transcript and gets re-read on every subsequent turn.</p>
+<p><strong>Retrieved documents.</strong> If you’re doing RAG — retrieval-augmented generation, where you search a knowledge base and paste the hits into the prompt so the model can answer from them — those hits stack up too, and old ones rarely get cleaned out.</p>
+<p><strong>Error messages from failed attempts.</strong> Stack traces. Timeouts. “Permission denied.” Malformed-JSON complaints. Each one is a small block of low-value, high-token-count text, and they arrive exactly when the agent is already struggling.</p>
+<p>The asymmetry is the thing to internalize.</p>
+<p>The stuff you carefully wrote — the goal, the constraints, the format rules — is a tiny fraction of the window and it stops growing after turn one.</p>
+<p>The stuff nobody wrote grows without limit.</p>
+<p>By turn 40, your carefully crafted instructions are a rounding error in a sea of machine output.</p>
+<h2 id="the-seven-ways-it-goes-wrong"><a class="header" href="#the-seven-ways-it-goes-wrong">The seven ways it goes wrong</a></h2>
+<p>“Context drift” is a bucket term, and buckets are bad for debugging.</p>
+<p>What you actually want is the ability to look at a broken transcript and say “that’s instruction decay, not goal drift,” because the fixes are different.</p>
+<p>So here are the seven distinct failure modes, each with what it actually looks like when you read the log.</p>
+<h3 id="goal-drift"><a class="header" href="#goal-drift">Goal drift</a></h3>
+<p>The agent gradually optimizes for a subgoal and loses the original ask.</p>
+<p>This one is sneaky because every individual step looks reasonable.</p>
+<p>You asked for: “Find out why our checkout conversion dropped last week.”</p>
+<p>By turn 12 the agent has decided it needs clean analytics data first, which is fair.</p>
+<p>By turn 25 it is writing a data-validation script.</p>
+<p>By turn 40 it is debugging the test suite for the data-validation script, and it has not thought about checkout conversion in twenty-eight turns.</p>
+<p>In the transcript you’ll see the objective quietly restated in a smaller form: turn 3 says “to understand the conversion drop,” turn 20 says “to get reliable data,” turn 35 says “to make these tests pass.”</p>
+<p>Nobody lied to you.</p>
+<p>The goal just got replaced by its own scaffolding, one reasonable substitution at a time.</p>
+<h3 id="instruction-decay"><a class="header" href="#instruction-decay">Instruction decay</a></h3>
+<p>Rules from the system prompt stop being followed somewhere around turn N.</p>
+<p>You wrote “never modify files outside <code>/workspace</code>” at the top.</p>
+<p>Turns 1 through 22, honored perfectly.</p>
+<p>Turn 23, the agent edits something in <code>/etc</code> because it seemed necessary and nothing in its recent attention said not to.</p>
+<p>The tell in a transcript is that the violation is <em>casual</em>.</p>
+<p>There’s no reasoning about the rule, no “the user said not to, but…”.</p>
+<p>The rule simply isn’t in the model’s effective working set anymore, so it never comes up.</p>
+<p>This is the most direct consequence of the attention-budget problem, and it’s why the fix is re-injection rather than stronger wording.</p>
+<p>Writing “NEVER, UNDER ANY CIRCUMSTANCES” at position zero does not make position zero more attended-to at turn 40.</p>
+<h3 id="persona-and-format-drift"><a class="header" href="#persona-and-format-drift">Persona and format drift</a></h3>
+<p>The shape of the output degrades even when the content is fine.</p>
+<p>You asked for JSON with four specific fields.</p>
+<p>Turns 1 through 15: clean JSON.</p>
+<p>Turn 22: JSON wrapped in a markdown code fence.</p>
+<p>Turn 30: JSON with a chatty preamble, “Sure! Here’s the updated record:”.</p>
+<p>Turn 38: prose, with the four fields mentioned in a sentence.</p>
+<p>Tone does the same thing — a support agent that started crisp and professional gets progressively more casual as the transcript fills with its own increasingly informal turns, because the model is imitating the recent past, and the recent past is itself.</p>
+<p>That’s the feedback loop that makes format drift accelerate rather than plateau.</p>
+<h3 id="lost-in-the-middle"><a class="header" href="#lost-in-the-middle">Lost in the middle</a></h3>
+<p>Facts buried in the middle of a long context get under-used, even though they’re right there.</p>
+<p>This one has a real, well-known paper behind it: Liu et al., “Lost in the Middle: How Language Models Use Long Contexts,” published in TACL.</p>
+<p>They tested multi-document question answering and key-value retrieval, moving the location of the relevant information around, and found a U-shaped curve — “performance is often highest when relevant information occurs at the beginning or end of the input context, and significantly degrades when models must access relevant information in the middle of long contexts, even for explicitly long-context models.”</p>
+<p>In a transcript this looks like the agent confidently doing something the user explicitly ruled out at turn 18.</p>
+<p>The constraint is there.</p>
+<p>It’s just at the bottom of the counter with a pan on top of it.</p>
+<p>The practical consequence is a positioning rule you’ll use constantly: if a fact must survive, it goes near the end, not the middle.</p>
+<h3 id="context-poisoning"><a class="header" href="#context-poisoning">Context poisoning</a></h3>
+<p>One wrong fact enters the history and is thereafter treated as ground truth.</p>
+<p>This is the nastiest of the seven, because contexts are append-only by default.</p>
+<p>Say at turn 9 a tool returns a truncated result and the agent concludes “the <code>users</code> table has no <code>created_at</code> column.”</p>
+<p>That sentence is now in the transcript.</p>
+<p>At turn 15 it writes a query that avoids <code>created_at</code>.</p>
+<p>At turn 24 it builds a whole workaround table.</p>
+<p>At turn 33, when a different tool result plainly shows <code>created_at</code> right there in the schema, the model has two conflicting facts and often sides with the one it has been repeating for twenty turns.</p>
+<p>Drew Breunig’s writeup on how contexts fail names this one directly — “when a hallucination or other error makes it into the context, where it is repeatedly referenced” — and points at the Gemini Pokémon-playing agent, where a corrupted goals section led the model to pursue impossible objectives for long stretches.</p>
+<p>The reason poisoning is so bad is that it is self-reinforcing.</p>
+<p>Every turn where the agent acts on the bad fact produces more text asserting the bad fact.</p>
+<h3 id="error-loop-pollution"><a class="header" href="#error-loop-pollution">Error-loop pollution</a></h3>
+<p>Failed attempts fill the window with noise that makes the next attempt worse.</p>
+<p>The agent tries a command, gets a 40-line stack trace, tries a slight variation, gets a nearly identical 40-line stack trace, and repeats.</p>
+<p>By attempt six you’ve spent 250 lines of context on six almost-identical failures, and the model is now pattern-matching on “here is a thing that fails” rather than on the original task.</p>
+<p>Manus, the agent product team, argues in their context engineering writeup that you should generally <em>keep</em> errors in context, because seeing a failure is how the model learns to stop repeating it — and I think that’s right for the first error or two.</p>
+<p>What kills you is the eighth copy of the same trace.</p>
+<p>The distinction worth holding: one error is signal, six identical errors are noise, and the difference between a healthy agent and a spiraling one is whether anything in your system notices the transition.</p>
+<h3 id="stale-context"><a class="header" href="#stale-context">Stale context</a></h3>
+<p>The world changed and the agent is reasoning from an old snapshot.</p>
+<p>At turn 5 the agent reads a config file and learns the service runs on port 8080.</p>
+<p>At turn 30 — possibly because the agent itself edited that file at turn 22 — it’s 9090.</p>
+<p>The turn-5 read is still sitting in context, stated as fact, with no timestamp and no marker saying “this may be out of date.”</p>
+<p>The agent confidently connects to 8080 and fails, and then spends five turns debugging a network problem that doesn’t exist.</p>
+<p>Stale context is the failure mode that gets worse the more <em>effective</em> your agent is, because an agent that changes the world invalidates its own notes.</p>
+<h3 id="the-seven-on-one-card"><a class="header" href="#the-seven-on-one-card">The seven, on one card</a></h3>
+<p>Worth memorizing as a set, because in an interview the fastest way to sound like you’ve done this is to name the specific mode instead of saying “the context got messy.”</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Failure mode</th><th>What you see in the log</th><th>First thing to reach for</th></tr>
+</thead>
+<tbody>
+<tr><td>Goal drift</td><td>Objective quietly restated smaller each time</td><td>Periodic goal restatement + re-grounding</td></tr>
+<tr><td>Instruction decay</td><td>A system-prompt rule broken casually, with no reasoning about it</td><td>Canary instructions + re-injection</td></tr>
+<tr><td>Persona/format drift</td><td>Schema violations, chattier tone, creeping preambles</td><td>Per-turn validation, few-shot re-anchoring</td></tr>
+<tr><td>Lost in the middle</td><td>A mid-context constraint ignored while early and late ones hold</td><td>Move critical facts to the tail</td></tr>
+<tr><td>Context poisoning</td><td>A wrong fact repeated and defended across many turns</td><td>Verify-before-commit, prune the poisoned span</td></tr>
+<tr><td>Error-loop pollution</td><td>Six near-identical stack traces in a row</td><td>Collapse repeats, cap retries, escalate</td></tr>
+<tr><td>Stale context</td><td>Acting on a value the agent itself changed later</td><td>Timestamp facts, re-read before relying</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="summarization-is-not-a-free-fix"><a class="header" href="#summarization-is-not-a-free-fix">Summarization is not a free fix</a></h2>
+<p>The obvious response to a crowded counter is to clean it, and the obvious way to clean a context is <strong>compaction</strong> — summarizing the older part of the conversation and replacing it with the summary, so the run can continue in a smaller footprint.</p>
+<p>Anthropic describes it as “taking a conversation nearing the context window limit, summarizing its contents, and reinitiating a new context window with the summary.”</p>
+<p>It works.</p>
+<p>It is also lossy, by construction, and this is where people get burned.</p>
+<p>Compaction is not “making the context smaller.”</p>
+<p>Compaction is <em>choosing what to throw away</em>, and whatever you throw away determines which of the seven failure modes you get.</p>
+<p>Drop the original goal statement in favor of recent progress, and you’ve built a goal-drift machine.</p>
+<p>Drop the system-prompt constraints because they’re “static instructions, not conversation,” and you get instruction decay on a schedule.</p>
+<p>Drop the raw tool results but keep the model’s interpretation of them, and you’ve locked in whatever mistakes were in that interpretation — poisoning, permanently, with the evidence deleted.</p>
+<p>And then there’s the spiral.</p>
+<p>Summarize turns 1-40 into a paragraph.</p>
+<p>Continue to turn 80, then summarize [that paragraph plus turns 41-80] into a new paragraph.</p>
+<p>Continue to turn 120, summarize again.</p>
+<p>You are now summarizing a summary of a summary, and each pass is a lossy compression of an already-lossy compression.</p>
+<p>It’s the photocopy-of-a-photocopy problem.</p>
+<p>Details go first, then nuance, then whole constraints, and what survives to the third generation is a generic, confident-sounding blur — “the user wants the billing system improved” — that has lost every specific the run actually depended on.</p>
+<p>The counterintuitive fix is to make compaction <em>less</em> free-form, not more clever, and we’ll get to that in the mitigations.</p>
+<h2 id="actually-detecting-drift"><a class="header" href="#actually-detecting-drift">Actually detecting drift</a></h2>
+<p>Here’s the part most courses skip entirely, and it’s the part that separates people who’ve run agents in production from people who’ve read about them.</p>
+<p>You cannot fix drift you can’t see, and drift is specifically the failure mode that doesn’t throw an exception.</p>
+<p>The run completes.</p>
+<p>The agent sounds confident.</p>
+<p>Everything looks fine until a human reads turn 40 closely.</p>
+<p>So you need instrumentation, and here are six things that actually work.</p>
+<p><strong>Canary instructions.</strong> Plant a small, checkable, harmless rule in the system prompt whose violation you can detect mechanically. Something like: “End every response with the token <code>&lt;&lt;OK&gt;&gt;</code>.” It costs you six tokens per turn and buys you a binary signal — the turn where the canary stops appearing is, roughly, the turn where your system prompt stopped being effectively read. Coal miners used actual canaries for exactly this reason: you want the cheap thing to die first, while there’s still time to react. Use two or three canaries of different kinds (a format rule, a content rule, a refusal rule) because they decay at different rates and tell you different things.</p>
+<p><strong>Periodic goal restatement.</strong> Every N turns, ask the agent to state, in one sentence, what it’s currently trying to accomplish and why. Then diff that against the original ask — string similarity is enough to start, an LLM judge scoring “does this still describe the same objective?” is better. When the restatement stops mentioning the original noun, you have goal drift, and you have it with a turn number attached.</p>
+<p><strong>Per-turn format validators.</strong> If the agent is supposed to emit structured output, validate every single turn against the schema — a schema being a formal description of the required shape, like “an object with keys <code>status</code>, <code>findings</code>, and <code>next_action</code>.” Don’t sample. Validation is nearly free and format drift is your earliest, loudest warning that attention is thinning out.</p>
+<p><strong>A drift probe.</strong> Every N turns, inject a small question whose correct answer you already know and which depends on something stated early in the context. “What was the budget limit I gave you?” If it answers right, the early context is still live. If it hedges or invents, it isn’t. This is the closest thing to a direct measurement of “is the top of my context still being read,” and it’s cheap enough to run every ten turns.</p>
+<p><strong>Quality metric versus turn index.</strong> This is the key move, and if you take one operational habit from this chapter, take this one. Whatever quality metric you already have — judge score, task success, human rating — stop reporting it as a single number per run and start plotting it against turn number. A run that scores 0.82 overall might be 0.95 for thirty turns and 0.45 for the last twenty, and those two facts have completely different fixes. The average hides the cliff. The curve shows you exactly where it is, which tells you where to put your compaction boundary. The next chapter is entirely about building this properly.</p>
+<p><strong>Context size growth per turn.</strong> Log the token count of the context at every turn and watch the slope, not just the total. A healthy run grows roughly linearly and gently. A run that suddenly adds 30,000 tokens in two turns just ate a giant tool result, and that’s your leading indicator for every other problem on this list — usually minutes before quality visibly drops.</p>
+<p>The theme across all six: drift is gradual, so your instruments have to be <em>per-turn</em>, not per-run.</p>
+<p>Anything you measure once at the end will tell you the patient died without telling you when they got sick.</p>
+<h2 id="fixing-it-with-the-tradeoffs-stated"><a class="header" href="#fixing-it-with-the-tradeoffs-stated">Fixing it, with the tradeoffs stated</a></h2>
+<p>There’s no single fix, and anyone who tells you “just use a bigger context window” hasn’t watched quality fall off a cliff at 60k tokens inside a 200k window.</p>
+<p>Here’s the toolkit, roughly in order of how much I reach for each.</p>
+<p><strong>Structured compaction.</strong> Instead of “summarize the conversation,” compact <em>into a schema</em>. Something like: <code>original_goal</code> (copied verbatim, never re-summarized), <code>hard_constraints</code> (a list, verbatim), <code>completed_steps</code>, <code>current_state</code>, <code>open_questions</code>, <code>known_dead_ends</code>. The schema is what protects you, because free-form summarization drops whatever the summarizer felt was less interesting, while a schema has a slot that must be filled. Copy the goal and constraints by reference rather than re-summarizing them each time, and you’ve broken the photocopy spiral for exactly the fields that matter most. Tradeoff: you have to design the schema per agent type, and a schema that doesn’t fit the task will squeeze out information you needed.</p>
+<p><strong>Externalize state to a file.</strong> Give the agent a scratchpad — a file it writes progress notes to and re-reads when it needs them — and treat that file, not the transcript, as the source of truth. Anthropic’s writing on long-running agents describes exactly this pattern for coding agents: a progress file plus a structured feature list plus git history, so a fresh session can reconstruct where things stand. Manus does the same with a <code>todo.md</code> that the agent rewrites as it goes. The elegant side effect is that rewriting the todo list pushes the current objective back to the <em>end</em> of the context on every update — which, per the lost-in-the-middle finding, is exactly where it needs to be. Tradeoff: the agent has to actually maintain the file, and an agent that lies to its own scratchpad is worse than one with no scratchpad.</p>
+<p><strong>Re-grounding.</strong> Every N turns, re-inject the goal and the hard constraints as a fresh message near the end of the context. Not a rewrite, not a summary — the same text, again, in a position with attention on it. It costs you a few hundred tokens per re-injection and it directly counteracts instruction decay and lost-in-the-middle at the same time. Tradeoff: if you re-inject too often you’re burning budget and training the model to skim repeated blocks; every 10-20 turns is a reasonable starting point, tuned by where your canaries actually start failing.</p>
+<p><strong>Sub-agent isolation.</strong> This is the strongest fix, and it’s worth understanding <em>why</em> rather than just doing it. Everything above manages a context that keeps growing. Sub-agent isolation refuses to let it grow. You hand a subtask to a fresh agent with a clean context, it burns thirty turns of its own doing the messy exploratory work, and it returns a short distilled result — Anthropic quotes “often 1,000-2,000 tokens” — to the parent. The parent’s context grows by two thousand tokens instead of forty thousand. Every one of the seven failure modes is a function of how much junk is in the window, so the fix that structurally bounds the junk beats all the fixes that clean it up afterward. This is also why “should I use multi-agent?” is often really a context-management question wearing a costume. Tradeoff: the sub-agent can’t see the parent’s context, so you have to brief it well, and a bad brief means it solves the wrong problem in isolation. You also pay for the extra model calls and you lose the ability to easily debug what happened inside.</p>
+<p><strong>Tool-result truncation and lazy expansion.</strong> Cap what any single tool result can contribute — say, the first 2,000 tokens — and replace the rest with a reference the agent can expand on demand: “[truncated: 8,400 more tokens; call <code>read_more(handle=...)</code> to see them]”. This is the highest-leverage change per unit of effort, because tool results are the bulk of the problem and almost nobody bounds them. The frameworks have grown real support for it. LangChain’s <code>ContextEditingMiddleware</code> with <code>ClearToolUsesEdit</code> clears older tool outputs once you cross a token threshold while keeping the most recent few, and Anthropic’s Developer Platform ships server-side context editing that clears stale tool results automatically — their reported result on a 100-turn web search evaluation was completing workflows that would otherwise have died of context exhaustion “while reducing token consumption by 84%,” with a 29% performance improvement from context editing alone and 39% when combined with a persistent memory tool. Tradeoff: truncate the wrong 8,000 tokens and the agent re-fetches, which costs you a turn. Lazy expansion makes that recoverable; hard deletion doesn’t.</p>
+<p><strong>Position critical facts at the end.</strong> Cheap, mechanical, and follows straight from the U-shaped curve. Whatever must not be missed — the current constraint set, the active goal, the most recently discovered facts — goes in the last block before the model responds, not in the middle. Tradeoff: this fights with prompt caching, where a stable prefix is billed at a steep discount, so shuffling content late in the context can invalidate cache and raise cost. The usual resolution is a stable cached prefix plus a small, deliberately re-written “current state” block at the tail.</p>
+<p><strong>Know when to stop and hand off.</strong> Sometimes the counter is too dirty to wipe, and the right move is a new session with a deliberate handoff — a compact, structured briefing that lets a fresh context pick up the work. That deserves its own chapter, and it has one; this is the forward reference.</p>
+<h2 id="what-this-looks-like-in-the-wild"><a class="header" href="#what-this-looks-like-in-the-wild">What this looks like in the wild</a></h2>
+<p>The coding agents are the most-watched long-running agents in existence right now, and their design choices are a decent proxy for what actually holds up.</p>
+<p>Claude Code runs auto-compaction: as the session approaches the window limit it compacts automatically, and it exposes manual controls — <code>/compact</code> to do it on demand, <code>/clear</code> to start clean, and an <code>autocompact</code> setting to control the threshold. The distinction between those two commands is the whole chapter in miniature: <code>/compact</code> keeps a lossy summary and continues, <code>/clear</code> throws everything away and restarts. Experienced users reach for <code>/clear</code> more than you’d expect, because a clean context plus a good <code>CLAUDE.md</code> project file — an externalized-state file the agent re-reads at the start of every session — beats a compacted context carrying forty turns of accumulated confusion.</p>
+<p>Anthropic’s own writeup on harnesses for long-running agents is blunt that “compaction isn’t sufficient” on its own, and describes their working setup as an initializer agent that lays down scaffolding — an <code>init.sh</code>, a progress file, an initial git commit — followed by coding agents that each start a shift by reading the progress file and the git log and running the tests before touching anything. Their analogy is engineers working shifts, each arriving with no memory of the last one. The state lives on disk, not in anyone’s head.</p>
+<p>The Manus team’s version is the same instinct from a different angle: treat the filesystem as unlimited external memory, compress observations by dropping content while <em>keeping the reference</em> — the URL, the file path — so the compression is reversible.</p>
+<p>And the honest caveat, because it keeps you from over-promising in an interview: this doesn’t fully solve long-horizon reliability yet. Vending-Bench, a benchmark that runs agents through a simulated vending-machine business over runs exceeding 20 million tokens, found agents that forget orders they placed, misread delivery schedules, and occasionally spiral into tangential “meltdown” loops they rarely recover from. The finding worth remembering is that the authors found no clear correlation between those failures and the point where the context window fills up. Context pressure is a major cause of long-run failure. It is not the only one, and an answer that claims compaction solves long-horizon agents is overclaiming.</p>
+<h2 id="say-it-in-one-breath"><a class="header" href="#say-it-in-one-breath">Say it in one breath</a></h2>
+<p>“Context drift is what happens when an agent’s context window — the block of text the model re-reads before every response — fills up with forty turns of tool output, reasoning, and errors, so the original goal and the system prompt’s rules get drowned out; not forgotten, just out-attended. It shows up as seven distinct failures — goal drift, instruction decay, format drift, lost-in-the-middle, context poisoning, error-loop pollution, and stale context — and summarizing the history doesn’t fix it for free, because compaction is lossy and <em>what you drop</em> decides which failure you get. You detect it with per-turn instruments: canary instructions, periodic goal restatement, schema validation every turn, and above all by plotting your quality metric against turn index so you can see where the cliff is. You mitigate it with structured compaction that copies the goal verbatim, an externalized state file the agent re-reads, re-grounding every N turns, tool-result truncation with lazy expansion, and — strongest of all — sub-agent isolation, where a subtask burns its own fresh context and returns a two-thousand-token summary, because bounding the junk beats cleaning it up.”</p>
+<h2 id="what-an-interviewer-is-really-testing"><a class="header" href="#what-an-interviewer-is-really-testing">What an interviewer is really testing</a></h2>
+<p>They want to know whether you’ve actually operated an agent past turn ten, because everyone has built a three-turn demo and almost nobody has watched one rot at turn forty.</p>
+<p>The tell they’re listening for is whether you name specific failure modes with specific fixes, rather than saying “we’d summarize the history” and stopping — because that answer reveals you think of context as a size problem rather than a <em>composition</em> problem.</p>
+<p>They also want to see you say out loud that compaction is lossy and that the loss is a design decision you own, since candidates who treat summarization as free are the ones who ship goal-drift bugs.</p>
+<p>If you volunteer the detection story — canaries, goal restatement, quality-versus-turn-index curves — you’ve separated yourself from the field, because that’s the half that only comes from production.</p>
+<p>And if you reach for sub-agent isolation and can explain that it wins by <em>structurally bounding</em> context growth rather than cleaning up after it, you’re demonstrating the systems instinct the whole question exists to find.</p>
+<h2 id="where-this-comes-from"><a class="header" href="#where-this-comes-from">Where this comes from</a></h2>
+<p>Everything cited above is real and worth reading in the original, roughly in the order I’d read them.</p>
+<ul>
+<li>Liu et al., “Lost in the Middle: How Language Models Use Long Contexts,” TACL — the U-shaped position curve: <a href="https://aclanthology.org/2024.tacl-1.9/">https://aclanthology.org/2024.tacl-1.9/</a></li>
+<li>Chroma, “Context Rot: How Increasing Input Tokens Impacts LLM Performance,” 2025 — eighteen models, same slope: <a href="https://research.trychroma.com/context-rot">https://research.trychroma.com/context-rot</a></li>
+<li>Anthropic, “Effective context engineering for AI agents” — attention budget, compaction, structured note-taking, sub-agents: <a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents">https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents</a></li>
+<li>Anthropic, “Effective harnesses for long-running agents” — shift-handoff design, why compaction alone isn’t enough: <a href="https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents">https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents</a></li>
+<li>Anthropic, “Managing context on the Claude Developer Platform” — context editing and the memory tool, with the 84% / 29% / 39% numbers: <a href="https://claude.com/blog/context-management">https://claude.com/blog/context-management</a></li>
+<li>Drew Breunig, “How Long Contexts Fail” — poisoning, distraction, confusion, clash: <a href="https://www.dbreunig.com/2025/06/22/how-contexts-fail-and-how-to-fix-them.html">https://www.dbreunig.com/2025/06/22/how-contexts-fail-and-how-to-fix-them.html</a></li>
+<li>Manus, “Context Engineering for AI Agents: Lessons from Building Manus” — recitation via <code>todo.md</code>, filesystem as context, keeping errors in: <a href="https://manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus">https://manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus</a></li>
+<li>Andon Labs, “Vending-Bench: A Benchmark for Long-Term Coherence of Autonomous Agents” — long-run meltdowns uncorrelated with context fullness: <a href="https://arxiv.org/abs/2502.15840">https://arxiv.org/abs/2502.15840</a></li>
+<li>Claude Code context window docs — auto-compaction, <code>/compact</code>, <code>/clear</code>: <a href="https://code.claude.com/docs/en/context-window">https://code.claude.com/docs/en/context-window</a></li>
+<li>LangChain middleware reference — <code>SummarizationMiddleware</code> and <code>ContextEditingMiddleware</code>: <a href="https://docs.langchain.com/oss/python/langchain/middleware/built-in">https://docs.langchain.com/oss/python/langchain/middleware/built-in</a></li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../long-horizon-operations/01-introduction.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../long-horizon-operations/03-measuring-degradation.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../long-horizon-operations/01-introduction.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../long-horizon-operations/03-measuring-degradation.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

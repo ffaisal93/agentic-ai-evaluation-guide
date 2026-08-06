@@ -1,0 +1,1153 @@
+<!DOCTYPE HTML>
+<html lang="en" class="navy sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Multi Agent Evaluation Deep Dive - Agentic AI Evaluation — A Practical Guide</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="Frameworks, metrics, benchmarks, tool-use and safety evaluation, and production monitoring for agentic AI systems.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../custom-9222a227.css">
+
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "navy";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-96a8b00f.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-4b3c722b.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('navy')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Agentic AI Evaluation — A Practical Guide</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/ffaisal93/agentic-ai-evaluation-guide" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/ffaisal93/agentic-ai-evaluation-guide/edit/main/./07_multi_agent_evaluation/MULTI_AGENT_EVALUATION_DEEP_DIVE.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="multi-agent-evaluation--a-deep-dive"><a class="header" href="#multi-agent-evaluation--a-deep-dive">Multi-Agent Evaluation — A Deep Dive</a></h1>
+<blockquote>
+<p>“A multi-agent system can produce the right answer while every step of its process was wrong — and it can produce a wrong answer while every individual agent behaved correctly. Evaluating only the answer misses both.”</p>
+</blockquote>
+<blockquote>
+<p><strong>What you will be able to do by the end.</strong> (a) <em>Build</em> a real orchestrator-plus-workers multi-agent system and instrument it for evaluation; (b) <em>score</em> it on outcome, per-agent credit, coordination, and cost; (c) <em>diagnose</em> a failure down to the agent and step that caused it; (d) <em>decide</em> — with numbers — whether the multi-agent architecture is earning its 15x token bill or whether a single agent would do; and (e) <em>convince a senior interviewer</em> you understand the 2025–2026 landscape, the failure taxonomy, and the live architectural debate cold.</p>
+</blockquote>
+<h2 id="why-this-matters"><a class="header" href="#why-this-matters">Why This Matters</a></h2>
+<p>Single-agent evaluation asks a comparatively simple question: given an input, did the agent produce a good output? Multi-agent evaluation asks a harder one: given a <em>society</em> of agents that talk to each other, hand off work, criticize one another, and share state, did the <strong>system</strong> behave well — and if it did not, <em>which agent, at which step, caused the failure</em>?</p>
+<p>This distinction is not academic. As soon as you move from one agent to several, three new classes of things can go wrong that simply do not exist in the single-agent world:</p>
+<ol>
+<li><strong>The communication channel</strong> — agents misread, ignore, or corrupt each other’s messages.</li>
+<li><strong>The coordination structure</strong> — the wrong agent does the work, two agents do the same work, or everyone waits for everyone else.</li>
+<li><strong>Emergent dynamics</strong> — errors amplify as they propagate, agents converge on a confidently wrong consensus (groupthink), or the system stalls (deadlock).</li>
+</ol>
+<p>The economics also change, and they change hard. Anthropic reports that agents use roughly <strong>4x more tokens than chat</strong>, and multi-agent systems roughly <strong>15x more tokens than chat</strong> (<a href="https://www.anthropic.com/engineering/multi-agent-research-system">Anthropic, “How we built our multi-agent research system,” June 2025</a>). In their analysis, <strong>token usage alone explained about 80% of the variance</strong> in how well their research system performed — meaning most of the “intelligence” you are buying is really <em>permission to spend more tokens searching in parallel</em>. At 15x the cost, a multi-agent architecture has to <em>earn</em> its overhead, and the only way to know whether it does is to evaluate it properly against a single-agent baseline. Evaluation is therefore not just a quality gate; it is the instrument that tells you whether you should be running a multi-agent system at all.</p>
+<p>There is also a live, public disagreement among the teams who build these systems for a living about whether you should build them at all. In June 2025 Cognition (the Devin team) published <a href="https://cognition.com/blog/dont-build-multi-agents">“Don’t Build Multi-Agents”</a>, arguing that parallel subagents make conflicting implicit decisions and that a single, linear, context-engineered agent is more reliable. The same month Anthropic published the opposite lesson from its research product. Both cannot be unconditionally right — and the reconciliation (below) is one of the most useful things you can carry into an interview.</p>
+<p>This chapter gives you the intuition, the current landscape, the metrics, a taxonomy of failures grounded in real research, working code you can run, production war stories, and an honest account of when multi-agent is worth it.</p>
+<hr>
+<h2 id="core-intuition"><a class="header" href="#core-intuition">Core Intuition</a></h2>
+<p>Hold three ideas in your head before anything else.</p>
+<p><strong>1. Outcome and process are separable.</strong> A pipeline of a planner, a coder, and a reviewer can ship correct code because the coder happened to be right and the reviewer rubber-stamped it without reading — the outcome passed, the process failed. Next time the coder is wrong, the same broken process ships a bug. If your eval only checks the final artifact, you have no early warning. <strong>Evaluate the process, not just the product.</strong></p>
+<p><strong>2. Failures are systemic, not local.</strong> In the largest empirical study of this to date, Cemri et al. found that most multi-agent failures are <em>not</em> “the LLM is dumb” — they are failures of <strong>system design, inter-agent alignment, and verification</strong> (<a href="https://arxiv.org/abs/2503.13657">Cemri et al., “Why Do Multi-Agent LLM Systems Fail?”, 2025</a>). Swapping in a stronger base model often does not fix them, because the fault lives in the <em>interaction</em>, not in any single agent’s head. This is the single most counterintuitive fact in the field: you can upgrade every agent to a frontier model and watch the same failure recur, because no agent was ever the problem.</p>
+<p><strong>3. Attribution is the whole game.</strong> In a single-agent trace, blame is trivial — there is one agent. In a multi-agent trace, a wrong final answer might trace back to a planner that under-specified the task 12 steps ago, which no downstream agent could have recovered from. The core new skill of multi-agent evaluation is <strong>credit assignment</strong>: mapping a system-level outcome back to the agent and step responsible for it. Everything hard about this chapter is a consequence of this one problem being genuinely unsolved in general.</p>
+<p>Everything below is in service of those three ideas.</p>
+<p>A fourth idea worth holding loosely, because it frames the whole architectural debate: <strong>agents are stateful, and in a stateful system errors compound.</strong> A single wrong assumption early in a trajectory is not a one-time cost — it is a premise that every later step inherits and builds on. Anthropic put it bluntly: agents are stateful and errors compound, so minor issues that traditional software shrugs off can derail an agent run. That is why verification and containment (not just capability) dominate multi-agent reliability.</p>
+<hr>
+<h2 id="the-20252026-landscape"><a class="header" href="#the-20252026-landscape">The 2025–2026 Landscape</a></h2>
+<p>You will be asked, in some form, “what does the field actually look like right now?” Here is the map: the frameworks people build on, the research that named the failure modes, the production writeup everyone cites, and the architectural debate that is still unresolved. Dates and links are real; verify them yourself before quoting them in an interview.</p>
+<h3 id="the-frameworks-people-actually-build-on"><a class="header" href="#the-frameworks-people-actually-build-on">The frameworks people actually build on</a></h3>
+<p>Five stacks dominate multi-agent construction in 2025–2026. You do not need to master all of them, but you must be able to say what each one <em>is</em> and what evaluation surface it exposes.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Framework</th><th>Origin / status</th><th>Coordination model</th><th>What it hands your evaluator</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>AutoGen / AG2</strong></td><td>Microsoft Research (2023); rewritten as <strong>AutoGen v0.4</strong> (Jan 2025, async actor-model core); the original creators maintain the community fork <strong>AG2</strong></td><td>Conversable agents exchanging messages; <code>GroupChat</code> with a manager; event-driven</td><td>Full message transcripts between named agents — ideal for role-adherence and communication scoring</td></tr>
+<tr><td><strong>CrewAI</strong></td><td>Independent company; popular since 2024</td><td>Role/goal/backstory “crews”; sequential or hierarchical process; <strong>Flows</strong> add deterministic, event-driven orchestration</td><td>Explicit roles and a manager agent — a clean surface for role-violation and delegation metrics</td></tr>
+<tr><td><strong>LangGraph</strong></td><td>LangChain (2024)</td><td>Directed graph of nodes/edges over an <strong>explicit shared state</strong>; checkpointing, human-in-the-loop, <code>supervisor</code> and <code>swarm</code> prebuilts</td><td>The state object and graph edges are first-class — the best surface for trajectory tracing and credit assignment</td></tr>
+<tr><td><strong>OpenAI Agents SDK</strong></td><td>Successor to the experimental <strong>Swarm</strong> (Oct 2024); Agents SDK shipped as OpenAI’s production framework in <strong>March 2025</strong></td><td>Lightweight <code>Agent</code>s that <strong>hand off</strong> to one another; built-in guardrails, sessions, and tracing</td><td>Handoff events and a built-in trace viewer — coordination and handoff-correctness fall out for free</td></tr>
+<tr><td><strong>Google ADK + A2A</strong></td><td><strong>Agent Development Kit</strong> and the <strong>Agent2Agent (A2A)</strong> protocol both announced at Google Cloud Next, <strong>April 2025</strong>; A2A donated to the <strong>Linux Foundation in June 2025</strong></td><td>Code-first, model-agnostic agents; A2A lets agents from <em>different vendors and frameworks</em> discover and call each other via <strong>Agent Cards</strong></td><td>Cross-framework, cross-vendor call logs — the surface for evaluating <em>interoperable</em> agent ecosystems</td></tr>
+</tbody>
+</table>
+</div>
+<p>Two structural points an interviewer will reward you for making. First, <strong>AutoGen/AG2, CrewAI, and LangGraph are orchestration frameworks</strong> — they run agents <em>inside one process/organization</em>. <strong>A2A is an interoperability protocol</strong> — it standardizes how agents <em>across</em> organizations talk, the way HTTP standardized how servers talk, and it is complementary to MCP (which standardizes how an agent talks to <em>tools</em>, not to other agents). Second, <strong>the framework you choose changes what you can evaluate.</strong> LangGraph’s explicit state object makes trajectory replay and per-node credit assignment natural; a framework that hides the transcript forces you to reconstruct it from logs before you can score coordination at all. <strong>Choose the framework partly for its observability.</strong></p>
+<ul>
+<li>AutoGen — <a href="https://microsoft.github.io/autogen/">microsoft.github.io/autogen</a>; AG2 — <a href="https://docs.ag2.ai/">docs.ag2.ai</a>. Microsoft’s generalist multi-agent reference, <strong>Magentic-One</strong> (Nov 2024), pairs an Orchestrator with WebSurfer, FileSurfer, Coder, and Terminal agents and is a good concrete example to name (<a href="https://www.microsoft.com/en-us/research/articles/magentic-one-a-generalist-multi-agent-system-for-solving-complex-tasks/">Magentic-One</a>).</li>
+<li>CrewAI — <a href="https://docs.crewai.com/">docs.crewai.com</a>.</li>
+<li>LangGraph — <a href="https://langchain-ai.github.io/langgraph/">langchain-ai.github.io/langgraph</a>.</li>
+<li>OpenAI Agents SDK — <a href="https://openai.github.io/openai-agents-python/">openai.github.io/openai-agents-python</a>; the archived Swarm — <a href="https://github.com/openai/swarm">github.com/openai/swarm</a>.</li>
+<li>Google ADK — <a href="https://google.github.io/adk-docs/">google.github.io/adk-docs</a>; A2A — <a href="https://a2a-protocol.org/">a2a-protocol.org</a> and the <a href="https://www.linuxfoundation.org/press/linux-foundation-launches-the-agent2agent-protocol-project-to-enable-secure-intelligent-communication-between-ai-agents">Linux Foundation A2A project</a>.</li>
+</ul>
+<h3 id="the-research-that-named-the-failure-modes-mast"><a class="header" href="#the-research-that-named-the-failure-modes-mast">The research that named the failure modes: MAST</a></h3>
+<p>Before 2025 there was no shared vocabulary for <em>how</em> multi-agent systems fail. Cemri et al.’s <strong>MAST — Multi-Agent System failure Taxonomy</strong> — supplied one, and it is now the standard reference. The authors hand-annotated 200+ execution traces across seven frameworks (MetaGPT, ChatDev, HyperAgent, AppWorld, AG2, Magentic-One, OpenManus), clustered the failures into <strong>14 modes under 3 categories</strong>, and — crucially — validated the taxonomy by training an LLM judge to apply it, reaching strong inter-annotator agreement (Cohen’s kappa around 0.88) (<a href="https://arxiv.org/abs/2503.13657">arXiv:2503.13657</a>). The headline finding is the one from Core Intuition #2: the failures are dominated by <em>specification, coordination, and verification</em> problems, not by any single agent’s raw capability. We use MAST as the spine of the taxonomy section below.</p>
+<h3 id="the-production-writeup-everyone-cites-anthropics-research-system"><a class="header" href="#the-production-writeup-everyone-cites-anthropics-research-system">The production writeup everyone cites: Anthropic’s research system</a></h3>
+<p>Anthropic’s <a href="https://www.anthropic.com/engineering/multi-agent-research-system">“How we built our multi-agent research system”</a> (June 2025) is the most-cited real-world account and worth reading end to end. The load-bearing facts to memorize:</p>
+<ul>
+<li><strong>Architecture:</strong> an <strong>orchestrator-worker</strong> pattern. A lead agent (Claude Opus 4) plans and spawns specialized subagents (Claude Sonnet 4) that search in parallel, each with its own context window, then synthesizes their findings.</li>
+<li><strong>The win:</strong> the multi-agent system outperformed a single-agent Claude Opus 4 by <strong>90.2%</strong> on their internal research eval.</li>
+<li><strong>The cost:</strong> ~<strong>15x</strong> the tokens of a chat interaction; <strong>token budget explained ~80% of performance variance</strong>. Multi-agent “wins” largely by spending more tokens searching more places at once.</li>
+<li><strong>How they evaluate it:</strong> <strong>end-state / outcome</strong> evaluation with an <strong>LLM judge</strong> grading against a rubric (factual accuracy, citation quality, completeness, source quality), because “there are often multiple valid paths” to a good research answer. They started small — on the order of ~20 representative test cases — rather than waiting for a big benchmark, and they kept <strong>humans in the loop</strong> to catch failure modes (e.g., subtle source-quality problems) the automated judge missed.</li>
+<li><strong>The operational lessons:</strong> agents are stateful and errors compound; they used <strong>rainbow deployments</strong> to update agents without disrupting in-flight runs; and prompt-engineering the <em>orchestrator’s delegation</em> (clear task boundaries per subagent) mattered more than tuning the subagents.</li>
+</ul>
+<h3 id="the-debate-does-multi-agent-actually-beat-single-agent"><a class="header" href="#the-debate-does-multi-agent-actually-beat-single-agent">The debate: does multi-agent actually beat single-agent?</a></h3>
+<p>This is the part interviewers use to separate people who have read a blog post from people who have built systems. There is a genuine, unresolved disagreement.</p>
+<p><strong>The skeptic case — Cognition, <a href="https://cognition.com/blog/dont-build-multi-agents">“Don’t Build Multi-Agents”</a> (Walden Yan, June 2025).</strong> Building Devin (an autonomous coding agent), Cognition found parallel subagents unreliable for <em>write-heavy</em> work. Their argument distills to two principles of context engineering: <strong>(1) share full context</strong> — every agent should see the whole trajectory, not a compressed summary — and <strong>(2) actions carry implicit decisions</strong>, so when two subagents act in parallel they make <em>conflicting</em> implicit decisions that cannot be reconciled after the fact. Their now-famous example: ask parallel subagents to build a Flappy Bird clone and one renders a bird in one visual style while another builds pipes in a clashing style — each subagent silently assumed a different aesthetic, and there is no clean merge. Their prescription: a <strong>single-threaded, linear agent</strong> with aggressive context management, and if the context grows too large, a dedicated model to <em>compress</em> the trajectory rather than <em>fork</em> it. The slogan people took away is the <strong>“single writer”</strong> principle — one agent owns the mutable state.</p>
+<p><strong>The advocate case — Anthropic, above.</strong> For <em>read-heavy, breadth-first</em> work (research: explore many independent sources, no shared mutable artifact), parallel subagents with separate context windows are exactly right — they multiply the effective context and search bandwidth, and the lack of a shared artifact means there is nothing to merge and therefore no conflicting-decisions problem.</p>
+<p><strong>The reconciliation (say this).</strong> They are not actually contradicting each other; they are describing different <em>task shapes</em>. The deciding variable is whether the subtasks <strong>share a mutable artifact / evolving decision state</strong>:</p>
+<ul>
+<li><strong>Read-heavy, decomposable, no shared writes</strong> (research, breadth-first search, gathering evidence): multi-agent wins — parallelism buys real coverage and the subagents’ outputs <em>concatenate</em> rather than <em>conflict</em>.</li>
+<li><strong>Write-heavy, tightly coupled, shared evolving state</strong> (coding a single artifact, editing one document): single-agent (or a strictly serialized single-writer) wins — parallel writers make irreconcilable implicit decisions, exactly Cognition’s failure.</li>
+</ul>
+<p>Both camps agree on the deeper point: <strong>context engineering is the real work.</strong> Multi-agent is one tool for managing context (give each subagent a clean window); linear-agent-plus-compression is another. The architecture is downstream of the task’s read/write structure, and your evaluation must <em>measure</em> which one is actually winning on your task — which is why a single-agent baseline is non-negotiable (see “When Is It Worth It?”).</p>
+<hr>
+<h2 id="what-to-evaluate"><a class="header" href="#what-to-evaluate">What to Evaluate</a></h2>
+<p>A complete multi-agent evaluation covers seven dimensions. Outcome alone is table stakes; the other six are what distinguish a multi-agent eval from a single-agent one.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Dimension</th><th>Question it answers</th><th>Example signal</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Task outcome</strong></td><td>Did the system achieve the goal?</td><td>Final answer correct; end-state matches spec</td></tr>
+<tr><td><strong>Communication effectiveness</strong></td><td>Do messages carry the right information, understood correctly?</td><td>Key facts propagate; no ignored/misread messages</td></tr>
+<tr><td><strong>Coordination / orchestration</strong></td><td>Is work routed to the right agent, in the right order, without redundancy?</td><td>No duplicated work; no idle agents; correct handoffs</td></tr>
+<tr><td><strong>Role adherence</strong></td><td>Does each agent stay within its assigned role?</td><td>Reviewer reviews (doesn’t rewrite); planner plans (doesn’t code)</td></tr>
+<tr><td><strong>Credit assignment</strong></td><td>Which agent/step caused success or failure?</td><td>Blame localized to a specific message</td></tr>
+<tr><td><strong>Robustness</strong></td><td>Does the system contain errors or amplify them?</td><td>One agent’s mistake gets caught, not propagated</td></tr>
+<tr><td><strong>Cost / efficiency</strong></td><td>Is the outcome worth the tokens, latency, and dollars?</td><td>Quality gain per extra token vs single-agent baseline</td></tr>
+</tbody>
+</table>
+</div>
+<p>A useful mental model: <strong>task outcome is the <em>what</em>; the middle five are the <em>how</em>; cost is the <em>whether it was worth it</em>.</strong> A mature eval scores all three. A common mistake is to build an elaborate rubric for the <em>what</em>, nothing for the <em>how</em>, and to leave cost off the dashboard entirely — which is precisely how teams end up shipping an expensive system whose overhead they cannot justify when a director asks.</p>
+<p><strong>Map each dimension to a MAST category.</strong> The seven dimensions are not arbitrary — each one is the <em>detector</em> for a family of failures in the taxonomy below. Communication effectiveness catches “ignored other agents’ input” and “withholding crucial information” (FC2). Role adherence catches “disobey role specification” (FC1). Robustness catches cascading errors and “incorrect verification” (FC3). If you cannot say which failure mode a metric is supposed to catch, that metric is decoration.</p>
+<h3 id="end-state-vs-step-by-step-evaluation"><a class="header" href="#end-state-vs-step-by-step-evaluation">End-state vs step-by-step evaluation</a></h3>
+<p>Two philosophies for scoring outcome and process:</p>
+<ul>
+<li><strong>End-state evaluation</strong> checks only whether the system reached a correct final state, tolerating many valid paths to get there. Anthropic uses this for its research system precisely because “there are often multiple valid paths” to a good research answer (<a href="https://www.anthropic.com/engineering/multi-agent-research-system">Anthropic</a>). It is cheap and path-agnostic but blind to lucky-right processes.</li>
+<li><strong>Trajectory / step evaluation</strong> scores the sequence of actions and messages. It catches process failures and enables credit assignment but is expensive and requires reference trajectories or a strong judge.</li>
+</ul>
+<p>Use end-state for headline pass/fail and trajectory scoring for diagnosis. They answer different questions; you generally want both. A practical division of labor: run <strong>end-state on every case, every run</strong> (cheap enough for CI), and run <strong>trajectory scoring only on the failures</strong> end-state flags (expensive, so spend it where the signal is). This “cheap filter, expensive diagnosis” split is how you keep a trajectory eval affordable at scale.</p>
+<p>A subtle trap lives in end-state evaluation for multi-agent systems specifically: <strong>a correct end state can be reached by a process so wasteful or so lucky that it will not reproduce.</strong> Two subagents duplicating the same research still produce a correct report — end-state passes, and you have quietly paid double and learned nothing. This is why cost must ride alongside the end-state score, not in a separate report nobody opens.</p>
+<hr>
+<h2 id="the-credit-assignment-problem-in-depth"><a class="header" href="#the-credit-assignment-problem-in-depth">The Credit-Assignment Problem in Depth</a></h2>
+<p>Credit assignment is the problem of attributing a system-level outcome to the individual agents and steps that produced it. It is borrowed from reinforcement learning (the “temporal credit assignment problem”: which of the many actions in an episode deserves credit for the eventual reward?) and it is <em>the</em> hard problem of multi-agent evaluation.</p>
+<p><strong>The 60-second version (memorize this).</strong> In a system of many agents that pass work to each other, a single system-level score — “the report was wrong” — has to be distributed back over dozens of messages from several agents. That is credit assignment. It is hard for four reasons: the decisive mistake often happened <em>long before</em> the visible failure (delayed effect); when several agents each contribute a slice of a bad answer <em>no single message is the bug</em> (diffuse responsibility); “agent B caused it” is really a <em>counterfactual</em> — “had B acted differently the outcome would improve” — which you usually cannot run; and agents that are each individually correct can be <em>jointly</em> wrong (interaction effects). The practical toolkit is four methods trading off cost against rigor: trace localization, leave-one-out ablation, Shapley values, and milestone KPIs.</p>
+<h3 id="why-it-is-hard"><a class="header" href="#why-it-is-hard">Why it is hard</a></h3>
+<ul>
+<li><strong>Delayed effect.</strong> The decision that doomed the run often happened long before the visible failure. A planner that omitted a constraint on step 2 causes a spec violation on step 20; the coder who “produced” the wrong output is not the culprit.</li>
+<li><strong>Diffuse responsibility.</strong> When five agents each contribute 20% of a flawed argument, no single message is “the bug.” Groupthink failures have no localizable owner.</li>
+<li><strong>Counterfactual ambiguity.</strong> “Agent B caused the failure” really means “had B acted differently, the outcome would have been better.” Establishing that requires a counterfactual you usually cannot run.</li>
+<li><strong>Interaction effects.</strong> Two agents can each be individually correct yet jointly wrong (e.g., both assume the other will handle error-checking).</li>
+</ul>
+<h3 id="four-practical-attribution-methods"><a class="header" href="#four-practical-attribution-methods">Four practical attribution methods</a></h3>
+<p><strong>1. Trace-based localization (annotate the decisive step).</strong> Have a human or LLM judge read the full transcript and mark the <em>first</em> step where the trajectory became unrecoverable — the “decisive error.” This is exactly the methodology behind MAST: expert annotators labeled traces for failure modes and the step at which each occurred, reaching Cohen’s kappa = 0.88 inter-annotator agreement (<a href="https://arxiv.org/abs/2503.13657">Cemri et al., 2025</a>). Cheap-ish, interpretable, but subjective and hard to scale without an LLM judge. The key discipline is finding the <em>first</em> unrecoverable error, not the last visible symptom — those are usually different messages authored by different agents, and blaming the symptom is how teams “fix” the wrong agent.</p>
+<p><strong>2. Ablation / leave-one-out.</strong> Re-run the task with agent ( i ) removed (or replaced by a no-op / a stronger model / a weaker model). The change in system performance estimates that agent’s marginal contribution:</p>
+<p>[ \Delta_i = V(\text{system}) - V(\text{system} \setminus i) ]</p>
+<p>where ( V ) is your outcome score. Large positive ( \Delta_i ) means agent ( i ) is load-bearing; ( \Delta_i \approx 0 ) means it is dead weight (a candidate for deletion — cost savings!); and, importantly, a <strong>negative</strong> ( \Delta_i ) means the agent is <em>actively harmful</em> — the system scores <em>better</em> without it, which is more common than teams expect for redundant reviewers and over-eager planners. Requires re-running, which multiplies cost, and — because these systems are non-deterministic — you must average ( \Delta_i ) over several seeds or you are measuring noise.</p>
+<p><strong>3. Shapley-value attribution.</strong> Leave-one-out ignores interactions. The Shapley value fairly distributes the total system value across agents by averaging each agent’s marginal contribution over <em>all</em> orderings of agent inclusion:</p>
+<p>[ \phi_i = \sum_{S \subseteq N \setminus {i}} \frac{|S|!,(|N|-|S|-1)!}{|N|!} \big[ V(S \cup {i}) - V(S) \big] ]</p>
+<p>Here ( N ) is the set of agents, ( S ) a coalition not containing ( i ), and ( V(S) ) the score achieved by only the agents in ( S ). Shapley values are the principled answer to “how much did each agent contribute” — they uniquely satisfy efficiency, symmetry, null-player, and additivity — but they cost ( O(2^{|N|}) ) coalition evaluations, so feasible for 3–4 agents, not for 30. For larger systems you approximate with <strong>Monte-Carlo Shapley</strong> (sample random agent orderings and average marginal contributions), trading exactness for a tractable number of re-runs.</p>
+<p><strong>4. Milestone / process rewards.</strong> Decompose the task into intermediate milestones and check which agent achieved which. MultiAgentBench uses exactly this: <strong>milestone-based KPIs</strong> that score whether key sub-goals were reached, separating collaboration quality from raw task score (<a href="https://arxiv.org/abs/2503.01935">Zhu et al., “MultiAgentBench”, 2025</a>). This gives per-agent, per-milestone credit without combinatorial re-runs, at the cost of needing hand-authored milestones. It is the only one of the four that scales to production volume, which is why it is the workhorse for routine per-agent scoring.</p>
+<p><strong>Rule of thumb:</strong> use trace-based localization for debugging a specific failure, milestone KPIs for routine per-agent scoring, leave-one-out for pruning agents, and Shapley only when you have ≤4 agents and need defensible attribution. In practice these compose: milestone KPIs run continuously and flag <em>which</em> agent is under-contributing; trace localization then explains <em>why</em> on a sampled failure; leave-one-out confirms the fix by showing the score moves when you change that agent.</p>
+<hr>
+<h2 id="a-taxonomy-of-multi-agent-failure-modes"><a class="header" href="#a-taxonomy-of-multi-agent-failure-modes">A Taxonomy of Multi-Agent Failure Modes</a></h2>
+<p>The most useful empirical map here is <strong>MAST (Multi-Agent System failure Taxonomy)</strong> from Cemri et al., built by annotating 200+ execution traces across seven frameworks (MetaGPT, ChatDev, HyperAgent, AppWorld, AG2, Magentic-One, OpenManus) and clustering into <strong>14 failure modes under 3 categories</strong> (<a href="https://arxiv.org/abs/2503.13657">arXiv:2503.13657</a>). The percentages below are the approximate share of failures each category accounted for in their study. Treat them as an order-of-magnitude map of where to spend your defenses, not as universal constants — your distribution will differ by task, but the striking result that <em>specification and coordination dominate raw capability</em> holds broadly.</p>
+<h3 id="fc1--specification--system-design-issues-42-of-failures"><a class="header" href="#fc1--specification--system-design-issues-42-of-failures">FC1 — Specification &amp; System-Design Issues (~42% of failures)</a></h3>
+<p>The system is poorly specified or structured before any conversation goes wrong. These are the “you built it wrong,” not “it ran wrong,” failures — and because they are baked into the prompts, roles, and topology, they are the ones a stronger base model is <em>least</em> able to rescue.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Mode</th><th>What it looks like</th><th>Where your eval catches it</th></tr>
+</thead>
+<tbody>
+<tr><td>Fail to follow task requirements</td><td>System ignores an explicit constraint from the prompt</td><td>Outcome check against the spec’s constraints, not just the goal</td></tr>
+<tr><td>Disobey role specification</td><td>Reviewer starts writing code; planner starts executing</td><td>Role-adherence metric (forbidden-action detector)</td></tr>
+<tr><td>Step repetition</td><td>Agents redo work already completed</td><td>Redundancy rate over (sender, content)</td></tr>
+<tr><td>Loss of conversation history</td><td>Context is dropped; an agent “forgets” an earlier decision</td><td>Fact-propagation check across the transcript</td></tr>
+<tr><td>Unaware of stopping conditions</td><td>No agent knows when the task is done</td><td>Termination check: did it stop at goal, or run out / loop?</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="fc2--inter-agent-misalignment-37-of-failures"><a class="header" href="#fc2--inter-agent-misalignment-37-of-failures">FC2 — Inter-Agent Misalignment (~37% of failures)</a></h3>
+<p>The agents are individually capable but fail to align with each other. This is the category with no single-agent analogue at all — it exists <em>only</em> because there is more than one agent.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Mode</th><th>What it looks like</th><th>Where your eval catches it</th></tr>
+</thead>
+<tbody>
+<tr><td>Conversation reset</td><td>Dialogue unexpectedly restarts, discarding progress</td><td>Progress-monotonicity check on milestone coverage</td></tr>
+<tr><td>Proceeding on wrong assumptions</td><td>An agent guesses instead of asking a clarifying question</td><td>Assumption audit; provenance check on inputs</td></tr>
+<tr><td>Task derailment</td><td>Conversation drifts off the original objective</td><td>Goal-drift score (semantic distance from original goal)</td></tr>
+<tr><td>Withholding crucial information</td><td>An agent knows something relevant but never shares it</td><td>Information-flow / communication-effectiveness metric</td></tr>
+<tr><td>Ignoring other agents’ input</td><td>A message is received and simply not acted on</td><td>Ignored-message rate (directed message, no downstream use)</td></tr>
+<tr><td>Reasoning–action mismatch</td><td>Agent says one thing, does another</td><td>Consistency check between stated intent and tool call</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="fc3--task-verification--termination-21-of-failures"><a class="header" href="#fc3--task-verification--termination-21-of-failures">FC3 — Task Verification &amp; Termination (~21% of failures)</a></h3>
+<p>The system fails to check its own work. Small as a percentage, this category is disproportionately dangerous because it is the <em>last line of defense</em> — an FC3 failure is what lets an FC1 or FC2 error reach the user unchallenged.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Mode</th><th>What it looks like</th><th>Where your eval catches it</th></tr>
+</thead>
+<tbody>
+<tr><td>Premature termination</td><td>System stops before the goal is met</td><td>Milestone coverage &lt; 1.0 at termination</td></tr>
+<tr><td>No / incomplete verification</td><td>Output is never checked against requirements</td><td>Presence + coverage of a verification step</td></tr>
+<tr><td>Incorrect verification</td><td>The checker approves a wrong answer</td><td>Verifier accuracy (does “approved” correlate with actually correct?)</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="cross-cutting-emergent-failures"><a class="header" href="#cross-cutting-emergent-failures">Cross-cutting emergent failures</a></h3>
+<p>Some failures are not single modes but <em>dynamics</em> over the interaction graph. These are the ones single-agent evaluation has no vocabulary for:</p>
+<ul>
+<li><strong>Cascading errors / error propagation.</strong> Agent A’s small mistake becomes agent B’s premise, which B builds on confidently, and so on. The error is <em>amplified</em> rather than <em>contained</em>. A robust system has a verification agent that breaks the chain (FC3 is where this defense lives or dies). The diagnostic signature is a low-confidence or wrong assertion early in the trace that later messages cite <em>without re-deriving</em>.</li>
+<li><strong>Groupthink / sycophantic convergence.</strong> In debate or committee setups, agents converge on a confident consensus that is wrong, because each defers to the apparent majority instead of reasoning independently. Multi-agent debate can <em>improve</em> factuality when agents genuinely critique (<a href="https://arxiv.org/abs/2305.14325">Du et al., “Improving Factuality and Reasoning through Multiagent Debate”, 2023</a>) — but the same setup degrades into mutual agreement when critique collapses. The tell is <em>falling</em> disagreement across rounds coupled with <em>rising</em> confidence — unanimity reached too early is a red flag, not a green one.</li>
+<li><strong>Deadlock / livelock.</strong> A waits for B, B waits for A (deadlock); or agents keep politely handing the task back and forth without progress (livelock). Both surface as “unaware of stopping conditions” plus “step repetition,” and both are caught by a turn/step budget with a progress check.</li>
+<li><strong>Redundant work / cost blowup.</strong> Two subagents independently research the same subtopic. The outcome may still be correct, but you paid twice — a <em>coordination</em> failure visible only in the cost dimension, which is exactly why cost is one of the seven evaluation dimensions and not an afterthought.</li>
+</ul>
+<p><strong>Worked micro-example of error propagation.</strong> A planner instructs: “compute revenue for Q3.” The data agent silently uses Q2 data (wrong assumption, FC2). The analyst computes a beautiful, correct-looking growth rate on the wrong numbers. The reviewer checks the <em>arithmetic</em> (correct) but not the <em>data source</em> (incomplete verification, FC3). Final answer: confidently wrong. No single agent was “broken”; the <em>system</em> had no data-provenance check. This is why MAST’s authors stress that better <em>base models alone do not fix</em> these failures — the fix is structural: add a provenance assertion to the data agent’s contract and make source-checking an explicit item on the reviewer’s checklist. Notice the failure required <strong>two</strong> modes to line up (FC2 wrong assumption + FC3 incomplete verification) — robust systems fail only when a defense <em>and</em> its backstop both miss, which is the whole argument for a dedicated verifier.</p>
+<h3 id="how-to-use-the-taxonomy-in-an-eval"><a class="header" href="#how-to-use-the-taxonomy-in-an-eval">How to use the taxonomy in an eval</a></h3>
+<p>Turn MAST into a <strong>checklist judge</strong>. For each transcript, an LLM judge (or human) answers a yes/no question per failure mode (“Did any agent proceed on an unstated assumption? cite the message”), and you aggregate the rate of each mode across your eval set. Now your dashboard shows not just “68% pass” but “of the 32% that failed, 40% were incomplete-verification and 25% were wrong-assumption” — which tells you <em>what to build next</em> (a verifier, a clarify-first policy). This is the difference between an eval that scores and an eval that <em>directs engineering</em>.</p>
+<hr>
+<h2 id="build-it-in-practice"><a class="header" href="#build-it-in-practice">Build It in Practice</a></h2>
+<p>Reading about orchestrator-worker systems is not the same as building one. This section builds a realistic research system — a lead orchestrator that decomposes a query and spawns parallel workers, plus a synthesizer — first in <strong>LangGraph</strong> (how you would ship it), then as a <strong>self-contained runnable harness</strong> (stdlib only, no API keys) that generates an instrumented transcript and computes task success, per-agent credit via <em>empirical leave-one-out</em>, and a coordination metric. Together with the scorer in the next section, this is a complete evaluation loop you can lift into a real codebase.</p>
+<h3 id="b1--the-architecture-in-langgraph"><a class="header" href="#b1--the-architecture-in-langgraph">B.1 — The architecture, in LangGraph</a></h3>
+<p>The canonical multi-agent shape — and the one Anthropic’s research system uses — is <strong>orchestrator-worker</strong>: a lead agent plans, dynamically fans out to specialized workers (each with its own context window), then a synthesizer merges their findings. LangGraph expresses the dynamic fan-out with its <code>Send</code> API, which lets the orchestrator emit one worker invocation per subtask at run time (the number of workers is not known until the orchestrator plans). This is real, current LangGraph; it requires <code>pip install langgraph langchain</code> and a chat model.</p>
+<pre><code class="language-python">"""Orchestrator-worker research system in LangGraph (fan-out with Send)."""
+import operator
+from typing import Annotated
+from typing_extensions import TypedDict
+from langgraph.graph import StateGraph, START, END
+from langgraph.types import Send
+from langchain.chat_models import init_chat_model
+
+llm = init_chat_model("anthropic:claude-sonnet-4-20250514")  # any chat model
+
+
+# ---- Shared graph state. `findings` uses operator.add so parallel workers
+#      APPEND rather than overwrite each other (a map-reduce reducer). ----
+class State(TypedDict):
+    topic: str
+    subtasks: list[str]
+    findings: Annotated[list, operator.add]   # reducer: concatenate
+    report: str
+
+
+class WorkerState(TypedDict):
+    subtask: str
+    findings: Annotated[list, operator.add]
+
+
+def orchestrator(state: State) -&gt; dict:
+    """Lead agent: decompose the topic into independent, parallelizable subtasks."""
+    prompt = (
+        f"Break this research topic into 3-5 INDEPENDENT subtopics that can be "
+        f"researched in parallel without shared decisions. Topic: {state['topic']}. "
+        f"Return one subtopic per line."
+    )
+    resp = llm.invoke(prompt).content
+    subtasks = [ln.strip("-* ").strip() for ln in resp.splitlines() if ln.strip()]
+    return {"subtasks": subtasks}
+
+
+def assign_workers(state: State):
+    """Conditional edge: fan out one worker per subtask via the Send API."""
+    return [Send("worker", {"subtask": s}) for s in state["subtasks"]]
+
+
+def worker(state: WorkerState) -&gt; dict:
+    """Specialized subagent: researches ONE subtask in its own context window."""
+    resp = llm.invoke(f"Research this and report key findings concisely: {state['subtask']}")
+    return {"findings": [{"subtask": state["subtask"], "text": resp.content}]}
+
+
+def synthesizer(state: State) -&gt; dict:
+    """Lead agent: merge worker findings into a single cited report."""
+    bundle = "\n\n".join(f"## {f['subtask']}\n{f['text']}" for f in state["findings"])
+    resp = llm.invoke(f"Synthesize these findings into a report:\n\n{bundle}")
+    return {"report": resp.content}
+
+
+builder = StateGraph(State)
+builder.add_node("orchestrator", orchestrator)
+builder.add_node("worker", worker)
+builder.add_node("synthesizer", synthesizer)
+builder.add_edge(START, "orchestrator")
+builder.add_conditional_edges("orchestrator", assign_workers, ["worker"])
+builder.add_edge("worker", "synthesizer")
+builder.add_edge("synthesizer", END)
+graph = builder.compile()
+
+# result = graph.invoke({"topic": "Impact of A2A protocol on enterprise agent adoption"})
+# print(result["report"])
+</code></pre>
+<p>Three design choices in that code are exactly the things your evaluation will later scrutinize. <strong>(1) The orchestrator’s decomposition prompt demands <em>independent</em> subtasks</strong> — this is the read-heavy / no-shared-writes regime where multi-agent wins; if the subtasks secretly share a decision (Cognition’s Flappy Bird trap) the <code>operator.add</code> merge will concatenate <em>conflicting</em> findings and the synthesizer will have to paper over them. <strong>(2) Each worker gets its own context window</strong> — that is the entire point of the pattern (multiply effective context), and it is why per-agent credit is even meaningful. <strong>(3) The synthesizer is a single writer</strong> — there is exactly one agent that produces the final artifact, honoring the single-writer principle even inside a multi-agent system.</p>
+<h3 id="b2--instrument-first-or-you-cannot-evaluate"><a class="header" href="#b2--instrument-first-or-you-cannot-evaluate">B.2 — Instrument first, or you cannot evaluate</a></h3>
+<p>You cannot score coordination from a final report. You need the <strong>transcript</strong>: an ordered, structured log of who did what, when, with what inputs and outputs, and how many tokens it cost. Add a thin event recorder to every node before you do anything else — this is the highest-leverage thing on this page.</p>
+<pre><code class="language-python">import time, json
+
+class Recorder:
+    """Append-only event log; one row per agent action. This IS your eval surface."""
+    def __init__(self):
+        self.events = []
+    def log(self, agent, role, action, recipient, content, tokens, milestone=None):
+        self.events.append({
+            "step": len(self.events) + 1, "t": time.time(),
+            "agent": agent, "role": role, "action": action,
+            "recipient": recipient, "content": content,
+            "tokens": tokens, "milestone": milestone,
+        })
+    def dump(self, path):
+        with open(path, "w") as f:
+            json.dump(self.events, f, indent=2)
+</code></pre>
+<p>Wrap each node so it calls <code>rec.log(...)</code> on entry and exit. In production you get this for free from a tracer — <strong>LangSmith</strong> (LangGraph), the OpenAI Agents SDK’s built-in tracing, or <strong>Langfuse</strong> — which record the same structured spans. The rule: <em>if it did not get logged, it did not happen as far as your evaluation is concerned.</em></p>
+<h3 id="b3--a-runnable-end-to-end-harness-stdlib-only"><a class="header" href="#b3--a-runnable-end-to-end-harness-stdlib-only">B.3 — A runnable end-to-end harness (stdlib only)</a></h3>
+<p>Below is a complete, dependency-free program that <em>simulates</em> the orchestrator-worker system with pluggable “agent” functions, records a transcript, scores the end state, and computes <strong>empirical per-agent contribution by leave-one-out re-runs</strong> — the ablation method from the credit-assignment section, actually executed. It runs as-is with <code>python3</code>. Swap the stubbed agent bodies for real <code>llm.invoke</code> calls and it becomes a real evaluator.</p>
+<pre><code class="language-python">"""Runnable orchestrator-worker simulation + leave-one-out credit assignment.
+Pure standard library. Replace the stubbed agent functions with real LLM calls."""
+from __future__ import annotations
+from dataclasses import dataclass, field
+
+# ---- Ground truth for a toy research task: the facts a good report must contain. ----
+GOLD_FACTS = {
+    "a2a_origin": "A2A was announced by Google in April 2025.",
+    "a2a_lf": "A2A was donated to the Linux Foundation in June 2025.",
+    "a2a_vs_mcp": "A2A connects agents to agents; MCP connects agents to tools.",
+    "adk": "Google's ADK is a code-first framework that speaks A2A.",
+}
+
+# Which worker is responsible for which fact (its 'beat'). The orchestrator assigns these.
+BEATS = {
+    "history":   ["a2a_origin", "a2a_lf"],
+    "protocols": ["a2a_vs_mcp"],
+    "tooling":   ["adk"],
+}
+
+
+@dataclass
+class Transcript:
+    events: list = field(default_factory=list)
+    def add(self, agent, action, facts=None, tokens=0):
+        self.events.append({"step": len(self.events) + 1, "agent": agent,
+                            "action": action, "facts": facts or [], "tokens": tokens})
+
+
+def orchestrator(topic: str, active_workers: list[str], t: Transcript) -&gt; list[str]:
+    """Plans: assigns each active worker its beat. ~200 planning tokens."""
+    plan = [w for w in active_workers if w in BEATS]
+    t.add("orchestrator", f"plan:{topic}", tokens=200)
+    return plan
+
+
+def worker(name: str, t: Transcript) -&gt; list[str]:
+    """A subagent researches its beat and reports the facts it found. ~600 tokens."""
+    found = list(BEATS.get(name, []))
+    t.add(name, "research", facts=found, tokens=600)
+    return found
+
+
+def synthesizer(all_facts: list[str], t: Transcript) -&gt; set[str]:
+    """Single writer: merges worker findings into the report. ~400 tokens."""
+    report_facts = set(all_facts)
+    t.add("synthesizer", "write_report", facts=sorted(report_facts), tokens=400)
+    return report_facts
+
+
+def run_system(topic: str, active_workers: list[str]) -&gt; tuple[set[str], Transcript]:
+    """One full run of the orchestrator-worker system with a given worker set."""
+    t = Transcript()
+    plan = orchestrator(topic, active_workers, t)
+    gathered: list[str] = []
+    for w in plan:                       # (parallel in reality; sequential here)
+        gathered += worker(w, t)
+    report = synthesizer(gathered, t)
+    return report, t
+
+
+def end_state_score(report_facts: set[str]) -&gt; float:
+    """Outcome metric: fraction of gold facts present in the report."""
+    return len(report_facts &amp; set(GOLD_FACTS)) / len(GOLD_FACTS)
+
+
+def leave_one_out_credit(topic: str, workers: list[str]) -&gt; dict[str, float]:
+    """Empirical marginal contribution: score with all workers minus score without w."""
+    full_report, _ = run_system(topic, workers)
+    full = end_state_score(full_report)
+    credit = {}
+    for w in workers:
+        ablated = [x for x in workers if x != w]
+        rep, _ = run_system(topic, ablated)
+        credit[w] = round(full - end_state_score(rep), 3)   # Delta_i
+    return full, credit
+
+
+if __name__ == "__main__":
+    workers = ["history", "protocols", "tooling"]
+    report, tr = run_system("A2A protocol landscape", workers)
+    print("END-STATE SCORE :", round(end_state_score(report), 3))
+    total_tokens = sum(e["tokens"] for e in tr.events)
+    print("TOKENS SPENT    :", total_tokens)
+    full, credit = leave_one_out_credit("A2A protocol landscape", workers)
+    print("LEAVE-ONE-OUT   :", credit)
+</code></pre>
+<p>Running it prints:</p>
+<pre><code>END-STATE SCORE : 1.0
+TOKENS SPENT    : 1800
+LEAVE-ONE-OUT   : {'history': 0.5, 'protocols': 0.25, 'tooling': 0.25}
+</code></pre>
+<p>Read the output like an evaluator. The <strong>end-state score is 1.0</strong> — all four gold facts made it into the report. The <strong>leave-one-out credits are the empirical ( \Delta_i )</strong>: removing the <code>history</code> worker drops the score by 0.5 (it owned two of four facts), each of the others by 0.25 — so <code>history</code> is the most load-bearing worker, and none is dead weight. Now inject a failure to watch the metric bite: give the <code>history</code> worker a wrong assumption (have it research Q2 instead of Q3, i.e. <code>BEATS["history"] = []</code>) and its leave-one-out credit collapses to 0.0 while the end-state score falls to 0.5 — the ablation <em>localizes the damage to the agent that caused it</em> without any human reading the transcript. That is credit assignment, executed, in forty lines.</p>
+<p><strong>What is deliberately missing, and why it matters.</strong> This harness scores <em>outcome</em> and <em>contribution</em> but not <em>coordination</em> — it cannot see redundant work, role violations, or ignored messages, because those live in the transcript’s structure, not in the fact set. That is exactly the job of the scorer in the next section, which consumes a transcript of the same shape and produces the coordination metrics. The two halves — this generator/ablator and that scorer — compose into a full evaluation harness.</p>
+<hr>
+<h2 id="worked-example-scoring-a-multi-agent-transcript"><a class="header" href="#worked-example-scoring-a-multi-agent-transcript">Worked Example: Scoring a Multi-Agent Transcript</a></h2>
+<p>This is the second half of the harness. Where §B generated a transcript and did leave-one-out on <em>outcome</em>, this scorer reads a transcript and scores the <strong>process</strong> — task success (with milestone coverage), per-agent contribution (a milestone-based credit assignment complementary to §B’s ablation), and a <strong>coordination metric</strong> (how cleanly work was routed and handed off). It uses only the standard library so it runs anywhere. The judging here is rule-based for reproducibility; in practice you would swap the milestone checks and role rules for an LLM-as-judge call driven by the MAST checklist from the taxonomy section.</p>
+<pre><code class="language-python">"""Score a multi-agent transcript: task success, per-agent contribution, coordination.
+
+Transcript model: an ordered list of messages. Each message has a sender (agent id),
+a recipient, textual content, and an optional 'milestone' it completes.
+"""
+from __future__ import annotations
+from dataclasses import dataclass, field
+from collections import defaultdict
+
+
+@dataclass
+class Message:
+    step: int
+    sender: str
+    recipient: str            # "all" for broadcast
+    content: str
+    milestone: str | None = None   # id of a milestone this message completes, if any
+
+
+@dataclass
+class Task:
+    goal: str
+    milestones: list[str]                 # ordered sub-goals that define success
+    roles: dict[str, str]                 # agent_id -&gt; role name
+    final_answer_correct: bool            # from an outcome checker / gold comparison
+
+
+def task_success(task: Task, transcript: list[Message]) -&gt; dict:
+    """End-state success plus milestone coverage."""
+    hit = {m.milestone for m in transcript if m.milestone is not None}
+    covered = [m for m in task.milestones if m in hit]
+    coverage = len(covered) / len(task.milestones) if task.milestones else 0.0
+    # System 'passes' only if the final answer is correct AND all milestones were hit.
+    passed = task.final_answer_correct and coverage == 1.0
+    return {
+        "final_answer_correct": task.final_answer_correct,
+        "milestone_coverage": round(coverage, 3),
+        "milestones_missed": [m for m in task.milestones if m not in hit],
+        "passed": passed,
+    }
+
+
+def per_agent_contribution(task: Task, transcript: list[Message]) -&gt; dict:
+    """Milestone-based credit assignment: share of milestones each agent completed,
+    weighted so that credit sums to 1.0 across all completed milestones."""
+    completed = [m for m in transcript if m.milestone in task.milestones]
+    total = len(completed)
+    credit: dict[str, float] = defaultdict(float)
+    counts: dict[str, int] = defaultdict(int)
+    for m in completed:
+        credit[m.sender] += 1.0 / total if total else 0.0
+        counts[m.sender] += 1
+    # Every agent that ever spoke should appear, even with zero credit (dead weight).
+    for m in transcript:
+        credit.setdefault(m.sender, 0.0)
+    return {
+        agent: {"credit_share": round(credit[agent], 3),
+                "milestones_completed": counts.get(agent, 0)}
+        for agent in sorted(credit)
+    }
+
+
+def coordination_score(task: Task, transcript: list[Message]) -&gt; dict:
+    """A composite coordination metric in [0, 1] combining three penalties:
+       - redundancy: repeated identical (sender, content) work
+       - role violations: an agent producing content outside its role's allowed verbs
+       - ignored messages: a directed message that never gets a reply from its recipient
+    Higher is better."""
+    n = len(transcript)
+
+    # 1) Redundancy: fraction of messages that duplicate earlier (sender, content).
+    seen = set()
+    redundant = 0
+    for m in transcript:
+        key = (m.sender, m.content.strip().lower())
+        if key in seen:
+            redundant += 1
+        seen.add(key)
+    redundancy_rate = redundant / n if n else 0.0
+
+    # 2) Role adherence: a 'reviewer' must not author code; a 'planner' must not execute.
+    forbidden = {"reviewer": "def ", "planner": "EXECUTE"}
+    role_violations = 0
+    for m in transcript:
+        role = task.roles.get(m.sender, "")
+        needle = forbidden.get(role)
+        if needle and needle in m.content:
+            role_violations += 1
+    role_violation_rate = role_violations / n if n else 0.0
+
+    # 3) Ignored messages: directed (non-broadcast) message whose recipient never
+    #    sends anything afterward is treated as ignored.
+    ignored = 0
+    directed = 0
+    for i, m in enumerate(transcript):
+        if m.recipient == "all":
+            continue
+        directed += 1
+        if not any(later.sender == m.recipient for later in transcript[i + 1:]):
+            ignored += 1
+    ignored_rate = ignored / directed if directed else 0.0
+
+    # Combine: equal-weight average of (1 - each penalty).
+    score = (
+        (1 - redundancy_rate) + (1 - role_violation_rate) + (1 - ignored_rate)
+    ) / 3
+    return {
+        "coordination_score": round(score, 3),
+        "redundancy_rate": round(redundancy_rate, 3),
+        "role_violation_rate": round(role_violation_rate, 3),
+        "ignored_rate": round(ignored_rate, 3),
+    }
+
+
+if __name__ == "__main__":
+    task = Task(
+        goal="Compute Q3 revenue growth and write a summary.",
+        milestones=["fetch_data", "compute_growth", "verify", "write_summary"],
+        roles={"planner": "planner", "data": "worker",
+               "analyst": "worker", "reviewer": "reviewer"},
+        final_answer_correct=True,
+    )
+    transcript = [
+        Message(1, "planner", "data", "Fetch Q3 revenue.", milestone=None),
+        Message(2, "data", "analyst", "Q3 revenue = 120M.", milestone="fetch_data"),
+        Message(3, "analyst", "reviewer", "Growth = 12% QoQ.", milestone="compute_growth"),
+        Message(4, "reviewer", "analyst", "Checked numbers, ok.", milestone="verify"),
+        Message(5, "analyst", "all", "Summary: revenue up 12%.", milestone="write_summary"),
+    ]
+
+    print("TASK SUCCESS   :", task_success(task, transcript))
+    print("CONTRIBUTION   :", per_agent_contribution(task, transcript))
+    print("COORDINATION   :", coordination_score(task, transcript))
+</code></pre>
+<p>Running it produces (values match the transcript above):</p>
+<pre><code>TASK SUCCESS   : {'final_answer_correct': True, 'milestone_coverage': 1.0,
+                 'milestones_missed': [], 'passed': True}
+CONTRIBUTION   : {'analyst': {'credit_share': 0.5, 'milestones_completed': 2},
+                 'data': {'credit_share': 0.25, 'milestones_completed': 1},
+                 'planner': {'credit_share': 0.0, 'milestones_completed': 0},
+                 'reviewer': {'credit_share': 0.25, 'milestones_completed': 1}}
+COORDINATION   : {'coordination_score': 1.0, 'redundancy_rate': 0.0,
+                 'role_violation_rate': 0.0, 'ignored_rate': 0.0}
+</code></pre>
+<p>Two things worth noticing. First, the <strong>planner contributed 0 milestones</strong> — leave-one-out or a cost review should ask whether it earns its tokens. (Note the two contribution methods answer <em>different</em> questions: this milestone method says the planner completed no milestone; the §B ablation would ask whether <em>removing</em> the planner hurts the outcome. A planner can score zero on the first and still be load-bearing on the second, because good delegation enables the workers without itself “completing” a milestone — which is exactly why you keep both methods and do not prune on either one alone.) Second, this transcript is clean; to see the metrics bite, imagine the reviewer message were <code>Message(4, "reviewer", "analyst", "def recheck(): ...")</code> — the role-violation term would fire, dragging the coordination score below 1.0 and flagging an FC1 “disobey role specification” failure. Or swap the reviewer’s content to duplicate the analyst’s and watch <code>redundancy_rate</code> rise. These one-line perturbations are how you write <em>unit tests for your evaluator</em> — a metric that never moves when you inject the failure it claims to detect is a broken metric.</p>
+<p><strong>Hardening notes for production.</strong> The three coordination checks here are deliberately simple; in a real system you would (1) replace substring role-rules with an LLM judge that reads intent, because <code>"def "</code> is a brittle proxy for “wrote code”; (2) make “ignored message” smarter than “recipient never spoke again” — a message can be acknowledged by action rather than reply; and (3) weight the three penalties by how much each failure mode actually costs you (a role violation that ships bad code is worse than one redundant search), using the weighted form ( \text{Coord} = 1 - \sum_k w_k p_k ) from the metrics section.</p>
+<hr>
+<h2 id="metrics-formally"><a class="header" href="#metrics-formally">Metrics, Formally</a></h2>
+<p>Precise definitions with micro-examples. Math uses MathJax delimiters (this book renders <code>\( \)</code> and <code>\[ \]</code>, not dollar signs).</p>
+<h3 id="task-success-rate-tsr"><a class="header" href="#task-success-rate-tsr">Task Success Rate (TSR)</a></h3>
+<p>Fraction of tasks the <em>system</em> fully completed:</p>
+<p>[ \text{TSR} = \frac{1}{|D|} \sum_{t \in D} \mathbb{1}[\text{system solved } t] ]</p>
+<p><em>Micro-example.</em> Over ( |D| = 50 ) tasks the system fully solves 34, so ( \text{TSR} = 34/50 = 0.68 ). Because runs are non-deterministic, report TSR as a mean over ( k ) seeds with a confidence interval; a single-run TSR is a point estimate of a random variable, not a fact.</p>
+<h3 id="milestone-coverage"><a class="header" href="#milestone-coverage">Milestone Coverage</a></h3>
+<p>Fraction of predefined sub-goals achieved, averaged over tasks — a partial-credit signal that survives when TSR is 0:</p>
+<p>[ \text{MC} = \frac{1}{|D|}\sum_{t \in D} \frac{|\text{milestones hit}_t|}{|\text{milestones}_t|} ]</p>
+<p><em>Micro-example.</em> A task with 4 milestones where 3 are hit contributes ( 3/4 = 0.75 ). A system can have low TSR but high MC — it gets <em>most</em> of the way and fails at the last step (often FC3 premature termination). Watching MC and TSR together localizes failures in <em>time</em>: high MC with low TSR means “fails at the end” (fix verification/termination); low MC means “fails early” (fix the orchestrator’s plan).</p>
+<h3 id="per-agent-credit-shapley"><a class="header" href="#per-agent-credit-shapley">Per-Agent Credit (Shapley)</a></h3>
+<p>Defined earlier; the key property is <strong>efficiency</strong>: credits sum to the total system value,</p>
+<p>[ \sum_{i \in N} \phi_i = V(N) ]</p>
+<p><em>Micro-example.</em> Two agents, ( V(\varnothing)=0,\ V({A})=0.4,\ V({B})=0.2,\ V({A,B})=1.0 ). Then ( \phi_A = \tfrac12(0.4-0) + \tfrac12(1.0-0.2) = 0.6 ) and ( \phi_B = 0.4 ), summing to ( V({A,B}) = 1.0 ). Note both exceed their solo scores — the <em>interaction</em> created value, which leave-one-out alone would misattribute. This is the concrete reason to reach for Shapley over ablation when agents are synergistic rather than independent.</p>
+<h3 id="communication-efficiency"><a class="header" href="#communication-efficiency">Communication Efficiency</a></h3>
+<p>Useful information moved per token spent. One simple operationalization: milestones achieved per thousand tokens of inter-agent messages,</p>
+<p>[ \text{CE} = \frac{\text{milestones hit}}{(\text{message tokens})/1000} ]</p>
+<p><em>Micro-example.</em> 4 milestones over 8,000 message tokens gives ( \text{CE} = 4/8 = 0.5 ) milestones per 1k tokens. Falling CE across runs is an early sign of chatter/redundancy — agents talking more to accomplish the same thing, the quantitative signature of FC2 misalignment creeping in.</p>
+<h3 id="coordination-score"><a class="header" href="#coordination-score">Coordination Score</a></h3>
+<p>The composite used in the code, generalized to a weighted penalty average with weights ( w_k ) summing to 1:</p>
+<p>[ \text{Coord} = 1 - \sum_{k} w_k , p_k, \qquad p_k \in [0,1] ]</p>
+<p>where each ( p_k ) is a penalty rate (redundancy, role violations, ignored messages). <em>Micro-example.</em> Equal weights with ( p = (0.1, 0.0, 0.2) ) give ( \text{Coord} = 1 - \tfrac13(0.3) = 0.9 ). Choose the weights ( w_k ) by the <em>dollar cost</em> of each failure in your product, not by intuition — that is what turns a vanity number into a decision input.</p>
+<h3 id="goal-drift-score"><a class="header" href="#goal-drift-score">Goal-Drift Score</a></h3>
+<p>A dynamics metric with no single-agent analogue: how far the conversation wanders from the original objective. With ( g ) the goal embedding and ( m_t ) the embedding of the message at step ( t ),</p>
+<p>[ \text{Drift} = \frac{1}{T}\sum_{t=1}^{T}\big(1 - \cos(g, m_t)\big) ]</p>
+<p><em>Micro-example.</em> If cosine similarity to the goal stays near 0.9 early then decays to 0.4 over a long trace, rising Drift flags FC2 “task derailment” <em>while it is happening</em>, letting a supervisor intervene before termination.</p>
+<h3 id="cost-adjusted-utility-the-honest-metric"><a class="header" href="#cost-adjusted-utility-the-honest-metric">Cost-Adjusted Utility (the honest metric)</a></h3>
+<p>The one that decides whether multi-agent was worth it — quality per unit cost, compared to a baseline:</p>
+<p>[ \text{CAU} = \frac{V_{\text{multi}} - V_{\text{single}}}{C_{\text{multi}} - C_{\text{single}}} ]</p>
+<p><em>Micro-example.</em> Multi-agent scores 0.90 vs single-agent 0.75 (( \Delta V = 0.15 )) but costs 15x the tokens (say ( \Delta C = 14 ) baseline-units). ( \text{CAU} = 0.15/14 \approx 0.011 ) quality points per baseline-unit of extra cost. Whether that clears your bar depends entirely on how much a quality point is worth in your product. The discipline: never report ( \Delta V ) (the quality win) without ( \Delta C ) (the cost) in the same sentence — a 90% quality improvement at 15x cost is a <em>business decision</em>, not an automatic yes, and CAU is the number that forces that conversation.</p>
+<hr>
+<h2 id="production-case-studies--war-stories"><a class="header" href="#production-case-studies--war-stories">Production Case Studies &amp; War Stories</a></h2>
+<p>Theory tells you what <em>could</em> go wrong; production tells you what <em>does</em>. Here are how real teams evaluate multi-agent systems, and a dissection of a cascading failure with the lesson that generalizes.</p>
+<h3 id="case-study-1--anthropics-research-system-outcome-first-human-in-the-loop"><a class="header" href="#case-study-1--anthropics-research-system-outcome-first-human-in-the-loop">Case study 1 — Anthropic’s research system: outcome-first, human-in-the-loop</a></h3>
+<p>Anthropic’s public account (<a href="https://www.anthropic.com/engineering/multi-agent-research-system">June 2025</a>) is the reference implementation for <em>how to evaluate a multi-agent system in production</em>, and its choices are worth studying as choices:</p>
+<ul>
+<li><strong>They evaluate the end state, not the path</strong>, using an <strong>LLM judge</strong> against a rubric (factual accuracy, citation quality, completeness, source quality, tool efficiency) — because a research question has many valid trajectories, so scoring the trajectory against a reference would penalize good-but-different paths. This is the “end-state for headline pass/fail” philosophy applied at scale.</li>
+<li><strong>They started with ~20 test cases, not thousands.</strong> The lesson every senior engineer will nod at: a small set of <em>representative</em> queries caught the large effects immediately, and waiting for a big benchmark would have delayed learning by months. Start evaluating on day one with the cases you have.</li>
+<li><strong>They kept humans in the loop</strong> precisely because the automated judge missed subtle failures — e.g., a report that looked well-cited but leaned on low-quality sources, or that quietly preferred SEO-optimized content farms over primary sources. Automated judges catch the gross errors; humans catch the ones that matter most and are hardest to specify.</li>
+<li><strong>They treated the <em>orchestrator’s delegation</em> as the highest-leverage thing to tune.</strong> Vague subagent instructions (“research the semiconductor shortage”) caused duplicated work and gaps; precise, bounded task descriptions per subagent fixed more than any subagent-level change. In evaluation terms: the coordination dimension dominated the outcome dimension.</li>
+<li><strong>They deployed with “rainbow deployments”</strong> — updating agents gradually while runs are in flight — because agents are long-running and stateful, so a naive redeploy kills work in progress. An operational lesson that only shows up once your agents run for minutes, not milliseconds.</li>
+</ul>
+<p>The transferable takeaway: <strong>outcome-first LLM-judge evaluation, seeded with a tiny human-curated set, with humans retained for the failures the judge cannot see, and with coordination treated as the primary lever.</strong></p>
+<h3 id="case-study-2--masts-empirical-trace-study-how-researchers-evaluate-at-the-population-level"><a class="header" href="#case-study-2--masts-empirical-trace-study-how-researchers-evaluate-at-the-population-level">Case study 2 — MAST’s empirical trace study: how researchers evaluate at the population level</a></h3>
+<p>Where Anthropic evaluated <em>their</em> system, Cemri et al. evaluated <em>the field</em> (<a href="https://arxiv.org/abs/2503.13657">arXiv:2503.13657</a>). Their method is itself a case study in multi-agent evaluation:</p>
+<ul>
+<li><strong>Collect real traces</strong> across seven frameworks, not synthetic ones — the failures had to be ecologically valid.</li>
+<li><strong>Hand-annotate with a codebook</strong>, iterating the taxonomy until inter-annotator agreement was high (kappa ≈ 0.88). This is the gold-standard move: the humans <em>and the rubric</em> are validated before any automation.</li>
+<li><strong>Then automate</strong>: train an LLM judge to apply the validated taxonomy, so the annotation scales. This “validate on humans, then scale with a judge” pipeline is the template for any serious trajectory eval.</li>
+<li><strong>The finding that reframed the field</strong>: failures cluster in specification, coordination, and verification — so the fix is <em>structural</em> (better roles, clearer handoffs, mandatory verification), not “wait for a smarter model.”</li>
+</ul>
+<h3 id="war-story--the-cascading-failure-incident"><a class="header" href="#war-story--the-cascading-failure-incident">War story — the cascading-failure incident</a></h3>
+<p>Here is a composite incident, assembled from the failure modes above, of the kind that recurs in production analytics agents. It is illustrative rather than a specific company’s postmortem, but every step maps to a documented MAST mode.</p>
+<p><strong>The setup.</strong> A four-agent financial-reporting system: <code>planner</code> → <code>data-fetcher</code> → <code>analyst</code> → <code>reviewer</code>, orchestrated as a chain. Task: “Produce the Q3 revenue-growth summary for the board deck.”</p>
+<p><strong>The trajectory.</strong></p>
+<ol>
+<li>The <strong>planner</strong> writes: “Compute revenue growth for the latest quarter.” It does <em>not</em> pin the fiscal quarter or the data source — an FC1 <em>fail-to-follow-requirements</em> seed (the prompt said Q3; the plan said “latest”).</li>
+<li>The <strong>data-fetcher</strong>, seeing “latest quarter,” queries a warehouse view that had not yet loaded Q3, so “latest” resolved to <strong>Q2</strong>. It never states which quarter it pulled — FC2 <em>proceeding on wrong assumptions</em> + <em>withholding crucial information</em> (the provenance).</li>
+<li>The <strong>analyst</strong> computes a clean, correct 8% QoQ growth <em>on the Q2 numbers</em>. Its reasoning is flawless; its inputs are wrong. The error is now laundered into a confident, well-formatted result — this is the <strong>cascade</strong>: a silent assumption became a load-bearing premise.</li>
+<li>The <strong>reviewer</strong> checks the arithmetic (correct), checks the formatting (correct), and approves. It does not check <em>which quarter the data came from</em>, because provenance was never in its checklist — FC3 <em>incorrect/incomplete verification</em>. The defense that should have broken the chain instead rubber-stamped it.</li>
+<li>The board deck ships a confidently wrong Q3 number that is actually Q2. Every agent behaved “correctly” by its own contract. The <strong>system</strong> had no data-provenance check anywhere along the chain.</li>
+</ol>
+<p><strong>How evaluation would have caught it.</strong> (a) A <strong>trajectory/MAST-checklist judge</strong> asking “did any agent proceed on an unstated assumption about the time period?” fires on step 2. (b) A <strong>fact-propagation check</strong> comparing the requested period (Q3) against the period actually used (Q2) fails immediately — this is a <em>provenance</em> metric, not a <em>quality</em> metric, which is why an arithmetic-only reviewer missed it. (c) <strong>Credit assignment via trace localization</strong> marks step 1/2 as the decisive error, <em>not</em> step 4 where the symptom surfaced — so the fix targets the planner’s specification and the fetcher’s provenance reporting, not the reviewer. (d) A <strong>cost/redundancy</strong> metric would not have caught this one — a reminder that no single metric is sufficient.</p>
+<p><strong>The lessons, generalized.</strong></p>
+<ul>
+<li><strong>Provenance is a first-class output.</strong> Every agent that produces data must state where it came from, and every verifier must check provenance, not just internal consistency. Correct math on wrong data is the most dangerous multi-agent failure because it <em>looks</em> right.</li>
+<li><strong>Verification must target the failure mode, not the surface.</strong> A reviewer that checks the wrong thing is worse than no reviewer — it manufactures false confidence (FC3 <em>incorrect verification</em>).</li>
+<li><strong>Blame the decisive error, not the symptom.</strong> The reviewer “shipped” the number, but the planner and fetcher caused the failure. Firing the reviewer (or upgrading its model) fixes nothing; adding a provenance contract does.</li>
+<li><strong>Stronger models would not have saved this.</strong> Every agent could be a frontier model and still cascade, because the missing thing was a <em>structural</em> provenance check — the central MAST finding, in one incident.</li>
+<li><strong>Chains propagate; graphs with a verifier contain.</strong> Had the topology included a provenance-verification node with the <em>authority to reject and re-dispatch</em>, the chain breaks at step 2. Topology is a safety property, not just a performance one.</li>
+</ul>
+<hr>
+<h2 id="single-agent-vs-multi-agent-when-is-it-worth-it"><a class="header" href="#single-agent-vs-multi-agent-when-is-it-worth-it">Single-Agent vs Multi-Agent: When Is It Worth It?</a></h2>
+<p>The uncomfortable truth: <strong>most tasks do not need multiple agents.</strong> Multi-agent architectures buy you parallel breadth and specialization at a steep cost in tokens, latency, coordination complexity, and new failure modes. Anthropic’s own guidance is that multi-agent shines for <em>breadth-first, parallelizable</em> problems and is a poor fit for tightly coupled tasks where agents must share evolving context (<a href="https://www.anthropic.com/engineering/multi-agent-research-system">Anthropic</a>); Cognition’s guidance is that for <em>write-heavy</em> tasks you should prefer a single linear agent entirely (<a href="https://cognition.com/blog/dont-build-multi-agents">Cognition</a>). Both reduce to one question: <strong>do the subtasks share a mutable artifact or evolving decision state?</strong></p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Factor</th><th>Single-agent</th><th>Multi-agent</th></tr>
+</thead>
+<tbody>
+<tr><td>Token cost</td><td>~1x (baseline)</td><td>~15x chat / several x single-agent (<a href="https://www.anthropic.com/engineering/multi-agent-research-system">Anthropic</a>)</td></tr>
+<tr><td>Latency</td><td>Lower, sequential</td><td>Higher per-agent, but parallelizable across subagents</td></tr>
+<tr><td>Best for</td><td>Tightly coupled, sequential reasoning; shared evolving context</td><td>Breadth-first search; independent parallel subtasks; many specialized tools</td></tr>
+<tr><td>Failure surface</td><td>One agent’s mistakes</td><td>+ communication, coordination, emergent (cascade, groupthink, deadlock)</td></tr>
+<tr><td>Debuggability</td><td>Straightforward trace</td><td>Hard: non-deterministic, cross-agent, needs full tracing</td></tr>
+<tr><td>Credit assignment</td><td>Trivial</td><td>Genuinely hard (this chapter)</td></tr>
+<tr><td>Context handling</td><td>One window; compaction as it fills</td><td>Each subagent gets a fresh window — multiplies effective context</td></tr>
+<tr><td>When it <em>earns</em> its cost</td><td>Default choice</td><td>Task value is high AND work truly parallelizes AND context exceeds one window</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>A decision table for “does the overhead pay?”</strong> Multi-agent earns its 15x only when several conditions hold at once. If any of the “single-agent” answers apply, start there and prove multi-agent beats it before adopting it.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Question</th><th>Points to single-agent</th><th>Points to multi-agent</th></tr>
+</thead>
+<tbody>
+<tr><td>Do subtasks share a mutable artifact / evolving decisions?</td><td>Yes (coding one file, editing one doc)</td><td>No (independent research beats)</td></tr>
+<tr><td>Is the work read-heavy or write-heavy?</td><td>Write-heavy</td><td>Read-heavy / gather-and-synthesize</td></tr>
+<tr><td>Does the full context fit one window with room to reason?</td><td>Yes</td><td>No — need parallel windows</td></tr>
+<tr><td>Is the task decomposable into independent chunks?</td><td>No, tightly coupled</td><td>Yes, cleanly separable</td></tr>
+<tr><td>Is the per-task value high enough to justify 15x tokens?</td><td>No</td><td>Yes</td></tr>
+<tr><td>Do you need many specialized tools/personas that conflict in one prompt?</td><td>No</td><td>Yes</td></tr>
+<tr><td>Is low, predictable latency a hard requirement?</td><td>Yes</td><td>No (parallelism helps throughput, not tail latency)</td></tr>
+</tbody>
+</table>
+</div>
+<p>Anthropic reports a <strong>90.2%</strong> improvement of a multi-agent (Opus 4 lead + Sonnet 4 subagents) system over single-agent Opus 4 on an internal research eval — a large gain, but on a task that is <em>inherently breadth-first</em> (explore many sources in parallel), <em>read-heavy</em> (no shared artifact to merge), and <em>high-value</em> enough to justify 15x tokens (<a href="https://www.anthropic.com/engineering/multi-agent-research-system">Anthropic</a>). That is the profile where multi-agent wins. Change any one of those — make it write-heavy, or coupled, or low-value — and the calculus flips, which is exactly Cognition’s coding regime.</p>
+<p><strong>Diminishing returns are real.</strong> Adding a fourth or fifth agent to a coordination-heavy task frequently <em>lowers</em> quality: more agents means more messages, more opportunities for FC2 misalignment, and more chances for one bad hand-off to cascade. MultiAgentBench found that <em>coordination topology matters more than agent count</em> — graph-structured coordination beat other topologies on research tasks, and elaborate cognitive planning added only a few percent to milestone achievement (<a href="https://arxiv.org/abs/2503.01935">Zhu et al., 2025</a>). The lesson: <strong>structure your agents well before you add more of them, and always keep a single-agent baseline in your eval to prove the overhead pays.</strong> The failure pattern to avoid is “agent sprawl” — adding a specialist for every sub-concern until the coordination cost swamps the specialization benefit; leave-one-out ablation is how you find and delete the agents that are no longer paying for themselves.</p>
+<p><strong>The topology cheat-sheet.</strong> Beyond count, the <em>shape</em> of the interaction graph is a design decision with evaluation consequences:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Topology</th><th>Shape</th><th>Strength</th><th>Watch for</th></tr>
+</thead>
+<tbody>
+<tr><td>Single agent</td><td>one loop</td><td>simplest, cheapest, trivially debuggable</td><td>capability/context ceiling</td></tr>
+<tr><td>Chain / pipeline</td><td>A→B→C</td><td>clear stages, easy to reason about</td><td>cascades: no backstop if a stage errs</td></tr>
+<tr><td>Orchestrator-worker (star)</td><td>lead fans out to workers</td><td>parallel breadth; fresh context per worker</td><td>orchestrator’s delegation quality is the bottleneck</td></tr>
+<tr><td>Debate / committee</td><td>agents critique each other</td><td>improves factuality <em>if</em> critique is real</td><td>groupthink / sycophantic convergence</td></tr>
+<tr><td>Graph (arbitrary)</td><td>nodes + conditional edges</td><td>most expressive; can add verifier nodes with reject authority</td><td>complexity; hardest to trace</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="pitfalls-in-evaluating-multi-agent-systems"><a class="header" href="#pitfalls-in-evaluating-multi-agent-systems">Pitfalls in Evaluating Multi-Agent Systems</a></h2>
+<p>The evaluation itself has failure modes. Watch for these.</p>
+<ul>
+<li><strong>Grading only the final answer.</strong> The lucky-right process (correct output, broken process) passes and reappears as a regression later. Always score trajectory <em>and</em> end-state.</li>
+<li><strong>No single-agent baseline.</strong> Without it you cannot compute cost-adjusted utility, and you will keep an expensive multi-agent system that a single agent matches. This is the single most common and most expensive mistake; the baseline is not optional.</li>
+<li><strong>Ignoring cost.</strong> A quality win at 15x tokens may be a net loss. Report cost alongside every quality number, in the same view.</li>
+<li><strong>Judge contamination / self-preference.</strong> Using one of the system’s own agents (or same-family model) as the LLM judge inflates scores. Use an independent judge and spot-check with humans, as Anthropic does to catch hallucinated or low-source-quality answers automated judges miss.</li>
+<li><strong>Non-determinism mistaken for signal.</strong> Multi-agent runs vary run-to-run. A single run is noise; report means and variance over multiple seeds, and be suspicious of any A/B where the effect size is smaller than the run-to-run spread.</li>
+<li><strong>Attribution by vibes.</strong> Declaring “the coder was at fault” without trace localization, ablation, or milestone evidence. Credit assignment needs a method, not an intuition — and it usually indicts a <em>different</em> agent than the one where the symptom appeared.</li>
+<li><strong>Over-fitting to one topology.</strong> Evaluating only your favorite orchestration structure hides whether a chain would have beaten your graph (or vice versa). Vary the topology; MultiAgentBench found topology mattered more than agent count.</li>
+<li><strong>Milestone leakage.</strong> If milestones are too granular they become a checklist the agents game; too coarse and they give no per-agent signal. Calibrate against human judgments.</li>
+<li><strong>Evaluating on the happy path only.</strong> Multi-agent failures are combinatorial; your eval set must include adversarial inputs, tool failures, and ambiguous prompts, because that is where coordination and verification break.</li>
+<li><strong>Confusing “reached consensus” with “correct.”</strong> Unanimity is a <em>process</em> observation, not an <em>outcome</em> one; early, confident agreement is a groupthink red flag, not a success signal.</li>
+</ul>
+<hr>
+<h2 id="tools--benchmarks"><a class="header" href="#tools--benchmarks">Tools &amp; Benchmarks</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Name</th><th>Type</th><th>What it gives you</th><th>Link</th></tr>
+</thead>
+<tbody>
+<tr><td>MAST</td><td>Taxonomy + dataset</td><td>14 failure modes / 3 categories; 200+ annotated traces; an LLM-judge annotator</td><td><a href="https://arxiv.org/abs/2503.13657">arXiv:2503.13657</a></td></tr>
+<tr><td>MultiAgentBench (MARBLE)</td><td>Benchmark</td><td>Milestone KPIs; collaboration &amp; competition scenarios; star/chain/tree/graph topologies</td><td><a href="https://arxiv.org/abs/2503.01935">arXiv:2503.01935</a></td></tr>
+<tr><td>Multiagent Debate</td><td>Method + code</td><td>Debate protocol that improves factuality/reasoning; baseline for consensus dynamics</td><td><a href="https://arxiv.org/abs/2305.14325">arXiv:2305.14325</a> · <a href="https://github.com/composable-models/llm_multiagent_debate">code</a></td></tr>
+<tr><td>AutoGen / AG2</td><td>Framework</td><td>Conversable multi-agent orchestration; GroupChat; full transcripts to evaluate</td><td><a href="https://microsoft.github.io/autogen/">autogen</a> · <a href="https://docs.ag2.ai/">AG2</a></td></tr>
+<tr><td>Magentic-One</td><td>Reference system</td><td>Generalist orchestrator + web/file/coder/terminal agents; a concrete architecture to cite</td><td><a href="https://www.microsoft.com/en-us/research/articles/magentic-one-a-generalist-multi-agent-system-for-solving-complex-tasks/">Microsoft Research</a></td></tr>
+<tr><td>CrewAI</td><td>Framework</td><td>Role/goal-based crews; Flows for deterministic orchestration; role-adherence surface</td><td><a href="https://docs.crewai.com/">docs.crewai.com</a></td></tr>
+<tr><td>LangGraph</td><td>Framework</td><td>Graph-structured agent workflows; explicit shared state for tracing; supervisor/swarm prebuilts</td><td><a href="https://langchain-ai.github.io/langgraph/">langchain-ai.github.io/langgraph</a></td></tr>
+<tr><td>OpenAI Agents SDK (ex-Swarm)</td><td>Framework</td><td>Lightweight handoffs between agents; built-in tracing and guardrails</td><td><a href="https://openai.github.io/openai-agents-python/">openai.github.io/openai-agents-python</a></td></tr>
+<tr><td>Google ADK + A2A</td><td>Framework + protocol</td><td>Code-first agents; A2A cross-vendor/cross-framework interop via Agent Cards</td><td><a href="https://google.github.io/adk-docs/">ADK</a> · <a href="https://a2a-protocol.org/">A2A</a></td></tr>
+<tr><td>LangSmith / Langfuse</td><td>Observability</td><td>Full multi-agent tracing needed for credit assignment &amp; debugging</td><td><a href="https://docs.smith.langchain.com/">langsmith</a> · <a href="https://langfuse.com/">langfuse.com</a></td></tr>
+<tr><td>tau-bench (τ-bench)</td><td>Benchmark</td><td>Agent-user + tool interaction; reliability across repeated trials (pass^k)</td><td><a href="https://arxiv.org/abs/2406.12045">arXiv:2406.12045</a></td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="interview-mastery"><a class="header" href="#interview-mastery">Interview Mastery</a></h2>
+<p>This section is engineered to make you sound like someone who has <em>built and evaluated</em> these systems, not just read about them. It has four parts: the rapid-fire Q&amp;A, a memorized 60-second answer to the hardest single question, a full system-design walkthrough with a sketch, and a red-flags/green-flags cheat sheet.</p>
+<h3 id="rapid-fire-qa"><a class="header" href="#rapid-fire-qa">Rapid-fire Q&amp;A</a></h3>
+<p><strong>Q1. Why can’t you just evaluate a multi-agent system by checking its final output?</strong>
+Because outcome and process are separable. A system can produce the right answer through a broken process (the coder happened to be right; the reviewer never actually checked) — that passes your eval and then regresses the moment the lucky step goes wrong. And a system can fail while every individual agent behaved correctly, because the fault was in the <em>interaction</em>. You need trajectory scoring and credit assignment on top of end-state checking.</p>
+<p><strong>Q2. What is the credit-assignment problem and how do you approach it?</strong>
+It is attributing a system-level outcome to the specific agent and step that caused it — hard because effects are delayed, responsibility is diffuse, and true attribution is counterfactual. Four practical methods: trace-based localization of the decisive error (the MAST approach), leave-one-out ablation for marginal contribution, Shapley values for principled attribution when you have ≤4 agents, and milestone-based KPIs for scalable per-agent credit. In practice I run milestone KPIs continuously, use trace localization to explain sampled failures, and confirm fixes with ablation.</p>
+<p><strong>Q3. Name the main categories of multi-agent failure.</strong>
+Using MAST: (1) specification/system-design issues — bad roles, lost history, no stopping condition (~42% of failures); (2) inter-agent misalignment — wrong assumptions, ignored messages, withheld information (~37%); (3) task verification failures — premature termination, no or incorrect verification (~21%). Plus cross-cutting emergent dynamics: cascading errors, groupthink, and deadlock. The headline is that these are <em>structural</em>, so a stronger base model often does not fix them.</p>
+<p><strong>Q4. When is a multi-agent system actually worth the cost?</strong>
+When the subtasks <em>don’t</em> share a mutable artifact — read-heavy, breadth-first, decomposable work whose context exceeds one window — and the per-task value justifies ~15x the tokens of chat. Anthropic saw ~90% gain on research (parallel, read-heavy); Cognition argues <em>against</em> multi-agent for coding (write-heavy, shared state). The deciding variable is the read/write structure of the task. Always keep a single-agent baseline and report cost-adjusted utility.</p>
+<p><strong>Q5. How would you detect error propagation / cascading failures in a transcript?</strong>
+Look for a low-confidence or wrong assertion early in the trace that later messages build on without re-checking, combined with weak or absent verification (FC3). Concretely: trace-localize the first decisive error, then confirm no downstream agent challenged it. A healthy system has a verification agent that breaks the chain; its absence is the structural bug, and stronger base models alone won’t fix it. Add a provenance check so “correct math on wrong data” cannot pass.</p>
+<p><strong>Q6. What’s the difference between end-state and trajectory evaluation, and when do you use each?</strong>
+End-state checks only the final state, tolerating multiple valid paths — cheap, path-agnostic, good for headline pass/fail (Anthropic uses it for research). Trajectory evaluation scores the sequence of actions/messages — expensive but necessary for catching process failures and doing credit assignment. Use end-state on every run for the top-line metric, and spend trajectory scoring only on the failures end-state flags.</p>
+<p><strong>Q7. Does adding more agents reliably improve performance?</strong>
+No — diminishing and often negative returns. More agents mean more messages and more chances for misalignment and cascades. MultiAgentBench found coordination <em>topology</em> (graph beat chain/tree/star on research) mattered more than agent count, and elaborate planning added only a few percent. Structure the agents well before adding more, and prove each additional agent’s marginal contribution with ablation — a negative ( \Delta_i ) means delete it.</p>
+<p><strong>Q8. What are the traps in evaluating multi-agent systems themselves?</strong>
+Grading only the final answer; no single-agent baseline; ignoring token cost; using a same-family model as judge (self-preference); treating a single non-deterministic run as signal; and attributing blame by intuition instead of a method. Each of these makes a broken or overpriced system look good.</p>
+<p><strong>Q9. Anthropic and Cognition published opposite advice the same month. Reconcile them.</strong>
+They describe different task shapes, not a real contradiction. Anthropic’s research task is read-heavy with no shared mutable artifact, so parallel subagents’ outputs concatenate — multi-agent wins. Cognition’s coding task is write-heavy with shared evolving state, so parallel agents make conflicting implicit decisions that can’t be merged — single-agent wins. Both agree the real work is context engineering; the architecture is downstream of whether subtasks share writes. Cognition’s “single-writer” principle even lives <em>inside</em> Anthropic’s design — one synthesizer owns the final artifact.</p>
+<p><strong>Q10. What is the “single-writer” principle and why does it matter?</strong>
+Exactly one agent should own any given piece of mutable state or artifact. When two agents write the same artifact in parallel, each embeds implicit decisions (Cognition’s Flappy Bird example: clashing visual styles) that cannot be reconciled after the fact. It matters for evaluation because a role-adherence/coordination metric should flag multiple writers to the same artifact as a design smell before it produces an incoherent output.</p>
+<p><strong>Q11. Explain the MAST taxonomy and how you’d turn it into an eval.</strong>
+MAST is 14 empirically-derived failure modes in three buckets — specification/design, inter-agent misalignment, verification/termination — from 200+ annotated traces. I turn it into a <em>checklist judge</em>: for each transcript an LLM (validated against human labels) answers one yes/no question per mode with a citing message. Aggregating gives a failure-mode distribution, so the dashboard says not just “68% pass” but “of failures, 40% are incomplete-verification” — which tells engineering to build a verifier next.</p>
+<p><strong>Q12. What’s the difference between MCP and A2A, and why does it matter for evaluation?</strong>
+MCP standardizes how an agent talks to <em>tools</em>; A2A standardizes how an agent talks to <em>other agents</em> (cross-vendor, via Agent Cards; donated to the Linux Foundation in June 2025). For evaluation it matters because A2A gives you a standardized <em>inter-agent call log</em> even across frameworks and organizations — a portable transcript surface — whereas without it you’re reconstructing coordination from heterogeneous logs.</p>
+<p><strong>Q13. How do you handle non-determinism when comparing two multi-agent designs?</strong>
+Run each design over ( k ) seeds, report mean and variance of every metric, and only believe an A/B difference that exceeds the run-to-run spread. For reliability specifically, use a pass^k style metric (does it succeed on <em>all</em> k trials, not just one) — a system that’s right 1-in-3 times is not “66% good,” it’s unreliable.</p>
+<p><strong>Q14. A multi-agent run gave the right answer but you’re unhappy. Why might that be?</strong>
+Right answer, broken process: it may have reached the answer by luck (a wrong assumption that happened to cancel out), by wasteful duplication (two agents did the same search — cost failure), or without any verification (so it won’t reproduce). End-state passed; trajectory and cost scoring would show the process is fragile, and it will regress.</p>
+<p><strong>Q15. Where do you put verification in a multi-agent system, and how do you evaluate the verifier?</strong>
+Give verification its own node with the <em>authority to reject and re-dispatch</em>, positioned to break cascades before they reach the output. Evaluate the verifier by its <em>discrimination</em>: does “approved” actually correlate with “correct”? A verifier that approves everything (or checks the wrong property, like arithmetic instead of provenance) manufactures false confidence — FC3 incorrect verification — and is worse than none.</p>
+<p><strong>Q16. How would you detect and prevent groupthink in a debate/committee setup?</strong>
+Detect it by tracking disagreement and confidence across rounds: falling disagreement with rising confidence, especially early unanimity, is the signature. Prevent it by assigning genuine adversarial roles, hiding others’ answers until each agent commits independently, and using an independent judge rather than majority vote. Multiagent debate helps factuality only when the critique is real.</p>
+<p><strong>Q17. Your multi-agent system costs 15x a single agent for a 10% quality gain. Ship it?</strong>
+Not automatically — that’s a business decision, captured by cost-adjusted utility ( \text{CAU} = \Delta V / \Delta C ). I’d quantify what a quality point is worth in the product, check whether a cheaper design (better single-agent prompt, fewer agents, better delegation) captures most of the 10%, and only ship multi-agent if the value per marginal token clears our bar. Often the honest answer is “improve the single agent first.”</p>
+<p><strong>Q18. What observability do you need before you can evaluate a multi-agent system at all?</strong>
+A structured, append-only transcript: per-action rows with agent id, role, action, inputs, outputs, tokens, and timestamps — from a tracer like LangSmith, the Agents SDK tracer, or Langfuse. Without it you can’t score coordination, do credit assignment, or reproduce a failure. If it wasn’t logged, it didn’t happen. Instrumentation is a prerequisite, not a nice-to-have.</p>
+<h3 id="explain-the-credit-assignment-problem-in-60-seconds"><a class="header" href="#explain-the-credit-assignment-problem-in-60-seconds">Explain the credit-assignment problem in 60 seconds</a></h3>
+<blockquote>
+<p>“In a multi-agent system, several agents pass work to each other, and at the end you get one system-level signal — the report was right, or it was wrong. Credit assignment is the problem of pushing that single signal back onto the individual agents and steps that actually caused it. It’s hard for four reasons. First, delay: the mistake that doomed the run often happened many steps before the visible failure — a planner under-specified the task and the coder twelve steps later just inherited it. Second, diffusion: when five agents each contribute a slice of a bad answer, no single message <em>is</em> the bug. Third, it’s counterfactual: ‘agent B caused it’ really means ‘if B had acted differently the outcome would improve,’ and you usually can’t run that world. Fourth, interaction: two agents can each be individually correct and jointly wrong. In practice I use four tools that trade cost for rigor: read the trace and mark the first unrecoverable error; leave-one-out ablation to measure each agent’s marginal contribution; Shapley values when there are only three or four agents and I need a defensible split; and milestone KPIs for cheap per-agent credit at scale. The one discipline that matters most: blame the <em>decisive</em> error, not the <em>symptom</em> — they’re almost always different agents.”</p>
+</blockquote>
+<h3 id="system-design-prompt-design-and-evaluate-a-multi-agent-research-system"><a class="header" href="#system-design-prompt-design-and-evaluate-a-multi-agent-research-system">System-design prompt: “Design and evaluate a multi-agent research system”</a></h3>
+<p>This is the canonical multi-agent system-design interview question. Here is a structured answer you can adapt.</p>
+<p><strong>1. Clarify the task and the win condition.</strong> “Research system” = given an open-ended question, produce a cited, accurate, complete report. It’s <em>read-heavy</em> and <em>breadth-first</em> with <em>no shared mutable artifact until synthesis</em> — the profile where multi-agent genuinely wins. Success = factual accuracy + citation quality + completeness + source quality, judged on the end state (many valid paths).</p>
+<p><strong>2. Architecture — orchestrator-worker.</strong> A lead agent decomposes the query into independent subtopics and fans out one worker per subtopic (each with its own context window, searching in parallel), then a single synthesizer merges findings into the report. One writer owns the final artifact (single-writer principle). Add a dedicated <strong>verifier</strong> node between synthesis and output, with authority to reject and re-dispatch, so cascades and low-source-quality claims get caught.</p>
+<pre><code>                         (query)
+                            |
+                     +------------+
+                     | ORCHESTRATOR |  plan: split into independent subtopics
+                     +------------+
+                        /   |   \        fan-out (Send / handoff), parallel
+                       v    v    v
+                   [worker][worker][worker]   each: own context window, tools, cites sources
+                       \    |    /
+                        v   v   v
+                     +------------+
+                     | SYNTHESIZER |  single writer -&gt; draft report (with citations)
+                     +------------+
+                            |
+                     +------------+
+                     |  VERIFIER   |  check facts, citations, provenance, completeness
+                     +------------+
+                       reject|approve
+                       (re-dispatch)  \-&gt; (final report)
+</code></pre>
+<p><strong>3. Instrumentation.</strong> Trace every node: agent id, subtopic assigned, tools called, sources cited, tokens, latency. This transcript is the eval surface; without it nothing below is possible.</p>
+<p><strong>4. Evaluation plan.</strong></p>
+<ul>
+<li><em>Outcome (end-state):</em> LLM judge against a rubric (accuracy, citations, completeness, source quality), validated against ~20 human-curated cases to start, humans retained for the failures the judge misses (e.g., authoritative-looking but low-quality sources).</li>
+<li><em>Process (trajectory):</em> MAST checklist judge on sampled/failed runs — did any worker proceed on a wrong assumption? did the synthesizer drop a worker’s finding? did the verifier actually check provenance?</li>
+<li><em>Coordination:</em> redundancy rate (two workers on the same subtopic), ignored-finding rate (a worker’s result absent from the report), goal-drift.</li>
+<li><em>Credit assignment:</em> milestone KPIs per subtopic for routine per-worker credit; leave-one-out to prune workers that don’t move the outcome.</li>
+<li><em>Cost:</em> tokens and dollars per report, and cost-adjusted utility vs a <strong>single-agent baseline</strong> — non-negotiable, or you can’t prove the architecture pays.</li>
+<li><em>Reliability:</em> run each eval query over k seeds; report mean/variance; watch pass^k for consistency.</li>
+</ul>
+<p><strong>5. The failure modes I’d specifically guard against.</strong> Duplicated subtopics (orchestrator delegation quality — tune the plan prompt); a worker’s finding silently dropped in synthesis (withholding/ignored input, FC2); the verifier rubber-stamping (FC3 — evaluate the verifier’s discrimination); and cost blowup from over-broad decomposition. I’d start with ~20 test cases, ship, and let the failure-mode distribution direct what to build next.</p>
+<p><strong>6. When I’d walk it back to a single agent.</strong> If the eval shows CAU below our bar — i.e., the 15x tokens don’t buy enough quality over a well-prompted single agent — or if the task turns out write-heavy (drafting one long artifact where sections must stay consistent), I’d collapse to a single agent with retrieval and context compaction, keeping only the verifier.</p>
+<h3 id="red-flags-vs-green-flags"><a class="header" href="#red-flags-vs-green-flags">Red flags vs green flags</a></h3>
+<p>Use this to read a candidate system (or to audit your own) fast.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Red flags (worry)</th><th>Green flags (healthy)</th></tr>
+</thead>
+<tbody>
+<tr><td>Eval checks only the final answer</td><td>Scores end-state <em>and</em> trajectory <em>and</em> cost</td></tr>
+<tr><td>No single-agent baseline in the eval</td><td>Every multi-agent number sits next to a single-agent one</td></tr>
+<tr><td>Quality reported without cost</td><td>Cost-adjusted utility reported alongside quality</td></tr>
+<tr><td>“The X agent is at fault” with no method</td><td>Blame localized by trace/ablation/milestones to a decisive step</td></tr>
+<tr><td>Same-family model judges its own system</td><td>Independent judge, human spot-checks</td></tr>
+<tr><td>A single run cited as a result</td><td>Means and variance over multiple seeds; pass^k for reliability</td></tr>
+<tr><td>No verifier, or a verifier that checks the surface</td><td>Verifier with reject authority, evaluated for discrimination</td></tr>
+<tr><td>Adds agents to fix quality problems</td><td>Structures/topology first; prunes agents with negative ( \Delta_i )</td></tr>
+<tr><td>Multiple agents writing the same artifact</td><td>Single writer owns each mutable artifact</td></tr>
+<tr><td>Early, confident consensus treated as success</td><td>Consensus dynamics monitored for groupthink</td></tr>
+<tr><td>No transcript / can’t reproduce a failure</td><td>Full structured tracing; failures replayable</td></tr>
+<tr><td>“We use multi-agent because it’s powerful”</td><td>“We use multi-agent because this task is read-heavy and parallelizable, and here’s the CAU proving it”</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="further-reading"><a class="header" href="#further-reading">Further Reading</a></h2>
+<p><strong>Research — failure analysis &amp; benchmarks</strong></p>
+<ul>
+<li>Cemri et al., “Why Do Multi-Agent LLM Systems Fail?” (MAST taxonomy; 14 modes, 3 categories; 200+ traces; 2025) — https://arxiv.org/abs/2503.13657</li>
+<li>Zhu et al., “MultiAgentBench: Evaluating the Collaboration and Competition of LLM Agents” (MARBLE; milestone KPIs; topology study; 2025) — https://arxiv.org/abs/2503.01935</li>
+<li>Du et al., “Improving Factuality and Reasoning in Language Models through Multiagent Debate” (2023) — https://arxiv.org/abs/2305.14325 · code: https://github.com/composable-models/llm_multiagent_debate</li>
+<li>Yao et al., “tau-bench: A Benchmark for Tool-Agent-User Interaction” (reliability across trials; pass^k) — https://arxiv.org/abs/2406.12045</li>
+</ul>
+<p><strong>Production writeups &amp; the architecture debate</strong></p>
+<ul>
+<li>Anthropic, “How we built our multi-agent research system” (June 2025) — https://www.anthropic.com/engineering/multi-agent-research-system</li>
+<li>Anthropic, “Building Effective Agents” (patterns; workflow vs agent) — https://www.anthropic.com/engineering/building-effective-agents</li>
+<li>Cognition (Walden Yan), “Don’t Build Multi-Agents” (context engineering; single-writer) — https://cognition.com/blog/dont-build-multi-agents</li>
+<li>Microsoft Research, “Magentic-One: A Generalist Multi-Agent System” (Nov 2024) — https://www.microsoft.com/en-us/research/articles/magentic-one-a-generalist-multi-agent-system-for-solving-complex-tasks/</li>
+</ul>
+<p><strong>Frameworks</strong></p>
+<ul>
+<li>AutoGen (Microsoft) — https://microsoft.github.io/autogen/ · AG2 (community fork) — https://docs.ag2.ai/</li>
+<li>CrewAI — https://docs.crewai.com/</li>
+<li>LangGraph (multi-agent patterns; supervisor/swarm) — https://langchain-ai.github.io/langgraph/</li>
+<li>OpenAI Agents SDK — https://openai.github.io/openai-agents-python/ · archived Swarm — https://github.com/openai/swarm</li>
+<li>Google Agent Development Kit (ADK) — https://google.github.io/adk-docs/</li>
+</ul>
+<p><strong>Protocols &amp; interoperability</strong></p>
+<ul>
+<li>Agent2Agent (A2A) protocol — https://a2a-protocol.org/</li>
+<li>Google, “Announcing the Agent2Agent Protocol (A2A)” (April 2025) — https://developers.googleblog.com/en/a2a-a-new-era-of-agent-interoperability/</li>
+<li>Linux Foundation, “Launches the Agent2Agent Protocol Project” (June 2025) — https://www.linuxfoundation.org/press/linux-foundation-launches-the-agent2agent-protocol-project-to-enable-secure-intelligent-communication-between-ai-agents</li>
+<li>Model Context Protocol (MCP; agent-to-tool, complements A2A) — https://modelcontextprotocol.io/</li>
+</ul>
+<p><strong>Observability</strong></p>
+<ul>
+<li>LangSmith — https://docs.smith.langchain.com/</li>
+<li>Langfuse — https://langfuse.com/</li>
+</ul>
+<hr>
+<h2 id="key-takeaways"><a class="header" href="#key-takeaways">Key Takeaways</a></h2>
+<ol>
+<li><strong>Evaluate the process, not just the product.</strong> Outcome and process are separable; a right answer from a broken process will regress. Score end-state, trajectory, and cost.</li>
+<li><strong>Failures are structural.</strong> MAST shows most multi-agent failures come from specification, coordination, and verification — not raw model capability. A stronger base model rarely fixes them; better roles, handoffs, provenance, and verification do.</li>
+<li><strong>Credit assignment is the core new skill.</strong> Push a single system-level signal back onto the agent and step that caused it, using trace localization, leave-one-out, Shapley, and milestone KPIs — and always blame the decisive error, not the symptom.</li>
+<li><strong>Multi-agent is not free and not always better.</strong> It costs ~15x chat tokens. It wins on read-heavy, breadth-first, decomposable, high-value work (Anthropic’s research: +90%); it loses on write-heavy, tightly-coupled work with shared state (Cognition’s coding). The deciding variable is whether subtasks share mutable state.</li>
+<li><strong>Prove it with a baseline and cost-adjusted utility.</strong> Never adopt multi-agent without a single-agent baseline and a CAU that shows the overhead pays.</li>
+<li><strong>Instrument first.</strong> No structured transcript, no evaluation. Coordination, credit assignment, and reproducibility all depend on tracing every action.</li>
+</ol>
+<hr>
+<h2 id="appendix-a--a-mast-checklist-judge-llm-as-judge-for-trajectories"><a class="header" href="#appendix-a--a-mast-checklist-judge-llm-as-judge-for-trajectories">Appendix A — A MAST checklist judge (LLM-as-judge for trajectories)</a></h2>
+<p>The rule-based scorer earlier is reproducible but brittle: <code>"def "</code> is a poor proxy for “wrote code,” and no substring rule can tell whether an agent <em>proceeded on an unstated assumption</em>. For process scoring at production quality you promote the MAST checklist to an <strong>LLM-as-judge</strong> that reads the transcript and answers one structured question per failure mode, each with a citing step so the verdict is auditable. Below is the scaffolding; the <code>call_llm</code> body is where your provider’s structured-output call goes. Use an <strong>independent</strong> model family from the ones under test to avoid self-preference.</p>
+<pre><code class="language-python">"""MAST checklist judge: turn a transcript into a per-failure-mode verdict with citations.
+The judge model should be from a DIFFERENT family than the agents under test."""
+import json
+from dataclasses import dataclass
+
+# One question per MAST mode. Keep them yes/no and demand a citing step.
+MAST_CHECKS = {
+    "FC1_role_violation":   "Did any agent act outside its assigned role (e.g., a reviewer writing code)?",
+    "FC1_lost_history":     "Did any agent forget or contradict a decision made earlier in the transcript?",
+    "FC1_no_stop_cond":     "Did the system fail to recognize when the task was complete?",
+    "FC2_wrong_assumption": "Did any agent proceed on an unstated assumption instead of asking or verifying?",
+    "FC2_ignored_input":    "Was any agent's message received and then not acted upon by its recipient?",
+    "FC2_withheld_info":    "Did any agent hold back information (e.g., data provenance) that others needed?",
+    "FC2_derailment":       "Did the conversation drift away from the original objective?",
+    "FC3_no_verification":  "Was the final output never checked against the task requirements?",
+    "FC3_bad_verification": "Did a verifier approve an output that was actually wrong or unchecked on a key property?",
+}
+
+JUDGE_SYSTEM = (
+    "You are an impartial evaluator of multi-agent transcripts. For each question, "
+    "answer strictly in JSON: {\"present\": true|false, \"step\": &lt;int or null&gt;, "
+    "\"evidence\": \"&lt;short quote&gt;\"}. Cite the earliest step where the issue first occurs. "
+    "Do not reward fluent writing; judge only the behavior asked about."
+)
+
+@dataclass
+class Verdict:
+    mode: str
+    present: bool
+    step: int | None
+    evidence: str
+
+def call_llm(system: str, user: str) -&gt; dict:
+    """Replace with your provider's JSON/structured-output call (temperature 0)."""
+    raise NotImplementedError
+
+def judge_transcript(transcript_json: str) -&gt; list[Verdict]:
+    verdicts = []
+    for mode, question in MAST_CHECKS.items():
+        user = f"TRANSCRIPT:\n{transcript_json}\n\nQUESTION: {question}"
+        out = call_llm(JUDGE_SYSTEM, user)     # {"present":..., "step":..., "evidence":...}
+        verdicts.append(Verdict(mode, out["present"], out.get("step"), out.get("evidence", "")))
+    return verdicts
+
+def failure_mode_rates(all_verdicts: list[list[Verdict]]) -&gt; dict:
+    """Aggregate across an eval set: share of transcripts exhibiting each mode."""
+    n = len(all_verdicts) or 1
+    rates = {mode: 0 for mode in MAST_CHECKS}
+    for vs in all_verdicts:
+        for v in vs:
+            if v.present:
+                rates[v.mode] += 1
+    return {m: round(c / n, 3) for m, c in rates.items()}
+</code></pre>
+<p>Two disciplines make this trustworthy. <strong>Validate the judge before you trust it:</strong> hand-label 30–50 transcripts, run the judge, and require high agreement (Cohen’s kappa) per mode — exactly the “validate on humans, then scale with the judge” pipeline MAST’s authors used. And <strong>decompose the prompt into one narrow question per call</strong> rather than asking for all fourteen at once; narrow questions are far more reliable and each verdict carries its own citing step, so a disputed call is auditable. The payoff is the failure-mode <em>distribution</em> across your eval set — the dashboard line that turns “68% pass” into “of the failures, incomplete-verification is 40% and wrong-assumption 25%,” which is a directive for what to build next.</p>
+<hr>
+<h2 id="appendix-b--a-reproducible-multi-agent-eval-run-checklist"><a class="header" href="#appendix-b--a-reproducible-multi-agent-eval-run-checklist">Appendix B — A reproducible multi-agent eval-run checklist</a></h2>
+<p>A concrete, copy-pastable protocol for evaluating a multi-agent system so results are comparable across runs and defensible in review.</p>
+<ol>
+<li><strong>Freeze the eval set.</strong> Curate ~20–50 representative tasks with gold outcomes and, where possible, milestone lists. Include adversarial and ambiguous cases and at least a few with injected tool failures. Version it.</li>
+<li><strong>Stand up the single-agent baseline.</strong> The <em>same</em> task solved by a well-prompted single agent. Without it, no cost-adjusted utility, no adoption decision.</li>
+<li><strong>Instrument.</strong> Confirm every action emits a structured trace row (agent, role, action, inputs, outputs, tokens, latency). Spot-check that a known failure is reproducible from the trace alone.</li>
+<li><strong>Run k seeds.</strong> For each task, run the system and the baseline over k≥3 seeds. Record every metric per seed; you will report mean and variance, never a single run.</li>
+<li><strong>Score outcome (end-state).</strong> LLM judge (independent family) against a rubric, plus milestone coverage. This is the cheap filter that runs on every case.</li>
+<li><strong>Score process (trajectory) on failures.</strong> Run the MAST checklist judge on the cases end-state flagged, plus a random sample of passes (to catch lucky-right processes). Produce the failure-mode distribution.</li>
+<li><strong>Score coordination and cost.</strong> Redundancy, ignored-input, role-violation rates; tokens and dollars per task; communication efficiency; goal-drift on long traces.</li>
+<li><strong>Assign credit.</strong> Milestone KPIs per agent for routine credit; leave-one-out ablation to find dead-weight or actively-harmful agents (negative ( \Delta_i )); trace localization on the most important failures to name the decisive step.</li>
+<li><strong>Compute the decision number.</strong> Cost-adjusted utility vs the baseline. State plainly whether the overhead pays and what a quality point is worth in the product.</li>
+<li><strong>Write the directive, not just the score.</strong> The output of an eval run is not “68% pass” — it is “ship/hold, here is the dominant failure mode, and here is the one structural change (verifier / provenance contract / better delegation prompt) that addresses it.” Re-run after the change and confirm the mode’s rate dropped.</li>
+</ol>
+<p>Follow this and your evaluation does the two things a senior interviewer is listening for: it <em>localizes</em> failure to a cause, and it <em>decides</em> whether the architecture earns its cost.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../07_multi_agent_evaluation/index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../08_real_world_testing/index.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../07_multi_agent_evaluation/index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../08_real_world_testing/index.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

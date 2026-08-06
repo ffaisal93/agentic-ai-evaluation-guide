@@ -1,0 +1,518 @@
+<!DOCTYPE HTML>
+<html lang="en" class="navy sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Pattern 15: Inter-Agent Communication (A2A) - Agentic AI Evaluation — A Practical Guide</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="Frameworks, metrics, benchmarks, tool-use and safety evaluation, and production monitoring for agentic AI systems.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../custom-9222a227.css">
+
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "navy";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-96a8b00f.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-4b3c722b.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('navy')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Agentic AI Evaluation — A Practical Guide</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/ffaisal93/agentic-ai-evaluation-guide" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/ffaisal93/agentic-ai-evaluation-guide/edit/main/./agentic-design-pattern/15-a2a.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="pattern-15-inter-agent-communication-a2a--getting-strangers-agents-to-work-together"><a class="header" href="#pattern-15-inter-agent-communication-a2a--getting-strangers-agents-to-work-together">Pattern 15: Inter-Agent Communication (A2A) — Getting Strangers’ Agents to Work Together</a></h1>
+<h2 id="the-interview-scenario"><a class="header" href="#the-interview-scenario">The interview scenario</a></h2>
+<p>This pattern shows up when the problem crosses a team or company boundary:</p>
+<ul>
+<li>“Our procurement agent needs to negotiate with our suppliers’ agents — different
+companies, different tech stacks. How do they talk?”</li>
+<li>“Five teams here each built their own agent — one in LangGraph, one in CrewAI, one on
+a homegrown stack. Design how they collaborate on a single workflow without rewriting
+them.”</li>
+<li>“Design an ecosystem where third-party developers can publish agents that our
+orchestrator can discover and delegate work to.”</li>
+</ul>
+<p>The tell is <em>heterogeneity</em>: multiple agents, built by different people on different
+frameworks, that must coordinate. If everything lived in one codebase under one team,
+you’d use in-process orchestration and skip this pattern entirely — and saying that out
+loud earns points.</p>
+<h2 id="what-this-pattern-is-in-plain-words"><a class="header" href="#what-this-pattern-is-in-plain-words">What this pattern is, in plain words</a></h2>
+<p>One agent, however capable, hits a ceiling on multi-faceted problems. The natural fix is
+specialists: a research agent, an analysis agent, a report-writing agent, each owned by
+whoever knows that domain best. But the moment those specialists are built by different
+teams — or different <em>companies</em> — on different frameworks, you hit the babel problem:
+LangGraph agents, CrewAI agents, and Google ADK agents have no native way to talk to
+each other. Every pairing needs a custom, brittle integration, and the integration count
+grows with every new agent.</p>
+<p>Inter-agent communication protocols solve this the way the web solved it for documents:
+with a shared, open standard. The concrete one to name is A2A — Agent2Agent — an open
+protocol originated by Google and backed by a broad industry group (Microsoft,
+Salesforce, SAP, ServiceNow, LangChain, and others), which matters because a
+communication standard is only as valuable as the crowd that speaks it. A2A runs over
+plain HTTP with JSON payloads — deliberately boring transport, because boring transport
+is what lets everyone join.</p>
+<p>The analogy I’d lead with: A2A does for agents what standardized business communication
+does for companies. When you hire a contractor, you don’t need to know what software
+runs their back office. You find their public listing, read what services they offer,
+send a work order, and get status updates and deliverables back. A2A formalizes exactly
+that loop for software agents — discover, delegate, track, receive — while each agent’s
+internals stay a black box. The protocol’s word for this is <em>opaque</em>: the client agent
+sees the remote agent’s advertised capabilities and its results, never its
+implementation, its prompts, or its proprietary logic. Opacity is a feature — it’s what
+makes cross-company collaboration palatable, because nobody has to expose their secret
+sauce to cooperate.</p>
+<p>Three roles to keep straight: the <em>user</em> who wants something done; the <em>client agent</em>
+acting on the user’s behalf, which discovers and delegates; and the <em>remote agent</em> (the
+A2A server), which exposes an HTTP endpoint, accepts tasks, and does the work.</p>
+<p>And here’s the sentence you must be able to say cleanly, because it’s asked in nearly
+every interview that touches this space: <strong>MCP connects an agent to its tools and data,
+while A2A connects an agent to other agents</strong> — MCP is how an agent uses a hammer; A2A
+is how it hires another carpenter. The deeper distinction: a tool is called and
+mechanically returns; an agent is <em>delegated to</em> — it reasons, may work for hours, may
+come back with clarifying questions. The two protocols are complements, not rivals, and
+a real system uses both: each agent reaches its own tools via MCP and its peers via A2A.</p>
+<h2 id="how-the-design-actually-works"><a class="header" href="#how-the-design-actually-works">How the design actually works</a></h2>
+<p>Four building blocks, in the order a real interaction uses them.</p>
+<p><strong>The agent card — a business card describing what an agent can do.</strong> Every A2A agent
+publishes a small JSON file listing its name, description, endpoint URL, version, its
+<em>skills</em> — named capabilities like “check_availability,” each with a description and
+example prompts, so a caller (human or LLM) can figure out which agent fits a job — plus
+the interaction modes it supports (streaming? push notifications?), what input and
+output formats it accepts, and how you must authenticate. It’s simultaneously a business
+card, a menu, and the fine print on the door.</p>
+<p><strong>Discovery — how you find the card.</strong> Three strategies, matched to context. <em>Well-known
+URI</em>: the card lives at a standard path on the agent’s domain (<code>/.well- known/agent.json</code>), like a shop hanging its sign where everyone knows to look — good for
+public agents. <em>Curated registry</em>: a searchable internal catalog where approved agents
+are published — the right answer for enterprises, because it doubles as a governance
+chokepoint (only vetted agents get listed). <em>Direct configuration</em>: you just hardcode
+the card for partners you already know. In an enterprise design, say “registry” and
+mention that the card endpoint itself should be access-controlled, since even non-secret
+capability metadata is reconnaissance material for an attacker.</p>
+<p><strong>Tasks — delegation with a paper trail.</strong> The unit of work is the <em>task</em>: the client
+sends a message (which can carry text, files, or structured data in typed <em>parts</em>), the
+server assigns the task an ID and moves it through an explicit lifecycle — submitted,
+working, completed, or failed, plus a state worth calling out: <em>input-required</em>, meaning
+the remote agent is pausing to ask the client a clarifying question mid-task, which
+turns delegation into a genuine conversation rather than fire-and-forget. Outputs come
+back as <em>artifacts</em> — the deliverables — and a context ID threads related tasks together
+so multi-step collaborations keep shared state. Notice the asynchrony is structural:
+agent work can take seconds or days, so the protocol is built around long-running jobs,
+not instant function calls.</p>
+<p><strong>Interaction styles — four ways to wait.</strong> Synchronous request/response for quick
+lookups: send, block, get the answer. Polling for longer jobs: the server immediately
+returns “working” plus a task ID; the client checks back periodically — like a package-
+tracking number. Streaming via server-sent events, a persistent one-way HTTP channel the
+server pushes incremental updates down — right for progress bars and partial results.
+And webhooks — push notifications — for very long jobs: the client registers a callback
+URL and the server calls <em>it</em> when the task finishes, so nobody holds a connection or
+polls for hours. Which of these an agent supports is declared on its card, and the
+protocol handles multimodal payloads — text, files, structured JSON, even audio and
+video.</p>
+<p><strong>Trust and security — the part that separates senior answers.</strong> The moment agents from
+different organizations delegate work, you’re doing cross-company API security with an
+agentic twist. The baseline: encrypted channels via TLS, or mutual TLS where <em>both</em>
+sides present certificates — both parties show ID, not just the server. Authentication
+requirements are declared on the agent card and use standard credentials — OAuth tokens
+or API keys in HTTP headers, never embedded in URLs or message bodies where they leak
+into logs. Authorization should be scoped: a client authorized for the “get_forecast”
+skill isn’t thereby authorized for everything else the agent can do. And comprehensive
+audit logs record who delegated what to whom, when, with what outcome — essential when a
+workflow spanning three companies goes wrong at 2am and everyone’s lawyers want the
+timeline. The agentic twist worth naming: the remote agent is a black box that
+<em>reasons</em>, so you should validate its outputs before acting on them — treat a peer agent
+with the same “trust but verify” posture as any external service, plus a bit more
+skepticism because its behavior is non-deterministic.</p>
+<h2 id="the-complete-interview-answer-spoken"><a class="header" href="#the-complete-interview-answer-spoken">The complete interview answer, spoken</a></h2>
+<p>Spoken end-to-end for: “Five teams each have their own agent on different frameworks —
+design how they collaborate on one workflow.”</p>
+<p>“Clarifying questions first. What’s the workflow — a fixed pipeline where agent A always
+feeds agent B, or dynamic, where an orchestrator decides at runtime who does what? Are
+all five agents inside our network, or are any external — vendors, partners? And what
+are the latency expectations — interactive, or batch jobs that can take hours?”</p>
+<p><em>(Interviewer: dynamic workflows, all internal today but a vendor agent is joining next
+quarter, and tasks range from seconds to about an hour.)</em></p>
+<p>“That shapes everything. Dynamic delegation means agents must be <em>discoverable</em> with
+machine-readable capability descriptions, not hardwired to each other. A vendor joining
+rules out any single-framework answer — we can’t ask a vendor to rewrite their CrewAI
+agent in our stack, and honestly we can’t even ask our own five teams to converge;
+that’s a year of rewrites for zero new capability. And hour-long tasks mean the
+communication has to be asynchronous at its core. All three constraints point the same
+direction: don’t unify the agents, unify the <em>conversation</em>. I’d adopt an open agent-to-
+agent protocol — A2A — as the lingua franca, so each team keeps its framework and just
+adds a standard HTTP front door. Whiteboard:</p>
+<pre><code>                     +--------------------+
+                     |   Agent Registry    |  (curated catalog of
+                     |  [card] [card] ...  |   agent cards; vetting
+                     +--------------------+   gate for new agents)
+                        ^ publish    | discover/query
+                        |            v
+  User ---&gt; +---------------------+
+            |  Orchestrator agent |  (A2A client)
+            +---------------------+
+              |            |             |
+        A2A/HTTPS     A2A/HTTPS     A2A/HTTPS + OAuth + mTLS
+              v            v             v
+        +---------+  +---------+   +----------------+
+        | Research|  | Data    |   | Vendor pricing |
+        | agent   |  | analysis|   | agent (external|
+        |(LangGr.)|  | (CrewAI)|   |  next quarter) |
+        +---------+  +---------+   +----------------+
+             |            |
+           MCP -&gt; tools  MCP -&gt; internal DBs
+        (tools via MCP; peers via A2A)
+
+  Task flow: submit -&gt; working -&gt; [input-required?] -&gt; completed
+             short task: sync/stream    long task: webhook callback
+</code></pre>
+<p>The pieces. Every agent, whatever its insides, exposes an A2A server endpoint and
+publishes an <em>agent card</em> — think of it as the agent’s business card: a JSON file with
+its name, endpoint, version, authentication requirements, and a list of skills with
+descriptions and example prompts. The card is the contract; the framework behind it
+becomes irrelevant, which is the entire trick.</p>
+<p>Cards get published to a central <em>registry</em> — a curated internal catalog. I’m choosing a
+registry over the fully-decentralized option, where each agent just hosts its card at a
+well-known URL on its own domain, because a registry gives the enterprise a governance
+gate: when the vendor’s agent wants in next quarter, someone reviews its card, its auth
+setup, and its data-handling posture <em>before</em> it’s listed and discoverable. The registry
+is where ‘can this agent participate?’ gets decided once, instead of five times by five
+teams.</p>
+<p>Runtime flow: a user asks the orchestrator for, say, a competitive pricing report. The
+orchestrator — the A2A client here — queries the registry, reads skill descriptions off
+the cards, and picks its subcontractors; because the cards carry natural-language
+descriptions and examples, the orchestrator’s own LLM can do this matching dynamically,
+which is exactly the dynamic-workflow requirement. It then creates <em>tasks</em>: structured
+delegations, each with a unique ID and an explicit lifecycle — submitted, working,
+completed, failed. For a thirty-second lookup it might use a synchronous call or stream
+results back over server-sent events, which is a persistent one-way channel for
+incremental updates. For the hour-long analysis job, holding a connection or hammering
+the status endpoint is silly, so the orchestrator registers a webhook — a callback URL
+the analysis agent pings when it finishes. The card tells you which modes each agent
+supports, so the orchestrator adapts per subcontractor.</p>
+<p>Two protocol features I’d call out because they do real work. First, the <em>input-
+required</em> state: halfway through, the analysis agent can pause its task and ask the
+orchestrator ‘which fiscal year?’ — delegation becomes a conversation, and without that
+state you get failed tasks or silently wrong assumptions on every ambiguous request.
+Second, <em>opacity</em>: the orchestrator never sees inside its subcontractors — not their
+prompts, not their chain of reasoning, just card, task states, and output artifacts.
+Teams keep autonomy over their internals; the vendor keeps their proprietary logic
+private; the only coupling is the contract. That’s what makes both the five-internal-
+teams story and the external-vendor story the <em>same</em> story.</p>
+<p>One distinction I want on the record, since these protocols get conflated: MCP and A2A
+solve different layers. MCP standardizes how an agent connects to its <em>tools and data</em> —
+databases, APIs, file systems. A2A standardizes how an agent talks to <em>other agents</em>. In
+this design each agent uses MCP internally to reach its own tools, and A2A externally to
+collaborate — tools versus colleagues, both protocols, different layers.</p>
+<p>Security, especially with the vendor coming. Everything over TLS; for the cross-company
+link, mutual TLS, where both sides present certificates. Auth requirements live on each
+agent card — internal agents can use service credentials; the vendor gets OAuth tokens
+scoped to exactly the skills they’re allowed to invoke, passed in headers where they
+don’t leak into URL logs. Authorization is per-skill, not per-agent — being allowed to
+ask the pricing agent for quotes doesn’t grant its admin skills. And every task — who
+delegated, to whom, when, what came back — lands in an audit log, because when a three-
+agent workflow produces a wrong number in an executive report, I need to reconstruct the
+chain in minutes, not days. I’d also treat remote agents’ outputs as untrusted input:
+schema-validate artifacts before acting on them, because a subcontractor agent can be
+wrong, compromised, or just weird — it’s a reasoning black box, not a deterministic
+function.</p>
+<p>Failure handling. Every failure mode of distributed systems applies, plus agent flavor.
+Timeouts per task with sensible defaults per skill; retries with idempotency keys so a
+retried ‘generate report’ doesn’t produce two reports; a fallback list per capability —
+if the primary research agent is down, the registry can offer an alternative that
+advertises the same skill, which is a resilience benefit you only get once capabilities
+are standardized and discoverable. If a task fails permanently, the orchestrator
+degrades gracefully: partial report with an explicit gap, rather than silent omission.
+For the agent-specific failures — a subcontractor returns confident nonsense — the
+orchestrator applies output validation and, for high-stakes artifacts, a critique pass
+before incorporating them.</p>
+<p>Monitoring and evaluation: distributed tracing with the task ID as the correlation key,
+so one user request can be followed across five agents — without it, debugging a multi-
+agent workflow is archaeology. Dashboards per agent: task success rate, time-in-state (a
+task stuck in ‘working’ for three hours is an alert), input-required frequency (a spike
+means some agent’s requests are chronically ambiguous — a prompt bug upstream). End-to-
+end, I’d keep a suite of golden workflows replayed nightly against the live mesh,
+because five independently-deploying teams means the system integration is changing
+daily even when the protocol isn’t.</p>
+<p>Cost is mostly organizational and architectural rather than per-token: each team
+implements one A2A adapter once — versus n-squared custom integrations that grow with
+every new agent — and the marginal cost of adding agent number six, including the
+vendor, is ‘publish a card, pass the registry review.’ There’s some latency overhead per
+hop from HTTP and task bookkeeping, which is why I’d keep genuinely chatty, tightly-
+coupled agent pairs inside one process behind a single A2A front door, and use the
+protocol at true team and company boundaries — standardize where the boundaries are
+real, not everywhere.</p>
+<p>Summary: keep every team’s framework, add a standard front door per agent; agent cards
+plus a curated registry make capabilities discoverable and governed; async task
+lifecycles with streaming and webhooks handle seconds-to-hours work; scoped OAuth, mTLS,
+and audit logs make it safe to extend to a vendor; and MCP handles each agent’s tools
+while A2A handles the conversation between them.“</p>
+<h2 id="follow-ups-they-will-ask"><a class="header" href="#follow-ups-they-will-ask">Follow-ups they will ask</a></h2>
+<p><strong>“A2A versus MCP — when do you use which?”</strong> The one-liner: MCP standardizes an agent’s
+connection to tools and data; A2A standardizes agent-to-agent collaboration. Deeper cut:
+a tool is invoked and mechanically returns; an agent is delegated to and <em>reasons</em> —
+long-running, stateful, capable of asking clarifying questions (input-required). Use
+both in one system: MCP inside each agent, A2A between agents. Grey zone worth
+acknowledging: you <em>can</em> wrap a simple agent as an MCP tool; prefer A2A when you need
+task lifecycles, streaming, negotiation, or cross-org boundaries.</p>
+<p><strong>“Why a protocol instead of a message queue like Kafka, or plain REST APIs?”</strong> A queue
+gives transport but no shared semantics — every pair of teams still invents its own
+message formats, task states, and discovery story, which is the babel problem relocated.
+Bespoke REST works for two agents and decays into n-squared custom integrations as
+agents multiply. The protocol’s value is the <em>standardized layer on top</em>: cards,
+discovery, task lifecycle, interaction modes — agreed once, spoken by everyone,
+including agents you don’t control.</p>
+<p><strong>“How does the orchestrator pick which agent to delegate to?”</strong> Discovery via the
+registry, then matching: skill descriptions and example prompts on the cards are written
+for LLM consumption, so the orchestrator can reason over them like a hiring manager
+reading résumés. Harden it with structured tags for filtering, a preference/fallback
+ranking per capability, and observed reliability stats feeding selection — route around
+agents whose task-failure rate is climbing.</p>
+<p><strong>“What stops a malicious or compromised agent from joining and wreaking havoc?”</strong>
+Layers: the registry as a vetting gate (no listing, no discovery), per-skill scoped
+authorization so a compromised credential has a small blast radius, mTLS so you know
+who’s on the wire, schema validation and sanitization of all inbound artifacts — a
+remote agent’s output is untrusted input, and could even carry prompt-injection text
+aimed at your orchestrator’s LLM — plus audit logs and anomaly detection on traffic
+patterns. Never extend blind trust to opaque reasoning systems.</p>
+<p><strong>“How do you debug a workflow spanning agents owned by three different teams?”</strong>
+Distributed tracing keyed on task and context IDs across every hop; each agent logs
+task-state transitions with timestamps; the audit trail gives the cross-team timeline
+nobody can dispute. Add replayable golden workflows to catch integration breakage before
+users do, and per-agent SLAs so accountability has edges. The honest admission: opacity
+is great for autonomy and terrible for debugging — the trace boundary <em>is</em> the team
+boundary, and that’s a deliberate trade.</p>
+<p><strong>“What if two agents’ schemas or interpretations subtly disagree — one’s ‘net price’ is
+another’s ‘gross price’?”</strong> Protocols standardize the envelope, not the meaning.
+Mitigations: typed structured parts rather than free text at critical interfaces,
+explicit schemas versioned in the cards, contract tests between agent pairs, and
+semantic checks in the orchestrator (units, ranges, cross-field sanity). Semantic drift
+is the multi-agent version of the classic microservices integration bug — same disease,
+agentic accent.</p>
+<h2 id="say-it-in-one-breath"><a class="header" href="#say-it-in-one-breath">Say it in one breath</a></h2>
+<p>“When agents built by different teams or vendors must collaborate, don’t unify their
+frameworks — unify their conversation: an open protocol like A2A gives every agent an
+HTTP front door and an agent card, a business card describing what it can do; clients
+discover cards via a registry, delegate work as tracked tasks that stream updates or
+call back via webhooks and can pause to ask clarifying questions, all under TLS, scoped
+OAuth, and audit logs — and in one sentence, MCP connects an agent to its tools while
+A2A connects it to other agents.”</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../agentic-design-pattern/14-rag.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../agentic-design-pattern/16-resource-aware.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../agentic-design-pattern/14-rag.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../agentic-design-pattern/16-resource-aware.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

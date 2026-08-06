@@ -1,0 +1,529 @@
+<!DOCTYPE HTML>
+<html lang="en" class="navy sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Pattern 12: Exception Handling and Recovery - Agentic AI Evaluation — A Practical Guide</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="Frameworks, metrics, benchmarks, tool-use and safety evaluation, and production monitoring for agentic AI systems.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../custom-9222a227.css">
+
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "navy";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-96a8b00f.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-4b3c722b.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('navy')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Agentic AI Evaluation — A Practical Guide</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/ffaisal93/agentic-ai-evaluation-guide" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/ffaisal93/agentic-ai-evaluation-guide/edit/main/./agentic-design-pattern/12-exception-handling.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="pattern-12-exception-handling-and-recovery--failing-without-falling-over"><a class="header" href="#pattern-12-exception-handling-and-recovery--failing-without-falling-over">Pattern 12: Exception Handling and Recovery — Failing Without Falling Over</a></h1>
+<h2 id="the-interview-scenario"><a class="header" href="#the-interview-scenario">The interview scenario</a></h2>
+<p>This one is often the most concrete question in the loop:</p>
+<ul>
+<li>“Your agent calls half a dozen flaky third-party APIs — payments, shipping, a CRM. Any
+of them can time out, rate-limit you, or return garbage. Design the agent to survive.”</li>
+<li>“Our workflow agent sends emails, updates records, and creates tickets. Yesterday it
+crashed halfway through a run — some actions done, some not, nobody sure which. What
+should we have built?”</li>
+<li>“The support chatbot falls over whenever the customer database has a blip, and users see
+a raw stack trace. Fix the design, not the bug.”</li>
+</ul>
+<p>The signal in all three: the world is unreliable, the agent acts on that world, and the
+interviewer wants systematic resilience — not a try/catch bolted on at the end.</p>
+<h2 id="what-this-pattern-is-in-plain-words"><a class="header" href="#what-this-pattern-is-in-plain-words">What this pattern is, in plain words</a></h2>
+<p>Ordinary software fails too, but agents raise the stakes for one specific reason worth
+stating in your first breath: agents act. A crashed web page re-renders; an agent that
+crashed halfway through “refund the customer and email them” may have moved real money and
+not sent the mail, or sent the mail about a refund that never happened. Failures don’t
+just interrupt agents — they leave side effects behind, half-finished changes to the real
+world. Add that agents chain many fallible steps (every tool call is a chance to fail, and
+a ten-step task multiplies those chances) and that a model can react to an error
+unpredictably — retrying something destructive, or fabricating a success — and you see why
+this pattern is a design discipline rather than error-handling hygiene.</p>
+<p>The pattern says: assume failure is normal, and give the agent three organized layers of
+response. Detect problems quickly and precisely. Handle them in the moment — retry, switch
+to a backup, degrade politely. Recover afterwards — undo what shouldn’t stand, fix the
+approach, or hand off to a human cleanly.</p>
+<p>The analogy I like is a good line cook mid-dinner-rush. The fryer dies. A brittle cook
+freezes and the kitchen stops. A good one notices in seconds (detection), moves the dish
+to the oven (fallback), 86’s the one item that truly needs the fryer (graceful degradation
+— reduced menu, kitchen still serving), tells the manager (notification), and comps the
+table that already ordered it (compensation — undoing the commitment already made).
+Nothing about the fryer improved; the system around it absorbed the failure.</p>
+<h2 id="how-the-design-actually-works"><a class="header" href="#how-the-design-actually-works">How the design actually works</a></h2>
+<p>Walk the three layers in order — detect, handle, recover — then the failure modes of the
+machinery itself.</p>
+<p><strong>Detection.</strong> You can’t handle what you haven’t noticed, and agents fail in both loud and
+quiet ways. Loud: explicit API error codes — a 404 meaning the thing you asked for doesn’t
+exist, a 500 meaning the service itself broke — and thrown exceptions. Quiet, and more
+dangerous: a call that “succeeds” but returns malformed or empty data, a response that
+doesn’t match the expected structure, or model output that’s incoherent. So detection
+means validating every tool result against expectations — schema checks, sanity ranges,
+“did this actually return items” — not just catching errors. Add timeouts: a timeout is a
+self-imposed deadline — if the service hasn’t answered in, say, ten seconds, stop waiting
+and treat it as failed, because an agent hanging forever on a dead service is itself an
+outage. And for slow-burn problems, an external watchdog — a monitor outside the agent,
+possibly another model, watching for anomalies the agent can’t see about itself.</p>
+<p>Crucially for agents, classify what you detect, because the right response differs.
+Transient errors — timeouts, rate limits, momentary outages — will likely succeed on
+retry. Permanent errors — bad credentials, nonexistent resource, malformed request — will
+fail identically forever, and retrying them is pure waste. Semantic errors — the call
+succeeded but the meaning is wrong: “insufficient funds,” “market closed” — need the agent
+to change its plan, not the plumbing to try harder. A trading bot hammering the same
+invalid order because it treated “insufficient funds” as transient is the canonical
+cautionary tale.</p>
+<p><strong>Handling.</strong> Six tools, each with a plain definition. <em>Logging:</em> record every failure
+with full context — which tool, what arguments, what came back — because you’ll debug
+tonight what you logged this afternoon, and the log is also what a human reads at
+escalation. <em>Retries with exponential backoff:</em> for transient errors, try again — but wait
+a bit longer each time you retry: one second, then two, then four, and add jitter, a bit
+of randomness in the delays, so a hundred agents that failed together don’t all retry in
+the same instant and knock the recovering service down again. Cap attempts; three-ish is
+typical. The precondition for retrying anything is <em>idempotency</em> — a fancy word for “safe
+to do twice”: checking a balance is idempotent; sending an email is not, and retrying a
+maybe-sent email is how customers get five copies. For unsafe operations you make them
+safe with an idempotency key — a unique ID on the request so the far side can recognize a
+duplicate and act once — or you don’t auto-retry them at all. <em>Timeouts</em> we covered —
+every external call gets one, no exceptions. <em>Fallbacks:</em> an alternative path when the
+primary fails — a backup provider, a cache, a cheaper method that’s good enough: precise
+geolocation fails, fall back to city-level; live inventory is down, serve the hourly
+snapshot labeled as such. <em>Graceful degradation:</em> when full function isn’t possible,
+deliver reduced-but-honest service instead of an error page — the chatbot that can’t reach
+the account database still answers general questions and says plainly, “account lookups
+are temporarily down, here’s what I can do meanwhile.” Partial value plus honesty beats a
+stack trace every time. <em>Notification:</em> some failures need a human now; the design
+decision is choosing which, and making the alert carry the context to act on.</p>
+<p><strong>Recovery.</strong> After the incident, restore a stable state. <em>State rollback and
+compensation:</em> the agent-specific crown jewel. Database transactions can be rolled back
+natively, but an agent’s actions cross systems — an email, a CRM update, a payment — and
+there’s no cross-system undo button. The pattern is compensation: for every consequential
+action, define a compensating action that reverses its effect — refund the charge, send
+the correction email, delete the created ticket — and keep an action ledger, a durable
+record of every side-effectful thing the agent did, so on failure you can walk the ledger
+backwards and compensate in reverse order. (Distributed-systems folks call this a saga;
+you don’t need the term, you need the ledger.) <em>Diagnosis and self-correction:</em> here’s
+where this pattern shakes hands with reflection — feed the failure back to the model
+(“your query returned zero rows; the date format was likely wrong”) and let it attempt a
+refined approach; a failed attempt plus analysis frequently produces a successful second
+attempt. But bound it: a repair loop without a cap is a new way to loop forever.
+<em>Escalation:</em> the designed exit — when retries, fallbacks, and self-correction are
+exhausted, stop and hand a human a structured package: goal, ledger of actions taken,
+failures encountered, current state. An agent that fails into a clean, actionable handoff
+is trustworthy; one that fails into mystery is not deployable.</p>
+<p>One more handling tool deserves its own paragraph because interviewers love it: the
+<em>circuit breaker</em>. Borrowed from electrical panels: stop calling a service that keeps
+failing, and check back later. Concretely, a wrapper counts recent failures per
+dependency; past a threshold the breaker “opens” and calls fail instantly without touching
+the service — no more 30-second timeouts in a loop, no more retry traffic pounding a
+service that’s already drowning. After a cooldown it goes “half-open”: one probe call is
+allowed through; success closes the breaker and traffic resumes, failure re-opens it. For
+agents there’s a bonus benefit: an open breaker is knowable — the agent can be told
+“shipping API is down, breaker open, use the fallback” at planning time and route around
+the outage instead of discovering it mid-task, five steps deep.</p>
+<p><strong>Failure modes of the failure handling</strong> — naming these is senior-signal. Retrying
+non-idempotent actions: the double-charged customer; cure is idempotency keys and a
+no-auto-retry rule for unsafe verbs. Retry storms: synchronized clients re-flooding a
+recovering service; cure is jitter plus breakers. Fallbacks that silently lie: stale cache
+served as fresh; cure is labeling degraded data as degraded, to the model and the user
+both. Compensation that itself fails: the refund call errors out; cure is treating
+compensations as retryable jobs on a queue with escalation on exhaustion, not
+fire-and-forget. Masking real bugs: aggressive auto-recovery hiding a permanent defect
+that then fires on every request forever; cure is alerting on retry and breaker-trip
+rates, not just final failures.</p>
+<p><strong>When to use and not:</strong> any agent in production touching external systems — which is
+nearly every agent worth building — needs at minimum timeouts, classified errors, capped
+retries, and honest degradation. Full ledger-and-compensation machinery is proportional to
+side effects: essential where money moves and records change, overkill for a read-only
+research agent, where a timeout, a retry, and a clear apology may be the whole story.
+<strong>Neighbors:</strong> goal monitoring (Pattern 11) notices strategy-level failure — no progress
+toward the objective — while exception handling catches operation-level failure — this
+call, right now, broke; monitoring might conclude “abandon the approach” while exception
+handling concludes “retry with backoff.” Reflection is the repair brain this pattern
+invokes for semantic errors. And robust tool design (good APIs, clear errors) is what
+makes all of this tractable — a tool that fails vaguely can’t be handled precisely.</p>
+<h2 id="the-complete-interview-answer-spoken"><a class="header" href="#the-complete-interview-answer-spoken">The complete interview answer, spoken</a></h2>
+<p>Spoken answer to “your agent calls flaky third-party APIs and takes real actions — design
+it to survive.”</p>
+<p>“Scoping questions first. Which actions have side effects? — assume the payment call and
+the customer email are consequential; CRM lookups and shipping quotes are read-only. Do
+the flaky vendors give us structured errors and idempotency support? — assume decent error
+codes, and the payment provider accepts idempotency keys; the shipping API is the true
+wild card. Is a human available for escalation? — yes, an ops queue with same-hour
+response. And roughly what reliability are we aiming for? — the workflow should either
+complete fully, or fail into a state a human can resolve in five minutes. That last
+sentence is really the spec: no mystery states.</p>
+<p>My design wraps every external dependency in a resilience layer the model never bypasses,
+keeps a durable ledger of consequential actions with compensations, and defines a strict
+escalation contract.</p>
+<p>First, the tool wrapper layer. The model never calls a vendor API raw; every tool call
+goes through a wrapper that enforces, uniformly: a timeout per dependency — a few seconds
+for lookups, longer for payments — because an agent hanging on a dead service is itself an
+outage; response validation, checking the result against an expected schema so a
+200-with-garbage is detected as the failure it is, since the quiet failures are the
+dangerous ones; and error classification into three bins — transient, like timeouts and
+rate limits; permanent, like bad credentials or a nonexistent resource; and semantic, like
+insufficient funds, where the plumbing worked but the meaning demands a plan change.
+Classification drives everything downstream, and it’s the step naive designs skip — which
+is how you get a bot hammering an invalid request forever because it treated ‘insufficient
+funds’ as a network blip.</p>
+<p>Second, per-class policy. Transient: retry with exponential backoff and jitter — wait one
+second, then two, then four, with randomness so a fleet of agents doesn’t re-flood the
+recovering service in lockstep — capped at three attempts. But an automatic retry is only
+allowed on idempotent calls, the ones safe to repeat. Reads qualify. The payment doesn’t —
+except we make it: every payment request carries an idempotency key, a unique ID letting
+the provider detect a duplicate and charge once, so a timeout on a payment (where we
+genuinely can’t know if it landed) is safely retryable. The email has no such support, so
+it’s never auto-retried; on ambiguity we check sent-status via a lookup or route to a
+human. Permanent errors: zero retries — log, and move straight to fallback or escalation.
+Semantic errors: surface the meaning to the model in plain language — ‘insufficient funds
+on the customer’s stored card’ — and let it replan: try the backup payment method, or
+pause the workflow and ask the customer. That’s reflection doing recovery work: failure
+plus analysis in, revised approach out — bounded to one or two repair attempts so the
+repair loop can’t itself become the runaway.</p>
+<p>Third, circuit breakers per dependency. A wrapper-level counter tracks recent failures per
+vendor; past threshold, the breaker opens — meaning stop calling a service that keeps
+failing — and calls to it fail instantly instead of burning a timeout apiece. After a
+cooldown, it half-opens: one probe goes through; success closes it, failure re-opens. Two
+payoffs: we stop kicking a service that’s already down, and — the agent-specific one —
+breaker state feeds the agent’s context at planning time, so it knows ‘shipping API
+unavailable’ before step one and routes around it, choosing the fallback carrier quote or
+telling the user shipping estimates are delayed, rather than discovering the outage
+mid-workflow.</p>
+<p>Fourth — the heart, given side effects — the action ledger and compensation. Before any
+consequential action, the agent writes an intent record to durable storage: about to
+charge X on order Y, key Z. After, it records the outcome. So the ledger always knows each
+action’s status: intended, confirmed, ambiguous, failed. Every consequential action
+registers a compensating action at design time — its undo: charge → refund; confirmation
+email → correction email; ticket created → ticket closed with note. When a workflow dies
+mid-flight — our ‘crashed halfway, nobody knows what happened’ scenario — recovery is
+mechanical, not forensic: read the ledger, resolve ambiguous entries by querying providers
+with the idempotency keys, then either resume forward from the last confirmed step or
+compensate backwards in reverse order to a clean state. Policy choice: forward-first if
+the customer’s intent was clear, rollback when in doubt. And compensations get the same
+resilience treatment as actions — they’re queued, retryable jobs, because a refund call
+can flake too; a compensation that exhausts retries escalates at top priority.</p>
+<p>Fifth, degradation and escalation. Degradation ladder per capability: full service;
+reduced service, honestly labeled — cached shipping rates marked as estimates, general
+answers while account lookups are down — because partial value with honesty beats an error
+page; then pause-and-notify. Escalation is a designed artifact, not a stack trace: goal,
+ledger with statuses, errors encountered with classifications, current breaker states, and
+a suggested next action. Target: the five-minute human resolution we specced. Every
+failure also logs to structured telemetry, and the dashboards alert on rates, not just
+outcomes — retry rate and breaker-trip rate per vendor are leading indicators; a retry
+rate quietly climbing all week is a vendor degrading before it’s an incident. That’s also
+how auto-recovery avoids masking real bugs: a permanent error being ‘handled’ a thousand
+times a day is a defect, and rate alerts surface it.</p>
+<p>The whiteboard:</p>
+<pre><code> [Agent/LLM] -- plan, replan on semantic errors
+      |                     ^
+      v                     | errors in plain language,
+ [Tool wrapper layer]       | breaker states at planning
+   timeout | validate | classify
+      |         |         |
+   transient permanent semantic
+      |         |         |
+   retry w/   no retry   surface to
+   backoff    fallback/  model -&gt; replan
+   +jitter    escalate
+      |
+ [Circuit breaker per vendor]
+      |
+   Vendor APIs (payments, shipping, CRM, email)
+
+ [Action ledger] intent -&gt; confirm  --&gt; resume forward
+        (on crash: reconcile)       --&gt; or compensate backward
+ [Escalation] structured handoff -&gt; ops queue
+</code></pre>
+<p>Cost and tradeoffs: retries and probes add modest spend — bounded by the caps and
+breakers, which exist precisely to bound it. The ledger adds a write before and after each
+consequential action; trivial next to a payment call, and it’s the difference between
+five-minute recovery and an afternoon of forensic spreadsheet-diffing. The real cost is
+engineering time on compensations, so I’d spend it proportionally: full
+intent/confirm/compensate treatment for the two consequential actions, lightweight
+retry-and-fallback for the read-only calls. Testing: failure paths that are never
+exercised don’t work when needed, so fault injection in staging — a chaos proxy randomly
+returning timeouts, 500s, and garbage from fake vendors — and the test suite asserts the
+interesting things: duplicate suppression via idempotency keys, ledger-driven recovery
+from a kill at every step of the workflow, breakers opening and closing on schedule.“</p>
+<h2 id="follow-ups-they-will-ask"><a class="header" href="#follow-ups-they-will-ask">Follow-ups they will ask</a></h2>
+<p><strong>“When do you retry and when not?”</strong> Two gates. Gate one, classification: transient
+errors — timeouts, rate limits, momentary outages — are retryable; permanent errors — bad
+auth, missing resource — never are, identical failure guaranteed; semantic errors —
+insufficient funds — need a plan change, not a retry. Gate two, idempotency: auto-retry
+only what’s safe to repeat, or what’s been made safe with an idempotency key so the far
+side deduplicates. Then backoff with jitter and a hard cap, so retries stay a courtesy
+rather than a siege.</p>
+<p><strong>“Explain a circuit breaker like I’m not a distributed-systems person.”</strong> It’s the
+electrical panel idea: a wire that keeps overheating gets its circuit cut rather than
+letting the house burn. Per flaky service, count recent failures; too many, and the
+breaker opens — stop calling that service entirely, fail fast — sparing you the timeouts
+and sparing the drowning service your traffic. After a cooldown, let one probe call
+through: works, resume; fails, wait again. For agents, the extra win is telling the model
+which breakers are open before it plans, so it routes around the outage instead of hitting
+it mid-task.</p>
+<p><strong>“The agent already sent the wrong email — how do you ‘undo’ that?”</strong> You can’t unsend;
+that’s exactly why compensation is a design-time obligation. Every consequential action
+registers its best-available reversal up front — for email, a prompt correction message;
+for a charge, a refund; for a record, restore-from-ledger. The action ledger makes it
+systematic: on failure, walk the completed actions backwards and run each compensation as
+a retryable job. And for the truly irreversible-and-costly — large payments, external
+publication — the compensation-doesn’t-really-exist realization argues for a confirmation
+gate before the action instead: human approval, because prevention is the only clean undo.</p>
+<p><strong>“How does the model itself participate in error handling?”</strong> The wrapper handles
+mechanics — timeouts, retries, breakers — below the model, deterministically; you don’t
+want a probabilistic system improvising backoff. The model handles meaning: semantic
+failures are translated into plain-language context — ‘the query returned zero rows; the
+date range may be wrong’ — and the model replans, which is reflection applied to recovery.
+The boundary rule: plumbing decisions in code, plan decisions in the model, and the
+model’s repair attempts are capped like any other loop.</p>
+<p><strong>“How do you test any of this?”</strong> Fault injection, because failure paths rot if
+unexercised. A chaos proxy between agent and (fake) vendors injects timeouts, 500s, rate
+limits, and schema-garbage on demand; the suite kills the workflow at every step and
+asserts ledger-driven recovery lands in a clean state; sends duplicate payment requests
+and asserts single-charge via idempotency keys; and drives a vendor’s failure rate up and
+down to watch breakers open, half-open, and close. In staging, run scheduled chaos
+continuously — the failure handling should be the most-tested code in the system, since it
+runs precisely when everything else is going wrong.</p>
+<p><strong>“Why do agents need all this more than normal software does?”</strong> Three compounding
+reasons. Agents act — failures leave real-world side effects, so recovery must include
+undoing, not just restarting. Agents chain — a ten-step task multiplies per-call failure
+odds, so ‘rare’ failures become routine at the task level. And agents improvise — an
+unhandled error surfaced raw to a model can trigger unpredictable behavior, from
+destructive retries to fabricated success; structured handling turns failures into
+information the model can reason about safely.</p>
+<h2 id="say-it-in-one-breath"><a class="header" href="#say-it-in-one-breath">Say it in one breath</a></h2>
+<p>Exception Handling and Recovery treats failure as normal: detect it precisely — timeouts,
+validation of every result, and classification into transient, permanent, and semantic;
+handle it in the moment — retries with exponential backoff and jitter for transient errors
+on idempotent calls only, fallbacks, honest graceful degradation, and circuit breakers
+that stop calling a service that keeps failing and probe it later; recover afterwards — an
+action ledger with compensating undo for every consequential step, bounded model-driven
+replanning on semantic errors, and escalation as a structured handoff rather than a stack
+trace. Agents need this more than ordinary software because they act — their failures
+leave side effects in the real world, and surviving that is a design discipline, not a
+try/catch.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../agentic-design-pattern/11-goal-setting.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../agentic-design-pattern/12a-part4-intro.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../agentic-design-pattern/11-goal-setting.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../agentic-design-pattern/12a-part4-intro.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

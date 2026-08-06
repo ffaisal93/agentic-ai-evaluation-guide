@@ -1,0 +1,604 @@
+<!DOCTYPE HTML>
+<html lang="en" class="navy sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Checkpoints and resume - Agentic AI Evaluation — A Practical Guide</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="Frameworks, metrics, benchmarks, tool-use and safety evaluation, and production monitoring for agentic AI systems.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../custom-9222a227.css">
+
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "navy";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-96a8b00f.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-4b3c722b.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('navy')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Agentic AI Evaluation — A Practical Guide</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/ffaisal93/agentic-ai-evaluation-guide" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/ffaisal93/agentic-ai-evaluation-guide/edit/main/./long-horizon-operations/06-checkpoint-resume.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="checkpoints-and-resume-making-a-long-run-survivable"><a class="header" href="#checkpoints-and-resume-making-a-long-run-survivable">Checkpoints and resume: making a long run survivable</a></h1>
+<h2 id="start-with-a-saved-game"><a class="header" href="#start-with-a-saved-game">Start with a saved game</a></h2>
+<p>Think about the last long video game you played.
+Someone on that game’s design team had to decide where the save points go, and it was not a casual decision.
+Put one after every single action and the game feels weightless, because nothing you do can ever cost you anything.
+Put none in at all and the game becomes unplayable, because a phone call at hour three throws away hour three.</p>
+<p>Now picture a game with no save points, that takes an hour to finish, that charges you money by the minute, and where some of the things your character does happen in the real world and cannot be taken back.</p>
+<p>That’s a long-running agent.</p>
+<p>Here’s the mental shift the whole chapter rests on, and if you only take one thing away, take this one.
+A single chat completion is a <strong>request</strong>: it takes two seconds, nothing outside the conversation changes, and if it fails you simply ask again.
+A 200-turn agent run is a <strong>process</strong>: it takes an hour, it costs real money, it sends emails and writes rows and moves money, and “just ask again” means burning the hour, burning the money, and possibly refunding the same customer twice.</p>
+<p>Requests get <em>retried</em>.
+Processes get <em>resumed</em>.
+The rest of this chapter is about the machinery that moves a run from the first category into the second — and about the part almost everybody skips, which is that resuming <em>safely</em> is a much harder problem than resuming at all.</p>
+<h2 id="why-agents-need-this-more-than-your-average-web-service"><a class="header" href="#why-agents-need-this-more-than-your-average-web-service">Why agents need this more than your average web service</a></h2>
+<p>Most ordinary services don’t bother with any of this, and they’re mostly right not to.
+An HTTP handler runs for eighty milliseconds, the chance of the machine dying inside that window rounds to zero, and if it does die the client retries and nobody notices.</p>
+<p>Agents break that arithmetic in three ways, and the three compound.</p>
+<p><strong>Runs are long, so interruption stops being an edge case.</strong>
+Suppose the machine your agent runs on has some small chance of being yanked away in any given minute — a deploy, a spot-instance reclaim, an out-of-memory kill, a network partition, a rate limiter that decides you’ve had enough.
+Call that one in a thousand per minute, which is optimistic.
+Over eighty milliseconds you’ll never see it; over a ninety-minute run, the probability that <em>nothing</em> goes wrong is roughly \(0.999^{90}\), about 91%, which means one run in eleven dies partway through.
+That’s not an edge case, that’s a Tuesday.</p>
+<p><strong>Runs are expensive, so restarting throws away something real.</strong>
+When an eighty-millisecond handler restarts you lose eighty milliseconds.
+When a ninety-minute agent restarts you lose the wall-clock, the tokens you paid for across two hundred model calls, and whatever the user’s patience was worth.
+The cost of a restart isn’t the cost of the failed step — it’s the cost of everything before it, and in a long run that number only grows.</p>
+<p><strong>Runs have side effects, so restarting can be worse than not finishing at all.</strong>
+A read-only data pipeline can be restarted from scratch as often as you like; the worst outcome is a bigger bill.
+An agent that files tickets, sends emails, updates CRM records and issues refunds does not have that property, and restarting it from step one means doing all of that again.
+The failure mode isn’t “wasted work,” it’s “the customer got three apology emails and two refunds,” and that one is visible to people outside your company.</p>
+<p>Hold those three together and the conclusion is forced: an agent that does real work needs to be able to stop in the middle and start again from the middle, and it needs to do that without redoing anything that already touched the outside world.</p>
+<h2 id="whats-actually-in-a-checkpoint"><a class="header" href="#whats-actually-in-a-checkpoint">What’s actually in a checkpoint</a></h2>
+<p>A <strong>checkpoint</strong> is a saved snapshot of everything a run needs in order to be picked up again by a different process, on a different machine, possibly hours later.
+The word people reach for is <em>durable</em> — meaning that if the machine running the job dies, another machine picks it up exactly where it left off instead of starting over.</p>
+<p>Five things go in, and they’re not equally well understood.</p>
+<p><strong>The conversation and working state</strong> — the messages so far, or a compacted version of them, plus whatever scratch variables the run carries.
+This is the part everyone remembers, and it’s the least interesting.</p>
+<p><strong>The plan and the progress against it</strong> — which steps exist, which are done, which is in flight, which are blocked.
+This matters more than the transcript, because it’s what lets a resumed run orient itself in one glance rather than re-deriving its own intentions by reading an hour of chat.</p>
+<p><strong>Tool results worth keeping.</strong>
+Not every result — most are noise and you’ll drown in storage — but the expensive ones, the slow ones, and the ones whose source might change under you are worth freezing, so the resumed run doesn’t pay for them twice or get a different answer the second time.</p>
+<p><strong>The budget ledger</strong> — steps used, tokens burned, money spent, deadline remaining.
+If you don’t checkpoint this, every resume hands the agent a fresh full budget, and a run that crashes four times quietly spends five times its allowance.</p>
+<p><strong>The side-effect log</strong> — a record of every action this run has already taken against the outside world, and how to recognise each one again.</p>
+<p>That last one is what people leave out, and it’s the difference between a resume that <em>works</em> and a resume that’s <em>safe</em>.
+Consider two runs that both crash after step 40 of 60.</p>
+<p>The first checkpointed conversation and progress: it comes back up, sees “step 41 next,” and carries on — and if step 39’s refund call succeeded but its result never got written down, nobody will ever know, because nothing in the checkpoint records that a refund was even attempted.</p>
+<p>The second checkpointed the side-effect log too: it comes back up, sees “refund for order 8812, intent recorded, outcome unknown,” and can go and <em>ask</em> whether that refund landed before deciding what to do.</p>
+<p>Same crash, same conversation, same progress marker.
+One of them can reason about what it has already done to the world; the other can only guess.</p>
+<h2 id="where-checkpoints-go-and-how-often"><a class="header" href="#where-checkpoints-go-and-how-often">Where checkpoints go, and how often</a></h2>
+<p>Two knobs: where you write, and how often.
+Where is easy: anywhere that survives the process, which in practice means a database — Postgres is the boring, correct default, and most agent frameworks ship a Postgres-backed saver.
+In-memory checkpointers are fine for development, but be honest about what they buy you, which is nothing at all when the machine dies.
+A file on local disk is halfway: it survives a process crash, not a machine loss.</p>
+<p>How often is the interesting one, because it’s a straight trade.
+Every turn is safest and most expensive: you pay a write — a few milliseconds locally, tens of milliseconds across a network — on every step, and storage grows as run length times run count.
+For a two-hundred-turn run that’s two hundred writes and two hundred stored blobs, most of which nobody will ever look at.</p>
+<p>Milestones only is cheaper and loses more: checkpoint after each completed phase and a crash costs you the current phase, which might be twenty turns of work — a fine trade for a read-only research agent, a terrible one for an agent that spends money mid-phase.</p>
+<p>LangGraph makes this trade explicit with three durability settings, which is a nice way to see the shape of it.
+<code>"exit"</code> writes only when the graph finishes, which is fastest and gives you no mid-run recovery at all.
+<code>"async"</code> writes checkpoints in the background while the next step runs, which is a good default for long workflows — with the caveat, stated plainly in their docs, that a crash can occasionally lose the most recent write.
+<code>"sync"</code> writes each checkpoint before advancing, which costs latency on every step and is what you want when a missed checkpoint means a duplicate email or a duplicate payment.
+(<a href="https://docs.langchain.com/oss/python/langgraph/durable-execution">durable execution</a>)</p>
+<p>The rule I’d give you is simpler than the settings: <strong>checkpoint synchronously around side effects, and lazily everywhere else.</strong>
+Ten turns of pure reasoning and file reads can share one checkpoint; nobody gets hurt if you replay them.
+The single turn that issues the refund gets its own write, before and after, no exceptions.</p>
+<p>On storage: checkpoints are append-heavy and read-almost-never, so give them a retention policy on day one — keep everything for runs still in flight, keep the final state for completed runs, delete the intermediate ones after a few days.
+The exception is the side-effect log, which is your audit trail; keep it far longer than the snapshots it came with, because “did we ever actually refund this person?” gets asked months later.</p>
+<h2 id="replay-safety-slowly"><a class="header" href="#replay-safety-slowly">Replay safety, slowly</a></h2>
+<p>Here’s the thing that catches people out, and it catches them <em>after</em> the checkpointing works, which is the worst possible time.</p>
+<p>You resume from a checkpoint, the agent picks up at the last recorded step, and it does that step again.</p>
+<p>That’s not a bug in your code, it’s the fundamental shape of resume.
+You saved a point in time; you come back to that point in time; anything that happened after that point and before the crash is invisible to you, and the system will redo it.
+LangGraph’s docs say this out loud for their own model: nodes after the checkpoint re-execute in full on resume, including the LLM calls and the API requests inside them.</p>
+<p>So the question isn’t “how do I avoid redoing steps,” it’s “what happens when a step gets done twice, and how do I make that outcome harmless.”</p>
+<h3 id="idempotency-defined-properly"><a class="header" href="#idempotency-defined-properly">Idempotency, defined properly</a></h3>
+<p><strong>Idempotent</strong> means: doing it twice has the same effect on the world as doing it once.
+Not “the second call fails,” not “the second call is ignored by luck” — same end state, every time, no matter how many times you run it.</p>
+<p>Setting a value is idempotent: <code>status = "refunded"</code> written five times leaves exactly the same row as writing it once.
+Adding to a value is not: <code>balance = balance + 40</code> run five times is a very different afternoon.</p>
+<p>Now the example that makes it concrete, because refunds are the canonical case and payment companies have thought about this harder than anyone.</p>
+<p>Say your agent issues a 40-unit refund by calling the vendor’s API.
+It sends the request, the refund is created, and then the network eats the response on the way back, so your agent sees a timeout and has no idea whether the money moved.
+Then it crashes.
+You resume, the step re-runs, it calls the API again — and now there are two refunds, because from the vendor’s side those were two perfectly valid, unrelated requests.</p>
+<p>The fix is an <strong>idempotency key</strong>: a unique string you generate and attach to the request, which the vendor stores alongside the result.
+Stripe’s implementation is the canonical one — the first request with a given key has its status code and body saved, and any later request carrying that same key returns the saved result rather than doing the work again, “including 500 errors.”
+Their keys live for at least 24 hours, and the layer compares the incoming parameters against the original request and errors if they differ, so you can’t accidentally reuse a key for a different refund.
+(<a href="https://docs.stripe.com/api/idempotent_requests">idempotent requests</a>)</p>
+<p>With a key, that retry is free: the vendor recognises it, hands back the same receipt, no new money moves.
+Without one, the retry is a second refund.</p>
+<p>The part people get wrong is where the key comes from — it must be <strong>derived from the work, not from the attempt.</strong>
+If you generate a fresh UUID on each call, every retry gets a new key and the key does nothing at all; you’ve added ceremony without protection.
+Build it from things stable across replays: the run ID and the step ID, or the order ID and the action name.
+In the code below it’s literally <code>run_id:step_id</code>, which is boring and exactly right, because the second attempt at step three computes precisely the same string as the first.</p>
+<h3 id="write-ahead-logging-in-plain-terms"><a class="header" href="#write-ahead-logging-in-plain-terms">Write-ahead logging, in plain terms</a></h3>
+<p>Idempotency keys handle the case where you <em>know</em> you’re retrying; write-ahead logging handles the case where you don’t know what happened at all.
+The idea comes straight out of databases, and it’s almost embarrassingly simple: <strong>write down what you’re about to do, before you do it.</strong>
+Every state change is appended to a log on disk <em>before</em> the in-memory structures change, so after a crash the system reads the log back and replays its way to a consistent state.
+(<a href="https://martinfowler.com/articles/patterns-of-distributed-systems/wal.html">Write-Ahead Log</a>)</p>
+<p>Applied to an agent, it becomes a three-beat rhythm around every side effect: record the <em>intent</em> (“about to refund 40 for order 8812, key <code>run-4711:s3</code>”) and flush it to durable storage, then actually do it, then record the <em>outcome</em> (“done, receipt re_3”) and flush that too.</p>
+<p>Now walk through where a crash can land.
+Crash before beat one, and the log has nothing: you know the action never started, so you just do it.
+Crash between two and three — the nasty one, the timeout case — and the log says <em>pending</em>.
+You know an attempt was made and you don’t know if it landed, which sounds bad but is enormously better than not knowing an attempt was made at all.
+That single word turns an unanswerable question into a lookup: go ask the vendor whether key <code>run-4711:s3</code> exists, adopt the receipt if it does, redo the call with the same key if it doesn’t.</p>
+<p>Crash after beat three, and the log says <em>applied</em>, so you skip the step entirely.</p>
+<p>The pending state is the whole reason the pattern is worth the extra write: without it, a crashed refund is indistinguishable from a refund that never happened, and you’re choosing between double-paying and under-paying with no evidence either way.</p>
+<p>This is exactly how durable execution engines work under the hood, incidentally.
+Restate describes it as journaling: every meaningful step is recorded to a persistent log <em>before</em> its result is returned to your function, and on recovery the engine replays the completed steps and carries on from the first one that isn’t in the journal.
+(<a href="https://restate.dev/what-is-durable-execution/">what is durable execution</a>)
+DBOS does the same with Postgres as the journal — one write per step outcome, plus two per workflow — re-invoking interrupted workflows with their saved inputs and checking before each step whether that step’s output is already checkpointed.
+(<a href="https://docs.dbos.dev/architecture">DBOS architecture</a>)</p>
+<h3 id="at-least-once-versus-exactly-once"><a class="header" href="#at-least-once-versus-exactly-once">At-least-once versus exactly-once</a></h3>
+<p>You’ll hear “exactly-once” thrown around, usually as a selling point, so here’s the honest version.
+Across an unreliable network, <strong>exactly-once delivery is not achievable.</strong>
+The sender can never distinguish “the request was lost” from “the response was lost,” so it has to choose: give up on unclear cases (at-most-once, and you’ll drop real work) or try again (at-least-once, and you’ll sometimes duplicate).
+Every serious system picks at-least-once.</p>
+<p>What you <em>can</em> have is <strong>exactly-once effects</strong>, and the recipe is short: at-least-once delivery, plus idempotent handling at the far end.
+The message may arrive five times; the world changes once.
+That’s what an idempotency key buys you, and it’s why DBOS’s own guidance is that steps “should be idempotent, meaning it should be safe to retry them multiple times” — the engine guarantees the retrying, you guarantee the harmlessness.</p>
+<p>Say it that way in an interview and you’ll sound like someone who has actually shipped this, because the distinction between <em>delivery</em> and <em>effect</em> is the exact thing people fudge.</p>
+<h2 id="when-replay-isnt-possible-compensation"><a class="header" href="#when-replay-isnt-possible-compensation">When replay isn’t possible: compensation</a></h2>
+<p>Some steps can’t be made idempotent, because the far end simply doesn’t offer you a handle — an API with no idempotency key support, a system that assigns a new ID on every create, a partner integration written in 2009 that fires and forgets.</p>
+<p>For those, you can’t make the second attempt harmless, so you take the other road: you <strong>undo the first one.</strong>
+That’s the <strong>Saga</strong> pattern, and stripped of the jargon it’s this — a long process is a sequence of small local steps, and each step ships with a paired <em>compensating</em> step that reverses it.
+If the process fails at step five, you run the undos for four, three, two and one, in reverse order, until the world is back roughly where it started.
+(<a href="https://microservices.io/patterns/data/saga.html">Saga pattern</a>)</p>
+<p>Booking a trip is the standard illustration and it’s a good one: reserve the flight, reserve the hotel, charge the card.
+The hotel reservation fails, so you run the flight’s compensation — cancel it — and stop.
+There’s no database transaction spanning three companies, so you build the rollback by hand out of ordinary forward actions.</p>
+<p>Two things to be honest about.</p>
+<p><strong>Compensation is hand-written, and it’s real work.</strong>
+The pattern’s own documentation says it plainly: you design compensating transactions that explicitly undo earlier changes, because there’s no automatic rollback to fall back on.
+Every step is now two pieces of code, and the undo path is the one that never gets exercised in testing and is therefore the one that’s broken.</p>
+<p><strong>Compensation has no isolation.</strong>
+That’s the “I” in ACID, and sagas don’t have it.
+Between the flight being booked and the flight being cancelled the flight is genuinely booked, and anything else looking at the system sees it that way — another process can read that intermediate state and act on it, and now your undo is undoing something someone else already built on top of.</p>
+<h3 id="and-some-things-simply-have-no-undo"><a class="header" href="#and-some-things-simply-have-no-undo">And some things simply have no undo</a></h3>
+<p>This is where you have to stop being clever.
+The email is sent, the Slack message is in the channel and eleven people have read it, the wire transfer has left the building, the tweet is up and the screenshot is already circulating.</p>
+<p>You can send a follow-up apology, but that’s a new action, not a reversal — the original effect is permanently in the world.</p>
+<p>For those actions, neither replay safety nor compensation saves you, and the correct engineering answer is not a better retry policy.
+It’s a <strong>human gate</strong>: the agent prepares the action, checkpoints, stops, and waits for a person to approve before anything leaves the building.</p>
+<p>A useful way to sort every side-effecting tool your agent has, on a single sheet of paper:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Can it be replayed safely?</th><th>Can it be undone?</th><th>What to do</th></tr>
+</thead>
+<tbody>
+<tr><td>Yes (idempotency key)</td><td>n/a</td><td>Let it retry freely</td></tr>
+<tr><td>No</td><td>Yes (compensation)</td><td>Write the undo, register it in the saga</td></tr>
+<tr><td>No</td><td>No</td><td>Human gate, every time</td></tr>
+</tbody>
+</table>
+</div>
+<p>Most teams have never made that table, and making it takes about twenty minutes and changes the design of the system.</p>
+<h2 id="two-reasons-you-resume-one-piece-of-machinery"><a class="header" href="#two-reasons-you-resume-one-piece-of-machinery">Two reasons you resume, one piece of machinery</a></h2>
+<p>Now the nice part, because there’s leverage hiding here that people miss: there are two entirely different reasons a run stops and later continues.
+<strong>Crash recovery</strong>, which is involuntary — the pod was evicted, the process was OOM-killed, the deploy rolled, the network went away, and nobody planned it or was watching.</p>
+<p><strong>Deliberate pause</strong>, which is voluntary — the agent drafted something that needs human approval, or it’s waiting on a six-hour data export, or it’s blocked on a colleague who’ll be back Monday.</p>
+<p>Those feel like different problems, and organisationally they usually belong to different people: one is an infrastructure concern, one is a product concern.
+Mechanically they are the same problem.
+Both need the run’s full state written somewhere durable, both need a way to identify the run later and hand that state to a fresh process, and both need the resumed run to know exactly what it already did to the world so it doesn’t do it twice.</p>
+<p>Which gives you the design instruction: <strong>build for the deliberate pause, and you get crash recovery for free.</strong>
+The reverse doesn’t hold, because crash recovery alone doesn’t force you to think about the <em>waiting</em> — the fact that a run can sit idle for three days, that the world changes underneath it, that a resumed agent should re-check reality rather than trusting an assumption it formed on Friday.
+Temporal makes exactly this pitch for agent workloads: the same event history that lets a worker replay after a failure is what lets a workflow park indefinitely on a human signal and pick up when it arrives.
+(<a href="https://temporal.io/blog/durable-execution-meets-ai-why-temporal-is-the-perfect-foundation-for-ai">durable execution meets AI</a>, July 2025)</p>
+<h2 id="three-practical-shapes"><a class="header" href="#three-practical-shapes">Three practical shapes</a></h2>
+<p><strong>Framework-level persistence.</strong>
+LangGraph is the reference example: you attach a <em>checkpointer</em> to the graph, hand every invocation a <code>thread_id</code> — a string identifying one conversation or run — and the framework snapshots state after each step, keyed to that thread.
+Pass the same <code>thread_id</code> again and it loads the last snapshot and continues, and the same mechanism powers interrupt-and-resume, so human approval and crash recovery genuinely are one feature.
+(<a href="https://docs.langchain.com/oss/python/langgraph/persistence">persistence</a>)
+The tradeoff: nearly free to adopt, and it only covers what’s inside the graph — your checkpoint knows the node finished, but not that the node called Stripe halfway through and got a timeout, so side-effect safety is still yours to build.</p>
+<p><strong>Durable execution engines.</strong>
+Temporal, Restate and DBOS sell the same promise: write ordinary-looking code, and the engine journals every step so a crash resumes mid-function instead of restarting it.
+Temporal’s Event History plus replay, Restate’s journal-before-return, DBOS’s Postgres-backed step checkpoints — different packaging, same idea.
+The tradeoff is that determinism becomes a hard requirement: your orchestration code must make the same decisions on replay, so no <code>now()</code>, no un-journalled randomness, and external calls confined to the parts the engine wraps.
+That’s a real constraint on agent code, where the orchestrator is a language model that is <em>definitionally</em> non-deterministic — the usual resolution is that the model call is itself a journalled step whose recorded output gets replayed, rather than something you re-roll.</p>
+<p><strong>Roll your own with an event log.</strong>
+Instead of snapshotting state, append every event and rebuild state by replaying the events.
+That’s <strong>event sourcing</strong>, and its best property here is that the log is an audit trail by construction: you see not just what the state is but how it got there, which is what you want when someone asks why the agent refunded a customer at 3am.
+(<a href="https://martinfowler.com/eaaDev/EventSourcing.html">Event Sourcing</a>)
+The tradeoff is that you own everything — replay performance, snapshotting so replay doesn’t take forever, schema evolution as event shapes change, and the discipline that external calls must never be re-issued during a replay.
+For a lot of agent systems the middle path is right, and it’s what the example below is: state snapshots for the conversation, an append-only event log for the side effects, no framework at all.</p>
+<h2 id="a-checkpointer-and-effect-ledger-you-can-run"><a class="header" href="#a-checkpointer-and-effect-ledger-you-can-run">A checkpointer and effect ledger you can run</a></h2>
+<p>Dependency-free, and it does three things: persists run state as JSON, keeps a write-ahead effect ledger with idempotency keys, and resumes across a crash without moving money twice.
+The crash is injected at the worst possible moment — after the refund reaches the vendor, before the outcome is recorded — because that’s the case that separates a real design from a hopeful one.</p>
+<pre><code class="language-python">import json
+import os
+
+
+class Crashed(Exception):
+    """Stands in for the machine dying mid-run."""
+
+
+class RefundAPI:
+    """A mock vendor that honours idempotency keys, the way Stripe does."""
+
+    def __init__(self, honour_keys=True):
+        self.honour_keys = honour_keys
+        self.by_key = {}
+        self.moved = []                          # payments that really happened
+
+    def refund(self, amount, idempotency_key):
+        if self.honour_keys and idempotency_key in self.by_key:
+            return self.by_key[idempotency_key]  # replay: no new money
+        receipt = {"id": "re_%d" % (len(self.moved) + 1), "amount": amount}
+        self.moved.append(amount)
+        self.by_key[idempotency_key] = receipt
+        return receipt
+
+    def lookup(self, idempotency_key):
+        return self.by_key.get(idempotency_key)
+
+
+class Checkpointer:
+    """Run state as one JSON file. Swap in Postgres and the shape is the same."""
+
+    def __init__(self, path):
+        self.path = path
+
+    def load(self):
+        if not os.path.exists(self.path):
+            return None
+        with open(self.path) as f:
+            return json.load(f)
+
+    def save(self, state):
+        with open(self.path + ".tmp", "w") as f:
+            json.dump(state, f, indent=2)
+        os.replace(self.path + ".tmp", self.path)   # atomic: never a half file
+
+
+def apply_refund(state, ckpt, api, step, log):
+    key = "%s:%s" % (state["run_id"], step["id"])   # stable across replays
+    rec = state["effects"].get(key)
+
+    if rec and rec["status"] == "applied":          # belt and braces
+        log.append("  skip      %s (already applied)" % step["id"])
+        return rec["receipt"]
+
+    if rec and rec["status"] == "pending":          # we died mid-flight
+        found = api.lookup(key)
+        if found:
+            state["effects"][key] = {"status": "applied", "receipt": found}
+            ckpt.save(state)
+            log.append("  reconcile %s -&gt; it did happen, adopting %s"
+                       % (step["id"], found["id"]))
+            return found
+        log.append("  reconcile %s -&gt; never landed, retrying" % step["id"])
+
+    state["effects"][key] = {"status": "pending", "receipt": None}
+    ckpt.save(state)                                # write-ahead: intent first
+    receipt = api.refund(step["amount"], idempotency_key=key)
+    state["effects"][key] = {"status": "applied", "receipt": receipt}
+    ckpt.save(state)                                # then the outcome
+    log.append("  refund    %s -&gt; %s for %d"
+               % (step["id"], receipt["id"], receipt["amount"]))
+    return receipt
+
+
+def run(ckpt, api, steps, run_id, crash_at=None):
+    state, log = ckpt.load(), []
+    if state is None:
+        state = {"run_id": run_id, "cursor": 0, "steps": steps, "effects": {}}
+        ckpt.save(state)
+        log.append("start  %s" % run_id)
+    else:
+        log.append("resume %s at step %d" % (state["run_id"], state["cursor"]))
+
+    while state["cursor"] &lt; len(state["steps"]):
+        step = state["steps"][state["cursor"]]
+        if state["cursor"] == crash_at:             # act, then die before recording
+            key = "%s:%s" % (state["run_id"], step["id"])
+            state["effects"][key] = {"status": "pending", "receipt": None}
+            ckpt.save(state)
+            api.refund(step["amount"], idempotency_key=key)
+            log.append("  CRASH     after acting on %s, before recording it"
+                       % step["id"])
+            raise Crashed(log)
+        apply_refund(state, ckpt, api, step, log)
+        state["cursor"] += 1
+        ckpt.save(state)
+    return state, log
+
+
+if __name__ == "__main__":
+    steps = [{"id": "s%d" % i, "amount": a} for i, a in enumerate([10, 25, 40, 5], 1)]
+    path = "/tmp/run.json"
+    if os.path.exists(path):
+        os.remove(path)
+    ckpt, api = Checkpointer(path), RefundAPI()
+
+    try:
+        run(ckpt, api, steps, "run-4711", crash_at=2)
+    except Crashed as e:
+        print("\n".join(e.args[0]))
+    state, log = run(ckpt, api, steps, "run-4711")
+    ledger = sum(e["receipt"]["amount"] for e in state["effects"].values())
+    print("\n".join(log))
+    print("\npayments that actually moved: %s" % api.moved)
+    print("total moved: %d   ledger total: %d   steps done: %d/%d"
+          % (sum(api.moved), ledger, state["cursor"], len(steps)))
+
+    naive = RefundAPI(honour_keys=False)
+    naive.refund(40, idempotency_key="run-4711:s3")
+    naive.refund(40, idempotency_key="run-4711:s3")   # same key, no protection
+    print("without idempotency the same resume moves: %s" % naive.moved)
+</code></pre>
+<p>Its actual output:</p>
+<pre><code>start  run-4711
+  refund    s1 -&gt; re_1 for 10
+  refund    s2 -&gt; re_2 for 25
+  CRASH     after acting on s3, before recording it
+resume run-4711 at step 2
+  reconcile s3 -&gt; it did happen, adopting re_3
+  refund    s4 -&gt; re_4 for 5
+
+payments that actually moved: [10, 25, 40, 5]
+total moved: 80   ledger total: 80   steps done: 4/4
+without idempotency the same resume moves: [40, 40]
+</code></pre>
+<p>Read the middle three lines slowly, because they’re the entire chapter.
+The run died at step three at the worst possible instant — the vendor had taken the money, and the ledger said only <em>pending</em>.
+The resumed run didn’t guess: it saw the pending entry, looked the key up at the vendor, found the receipt, adopted it, and moved on.
+Eighty units moved, once each, across a crash, with no coordination and no distributed transaction.
+The last line is the counterfactual — same resume, same key, a vendor that ignores it, and forty units go out twice.</p>
+<p>Two details worth stealing.
+<code>os.replace</code> is atomic on every mainstream filesystem, so a crash during the write leaves you with either the old checkpoint or the new one, never a half-parsed file — the same trick a database uses, at hobbyist scale.
+And the <code>applied</code> branch is technically unreachable here because the cursor already skips finished steps; it’s there because belt and braces is the right amount of clothing when the failure mode is duplicate payments, and it becomes reachable the moment steps retry independently of the cursor.</p>
+<p>What the toy leaves out: the vendor lookup is a local dictionary rather than a real API call that can itself fail, there’s no expiry on the effect ledger, and there’s no compensation path for steps that can’t be replayed.
+All three are more code, none are more concept.</p>
+<h2 id="say-it-in-one-breath"><a class="header" href="#say-it-in-one-breath">Say it in one breath</a></h2>
+<p>A long agent run is a process, not a request, so it needs saving and resuming rather than retrying.
+A checkpoint holds the conversation, the plan and progress, the expensive tool results, the budget ledger, and — the part everyone forgets — a log of what the run has already done to the outside world.
+Resume always means redoing something, so every side effect needs either an idempotency key that makes a second attempt harmless, or a hand-written compensating action that undoes the first, and if it has neither it belongs behind a human gate.
+Write the intent down before you act and the outcome after, because the <em>pending</em> state in between is what turns “did that refund happen?” from a guess into a lookup.
+Crash recovery and deliberate pause-for-approval are the same machinery, so build the pause and get the crash for free.</p>
+<h2 id="what-an-interviewer-is-really-testing"><a class="header" href="#what-an-interviewer-is-really-testing">What an interviewer is really testing</a></h2>
+<p>Almost everyone will answer “checkpoint the message history to a database” and stop there, which tells the interviewer you’ve read the framework docs and nothing else.
+The signal they’re listening for is whether you immediately ask what happens to the refund that was in flight when the process died — and reach for idempotency keys and a write-ahead effect log without being prompted.
+The second tell is whether you can state the exactly-once thing precisely: at-least-once delivery plus idempotent handling gives exactly-once <em>effects</em>, and anyone selling exactly-once <em>delivery</em> across a network is selling something.
+The third is knowing where the technique runs out — that compensation is hand-written, has no isolation, and doesn’t exist at all for a sent email or a wire transfer, which is an argument for a human gate rather than a cleverer retry.
+Volunteer that crash recovery and human-approval pauses are one mechanism and you’ve shown the architectural instinct the question exists to find.</p>
+<h2 id="further-reading"><a class="header" href="#further-reading">Further reading</a></h2>
+<ul>
+<li><a href="https://docs.langchain.com/oss/python/langgraph/persistence">LangGraph: persistence and checkpointers</a> — threads, <code>thread_id</code>, and the in-memory / SQLite / Postgres savers.</li>
+<li><a href="https://docs.langchain.com/oss/python/langgraph/durable-execution">LangGraph: durable execution</a> — the <code>"exit"</code> / <code>"async"</code> / <code>"sync"</code> durability modes and the determinism requirements.</li>
+<li><a href="https://docs.stripe.com/api/idempotent_requests">Stripe: idempotent requests</a> — the canonical idempotency-key design, including key retention and parameter matching.</li>
+<li><a href="https://temporal.io/blog/durable-execution-meets-ai-why-temporal-is-the-perfect-foundation-for-ai">Temporal: durable execution meets AI</a> — the case for durable execution under agent loops, July 2025.</li>
+<li><a href="https://restate.dev/what-is-durable-execution/">Restate: what is durable execution</a> — journaling, replayed results, durable timers and signals.</li>
+<li><a href="https://docs.dbos.dev/architecture">DBOS: architecture</a> — Postgres-backed checkpointing, step-level replay, and the requirement that steps be idempotent.</li>
+<li><a href="https://microservices.io/patterns/data/saga.html">microservices.io: Saga pattern</a> — compensating transactions, choreography versus orchestration, and the isolation caveat.</li>
+<li><a href="https://martinfowler.com/eaaDev/EventSourcing.html">Martin Fowler: Event Sourcing</a> — rebuilding state by replaying events, and why external systems can’t tell a replay from the real thing.</li>
+<li><a href="https://martinfowler.com/articles/patterns-of-distributed-systems/wal.html">Unmesh Joshi: Write-Ahead Log</a> — record the change before you apply it.</li>
+<li><a href="https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents">Anthropic: effective harnesses for long-running agents</a> — externalised progress state as the thing that survives between agent shifts.</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../long-horizon-operations/05-false-completion.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../long-horizon-operations/07-handoff.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../long-horizon-operations/05-false-completion.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../long-horizon-operations/07-handoff.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

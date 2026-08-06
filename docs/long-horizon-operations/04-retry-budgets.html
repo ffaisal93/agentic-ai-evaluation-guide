@@ -1,0 +1,676 @@
+<!DOCTYPE HTML>
+<html lang="en" class="navy sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Retry budgets - Agentic AI Evaluation — A Practical Guide</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="Frameworks, metrics, benchmarks, tool-use and safety evaluation, and production monitoring for agentic AI systems.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../custom-9222a227.css">
+
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "navy";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-96a8b00f.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-4b3c722b.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('navy')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Agentic AI Evaluation — A Practical Guide</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/ffaisal93/agentic-ai-evaluation-guide" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/ffaisal93/agentic-ai-evaluation-guide/edit/main/./long-horizon-operations/04-retry-budgets.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="retry-budgets-how-a-well-meaning-agent-burns-your-whole-budget"><a class="header" href="#retry-budgets-how-a-well-meaning-agent-burns-your-whole-budget">Retry budgets: how a well-meaning agent burns your whole budget</a></h1>
+<p>Here is a thing that happens to almost everyone who ships their first long-running agent.
+You give it a generous allowance — fifty steps, a couple of dollars, five minutes of wall-clock — and you feel like a benevolent god handing out pocket money.
+Then you check the logs the next morning and find it spent the whole allowance on step three, politely asking a slightly sick API the same question a few hundred times.</p>
+<p>Nobody wrote that behaviour.
+It emerged, the way a traffic jam emerges, out of a stack of individually reasonable decisions.
+Retries are sensible one at a time and catastrophic when stacked, and agents stack them in ways ordinary software does not.</p>
+<h2 id="the-nesting-doll-problem"><a class="header" href="#the-nesting-doll-problem">The nesting doll problem</a></h2>
+<p>Think about a set of Russian nesting dolls, except every doll contains three copies of the next one down.</p>
+<p>At the bottom is the HTTP client inside your tool.
+Modern SDKs retry automatically — most will quietly try a failed call two or three more times before handing you an error, because that’s usually right and it makes the SDK look reliable.
+You didn’t configure that, and you probably don’t know it’s on.</p>
+<p>One layer up is your tool wrapper, which some sensible engineer wrapped in a retry decorator after reading a blog post about resilience — three attempts, exponential backoff, very tidy.</p>
+<p>One layer up from that is the agent loop itself.
+The model gets an error back, decides the tool was flaky, and calls it again.
+That’s not a config setting, that’s a <em>decision the model made</em>, and no retry library on earth knows about it.</p>
+<p>And one layer above <em>that</em> is your orchestration framework, which has a notion of “retry the whole step” for robustness.</p>
+<p>Four layers, each reasonable in isolation, multiplying into a number nobody designed.</p>
+<p>The Amazon Builders’ Library makes exactly this point about ordinary distributed systems, with the arithmetic spelled out: if a database is failing and there are five service layers between the client and the database, each retrying three times, “the load on the database will increase 243x, making it unlikely to ever recover.”
+That’s just \(3^5\).
+Their conclusion is blunt — for most operations, retry at a <em>single</em> point in the stack, and nowhere else.
+(<a href="https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/">Timeouts, retries, and backoff with jitter</a>)</p>
+<p>Agents add a fifth layer that AWS didn’t have to worry about, because in agents one of the retriers is a language model with opinions.</p>
+<h2 id="retry-amplification-with-the-arithmetic-done-out-loud"><a class="header" href="#retry-amplification-with-the-arithmetic-done-out-loud">Retry amplification, with the arithmetic done out loud</a></h2>
+<p>Let’s make this visceral, because “amplification” is an abstract word and the numbers are not.</p>
+<p>Say you configure an agent with a fifty-step budget.
+In your head, “fifty steps” means “up to fifty things happen.”
+That’s the mental model, and it’s wrong.</p>
+<p>Now say each step, when a tool fails, retries that tool three times before giving up.
+Fifty steps times three attempts is a hundred and fifty tool invocations.
+Still sounds survivable.</p>
+<p>Now add the SDK underneath your wrapper, which quietly retries a 5xx on its own.
+Each of those hundred and fifty invocations becomes two actual network calls.
+Fifty times three times two is <strong>three hundred requests</strong> hitting the far end — from a budget you described to yourself as “fifty steps.”
+If the SDK’s default is two internal retries rather than one, it’s four hundred and fifty.</p>
+<p>And that’s before the model decides, unprompted, to re-call a tool because it didn’t like the answer.
+Say it does that on a quarter of the steps.
+Now you’re comfortably past five hundred.</p>
+<p>Here’s the part that stings: at no point did anything violate its configured limit.
+Every layer stayed inside its own rules.
+The rules just multiply, because that’s what nested loops do, and nobody owns the product.</p>
+<p>The useful habit is to stop thinking in <em>steps</em> and start thinking in <em>leaf calls</em> — the actual requests that leave your infrastructure and land on someone’s server.
+When you size a budget, size it in leaf calls, then divide backwards to figure out how many steps that buys you.
+If you can only afford two hundred leaf calls and your amplification factor is nine, you have a twenty-two-step agent, and you should tell it so.</p>
+<h2 id="why-agents-are-worse-at-this-than-ordinary-software"><a class="header" href="#why-agents-are-worse-at-this-than-ordinary-software">Why agents are worse at this than ordinary software</a></h2>
+<p>Three reasons, and they compound.</p>
+<p><strong>The model decides to retry, and no config controls that.</strong>
+A retry library retries on an <em>exception</em>.
+A model retries on <em>dissatisfaction</em>.
+It called the search tool, got three results, decided they were mediocre, and called it again with slightly different phrasing.
+That’s not an error path — the tool returned 200 OK — so your retry counters never incremented, your circuit breaker never noticed, and your dashboards show a perfectly healthy system quietly doing four times the work.
+This is the single biggest reason agent budgets blow in ways your ops instincts don’t predict.</p>
+<p><strong>The agent can’t see its own budget unless you tell it.</strong>
+This sounds obvious once said and is skipped constantly.
+The model has no proprioception — no sense of how much of the run it has used, how much money it has spent, how close it is to the wall.
+It’ll happily start a careful six-part research plan on step forty-eight of fifty.
+You wouldn’t send someone shopping without telling them how much cash is in their pocket, and then act surprised at the checkout.</p>
+<p><strong>Failures poison the context, which makes the next attempt dumber.</strong>
+Every failed call leaves an error message in the conversation.
+Stack traces, timeout notices, JSON blobs of nothing.
+Ten retries later, a meaningful chunk of the model’s working memory is transcripts of things that didn’t work — which is exactly the context drift problem: the further you get into a long run, the more the model’s attention is spread across noise instead of the goal.
+So the failure mode is doubly nasty.
+The retries burn budget <em>and</em> they degrade the reasoning that would have found a smarter path.
+An agent on its ninth attempt is not just poorer than one on its first; it’s also, in a real sense, less intelligent.</p>
+<h2 id="the-five-ways-this-actually-bites-you"><a class="header" href="#the-five-ways-this-actually-bites-you">The five ways this actually bites you</a></h2>
+<p>Give these names, because naming them is how you spot them in a log at 2am.</p>
+<p><strong>Retry storms.</strong>
+A service gets slow.
+Every agent talking to it starts retrying.
+The retries add load, which makes it slower, which triggers more retries.
+The service was going to recover in thirty seconds; instead it stays down for an hour, held under by the very clients trying to reach it.
+The AWS write-up puts it nicely: retries are <em>selfish</em> — each client demands more resources to improve its own odds, and when everyone is selfish at once the whole thing collapses.</p>
+<p><strong>Budget exhaustion before completion.</strong>
+The agent spends forty-eight of fifty steps fighting one stubborn sub-task — a flaky lookup, a permissions issue — and has two steps left for the actual goal.
+The tragedy is that the stubborn sub-task was often optional.
+It was a nice-to-have enrichment step, and the agent had no way to know it wasn’t worth the whole run.</p>
+<p><strong>Silent partial work.</strong>
+The budget runs out mid-task, and the run just… stops.
+But the agent had already refunded three of seven customers, updated two records, and sent one email.
+The world is now in a state no one designed: half-changed, undocumented, and inconsistent.
+This is the failure mode that turns a budget problem into an incident, and it’s why every consequential action wants an idempotency key and a ledger you can walk backwards.</p>
+<p><strong>Backoff versus deadline.</strong>
+Exponential backoff says wait longer each time: one second, two, four, eight, sixteen.
+Your user is staring at a spinner with a thirty-second attention span.
+Politely backing off is the right thing for the <em>server</em> and the wrong thing for the <em>person</em>, and if nobody reconciled those two you end up timing out the user in order to be considerate to a machine.
+Backoff must always be checked against the remaining deadline; if the nap is longer than the time you have left, don’t nap, fail.</p>
+<p><strong>Thrash.</strong>
+The agent tries approach A, it fails, so it tries approach B, which also fails, so it goes back to A.
+Each attempt looks like a <em>fresh first attempt</em> to any retry counter, because the counters are per-approach and the alternation resets them.
+The agent is in a loop, it’s burning the budget at full speed, and every individual decision looks locally reasonable in the transcript.
+Only a view across turns catches this — which is the no-progress watchdog we’ll build in the next chapter.</p>
+<h2 id="the-toolkit-defined-plainly"><a class="header" href="#the-toolkit-defined-plainly">The toolkit, defined plainly</a></h2>
+<p>Now the mechanisms.
+Each of these is old and boring in distributed systems, which is exactly why it works.</p>
+<p><strong>Exponential backoff with jitter.</strong>
+Backoff means waiting longer between each attempt — one second, then two, then four — so a struggling service gets breathing room instead of a fire hose.
+Jitter means randomising that wait — instead of sleeping exactly four seconds, sleep a random amount between zero and four.
+Why randomise?
+Because a thousand clients that failed at the same instant will, without jitter, all retry at the same instant, and you’ve built a synchronised wave that knocks the service over again.
+Jitter smears them out.
+This is the single highest-value line of code in the whole chapter and it’s one call to a random number generator.
+Use it whenever more than one caller can fail simultaneously — which, for agents running in parallel, is always.</p>
+<p><strong>Retry budgets as a ratio, not a count.</strong>
+This is the idea most people haven’t met, and it’s the one that gives this chapter its title.
+A retry <em>count</em> is per-call: “try this up to three times.”
+A retry <em>budget</em> is per-system: “across all recent traffic, retries may not exceed 20% of requests.”
+Twitter’s Finagle popularised it — their default allows retries on 20% of requests, on top of a floor of 10 retries per second, implemented as a token bucket whose credits expire after ten seconds.
+(<a href="https://finagle.github.io/blog/2016/02/08/retry-budgets/">Finagle: retry budgets</a>)
+The beauty of the ratio form is that it behaves correctly in both regimes automatically.
+One flaky call in a healthy system? Retry freely, you’re nowhere near 20%.
+Everything failing at once? The budget is instantly exhausted and retries stop — which is precisely when retrying is most harmful.
+It’s since been adopted in service meshes and is being standardised into the Kubernetes Gateway API. (<a href="https://gateway-api.sigs.k8s.io/geps/gep-3388/">GEP-3388</a>)
+Use ratio budgets at the run level; use counts at the individual-call level; you want both.</p>
+<p><strong>Circuit breakers.</strong>
+Named after the thing in your electrical panel.
+Count recent failures for a dependency, and past a threshold, <em>open</em> the breaker — stop calling that service entirely for a while, failing instantly instead of waiting out another timeout.
+After a cooldown the breaker goes <em>half-open</em>: let one probe call through, and if it succeeds, close the breaker and resume; if it fails, open again.
+(<a href="https://martinfowler.com/bliki/CircuitBreaker.html">Fowler on circuit breakers</a>)
+For agents there’s a bonus: an open breaker is a <em>fact you can put in the prompt</em>.
+“Shipping API is down, breaker open, don’t plan around it” lets the model route around an outage at planning time instead of discovering it five steps deep.</p>
+<p><strong>Deadlines that propagate.</strong>
+A timeout is a per-call limit: “give up on this request after ten seconds.”
+A deadline is an absolute point in time — “this whole run must be finished by 14:32:10” — that travels down the call chain, so a sub-agent three levels deep knows it has four seconds left, not ten.
+Timeouts alone let a chain of ten well-behaved ten-second calls take a hundred seconds.
+Deadlines are what stop that.
+If you only add one thing from this section, add deadlines; they subsume a surprising amount of the rest.</p>
+<p><strong>Per-tool caps versus a global run budget.</strong>
+These answer different questions and you want both.
+A per-tool cap says “no single tool may consume more than six retries across this entire run,” which stops one sick dependency from eating everything.
+The global run budget says “this run gets fifty steps and two dollars total, however you spend them.”
+Without per-tool caps, one bad tool takes the whole run hostage; without a global budget, twelve well-behaved tools can each stay under their cap and collectively bankrupt you.</p>
+<p><strong>Retryable versus non-retryable.</strong>
+Retrying something that can never succeed isn’t resilience, it’s a very expensive way of doing nothing.
+The rough split:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Kind</th><th>Examples</th><th>Retry?</th></tr>
+</thead>
+<tbody>
+<tr><td>Transient</td><td>429 rate-limited, 500, 502, 503, 504, connection reset, timeout</td><td>Yes, with backoff and jitter</td></tr>
+<tr><td>Permanent</td><td>400 malformed, 401 unauthorised, 403 forbidden, 404 missing, 422 invalid</td><td>No — fix the request or give up</td></tr>
+<tr><td>Semantic</td><td>“insufficient funds”, “market closed”, “already refunded”</td><td>No — the plan is wrong, not the plumbing</td></tr>
+</tbody>
+</table>
+</div>
+<p>That third row is the agent-specific one.
+The call succeeded, HTTP 200, everything green — but the <em>meaning</em> is a refusal.
+A model that treats “insufficient funds” as flakiness will re-submit that order until the budget dies, and your logs will show a hundred perfectly successful API calls.
+Teach the classifier about semantic failures explicitly, because no HTTP status code will do it for you.</p>
+<p><strong>Idempotency keys.</strong>
+Idempotent means “safe to do twice” — reading a balance is idempotent, charging a card is emphatically not.
+An idempotency key is a unique string you attach to a request so the far side can recognise a duplicate and act once.
+Stripe’s implementation is the canonical reference: they save the status code and body of the first request for a given key, and any later request with the same key returns that stored result rather than executing again — including stored 500s — with keys pruned after 24 hours.
+(<a href="https://docs.stripe.com/api/idempotent_requests">Stripe: idempotent requests</a>)
+Without this, “retry on timeout” is a coin flip between resilience and double-charging a customer, because a timeout doesn’t tell you whether the work happened.</p>
+<p><strong>Compensation for what can’t be undone.</strong>
+When a run dies halfway through a multi-system change, there is no cross-system rollback button.
+The pattern is a saga: every consequential action gets a paired compensating action that reverses it, and you keep a durable ledger of what you actually did, so on failure you can walk it backwards.
+(<a href="https://microservices.io/patterns/data/saga.html">Saga pattern</a>)
+You don’t need the vocabulary in an interview.
+You need the ledger.</p>
+<h2 id="the-agent-specific-moves-most-courses-skip"><a class="header" href="#the-agent-specific-moves-most-courses-skip">The agent-specific moves most courses skip</a></h2>
+<p>Everything above is standard distributed-systems hygiene.
+These next four are what separate someone who read a resilience blog post from someone who has actually run agents.</p>
+<p><strong>Make the budget visible to the model.</strong>
+Put the remaining budget in the context, in plain language, every turn.
+“You have 12 steps, roughly 11,000 tokens and $0.22 of budget left.”
+Something genuinely useful happens when you do this: the model starts <em>triaging</em>.
+It skips the optional enrichment step.
+It stops opening new lines of investigation.
+It writes the summary while it still can.
+This costs you about thirty tokens a turn and it’s the highest-leverage change in this chapter, because it converts a hard external limit into an internal planning constraint the model can actually reason with.</p>
+<p><strong>Force a graceful-degradation finish.</strong>
+Pick a threshold — say 20% of budget remaining — and when you cross it, change the instructions.
+Not “you’re running low,” but a hard switch: stop exploring, write the best partial answer you have, and produce a handoff note saying what’s done, what isn’t, and what you’d try next.
+Compare the two possible endings.
+An agent that dies mid-thought at step fifty produces nothing and leaves someone guessing.
+An agent that spends step forty-eight writing “I confirmed items 1–4, item 5 is blocked on a permissions error from the CRM, here’s the ticket ID” has produced something genuinely valuable.
+Same budget.
+Completely different product.</p>
+<p><strong>Escalate rather than burn the remainder.</strong>
+If the agent is stuck and the budget is half gone, spending the other half on the same wall is the worst available option.
+Hand it to a human <em>with the budget it hasn’t spent still on the table</em>, because that remaining budget is what lets the human’s follow-up instruction actually get executed.
+The design question is choosing the trigger: repeated failures on the same tool, a semantic refusal, a permissions error, or the no-progress signal from the next chapter.</p>
+<p><strong>Account for budget across sub-agents.</strong>
+The moment you spawn sub-agents, the naive design gives each one its own fresh budget, and your fifty-step run becomes five sub-agents times fifty steps.
+The fix is a shared ledger: the parent holds the budget and hands out <em>allocations</em>, sub-agents spend against the shared pool, and the parent sees the true total.
+Say it out loud in an interview and you will sound like someone who has been burned, because you will have described the exact mechanism by which people get a surprise invoice.</p>
+<h2 id="a-budget-ledger-you-can-actually-run"><a class="header" href="#a-budget-ledger-you-can-actually-run">A budget ledger you can actually run</a></h2>
+<p>Here’s a compact, dependency-free version that ties the pieces together.
+It tracks four dimensions at once, exposes the remaining budget in a form you can paste straight into a prompt, enforces per-call and per-tool and per-run retry limits, backs off with jitter, refuses to back off past the deadline, distinguishes retryable from non-retryable, and flips a graceful-finish flag when the budget gets thin.</p>
+<pre><code class="language-python">import random
+import time
+
+
+class Retryable(Exception):
+    """The world was briefly unhappy. Trying again might genuinely help."""
+
+
+class NonRetryable(Exception):
+    """The request itself is wrong. Trying again can only waste budget."""
+
+
+RETRYABLE_STATUS = {408, 425, 429, 500, 502, 503, 504}
+
+
+def raise_for_status(status, note=""):
+    if status &lt; 400:
+        return
+    if status in RETRYABLE_STATUS:
+        raise Retryable(f"{status} {note}")
+    raise NonRetryable(f"{status} {note}")
+
+
+class BudgetLedger:
+    def __init__(self, max_steps=50, max_tokens=200_000, max_usd=2.00,
+                 max_seconds=300.0, finish_at=0.20, retry_ratio=0.20,
+                 retry_floor=3, default_tool_retry_cap=6, tool_retry_caps=None,
+                 clock=time.monotonic, sleeper=time.sleep, rng=None):
+        self.caps = {"steps": float(max_steps), "tokens": float(max_tokens),
+                     "usd": float(max_usd), "seconds": float(max_seconds)}
+        self.used = {"steps": 0.0, "tokens": 0.0, "usd": 0.0, "seconds": 0.0}
+        self.finish_at = finish_at
+        self.retry_ratio = retry_ratio
+        self.retry_floor = retry_floor
+        self.default_tool_retry_cap = default_tool_retry_cap
+        self.tool_retry_caps = dict(tool_retry_caps or {})
+        self._clock = clock
+        self._sleep = sleeper
+        self._rng = rng or random.Random()
+        self._t0 = clock()
+        self.calls = 0
+        self.retries = 0
+        self.tool_retries = {}
+        self.log = []
+
+    def _tick(self):
+        self.used["seconds"] = self._clock() - self._t0
+
+    def spend(self, steps=0, tokens=0, usd=0.0):
+        self.used["steps"] += steps
+        self.used["tokens"] += tokens
+        self.used["usd"] += usd
+        self._tick()
+
+    def remaining(self):
+        self._tick()
+        return {k: self.caps[k] - self.used[k] for k in self.caps}
+
+    def fraction_left(self):
+        rem = self.remaining()
+        return min(max(rem[k], 0.0) / self.caps[k] for k in self.caps)
+
+    def exhausted(self):
+        return any(v &lt;= 0 for v in self.remaining().values())
+
+    def should_finish(self):
+        return self.exhausted() or self.fraction_left() &lt;= self.finish_at
+
+    def as_prompt_note(self):
+        """The whole point: budget the model can actually see."""
+        r = self.remaining()
+        note = ("BUDGET LEFT: {steps} steps | {tok:,} tokens | {usd:.2f} USD "
+                "| {sec:.0f}s").format(steps=int(max(r["steps"], 0)),
+                                       tok=int(max(r["tokens"], 0)),
+                                       usd=max(r["usd"], 0.0),
+                                       sec=max(r["seconds"], 0.0))
+        if self.should_finish():
+            note += ("\nYou are nearly out of budget. Stop exploring. Spend what is "
+                     "left writing the best partial answer you have plus a handoff "
+                     "note saying what is done, what is not, and what you would try next.")
+        return note
+
+    def _global_retry_allowance(self):
+        """Finagle-style: a ratio of traffic, with a small floor."""
+        return max(self.retry_floor, self.retry_ratio * self.calls)
+
+    def _backoff(self, attempt, base=0.5, cap=8.0):
+        """Full jitter: sleep somewhere in [0, ceiling), not exactly at it."""
+        ceiling = min(cap, base * (2 ** attempt))
+        return self._rng.uniform(0, ceiling)
+
+    def call_tool(self, name, fn, *args, max_attempts=3, step_cost=1,
+                  tokens_per_call=0, usd_per_call=0.0, reserve_seconds=5.0,
+                  **kwargs):
+        self.calls += 1
+        attempt = 0
+        while True:
+            self.spend(steps=step_cost, tokens=tokens_per_call, usd=usd_per_call)
+            if self.exhausted():
+                self.log.append((name, attempt, "budget exhausted"))
+                raise NonRetryable(f"budget exhausted before '{name}' succeeded")
+            try:
+                out = fn(*args, **kwargs)
+                self.log.append((name, attempt, "ok"))
+                return out
+            except NonRetryable as exc:
+                self.log.append((name, attempt, f"fatal: {exc}"))
+                raise
+            except Retryable as exc:
+                attempt += 1
+                if attempt &gt;= max_attempts:
+                    self.log.append((name, attempt, "per-call cap"))
+                    raise NonRetryable(f"'{name}' failed {max_attempts}x: {exc}")
+                tool_cap = self.tool_retry_caps.get(name, self.default_tool_retry_cap)
+                if self.tool_retries.get(name, 0) &gt;= tool_cap:
+                    self.log.append((name, attempt, "per-tool cap"))
+                    raise NonRetryable(f"'{name}' is out of per-tool retries: {exc}")
+                if self.retries &gt;= self._global_retry_allowance():
+                    self.log.append((name, attempt, "run retry budget spent"))
+                    raise NonRetryable(
+                        f"run retry budget spent, '{name}' still failing: {exc}")
+                wait = self._backoff(attempt - 1)
+                if wait &gt; self.remaining()["seconds"] - reserve_seconds:
+                    self.log.append((name, attempt, "deadline beats backoff"))
+                    raise NonRetryable(f"no time left to back off for '{name}': {exc}")
+                self.retries += 1
+                self.tool_retries[name] = self.tool_retries.get(name, 0) + 1
+                self.log.append((name, attempt, f"retry after {wait:.2f}s"))
+                self._sleep(wait)
+</code></pre>
+<p>And a demo, with a fake clock so it runs instantly.
+The search backend succeeds on every third call, and one tool is permanently broken.</p>
+<pre><code class="language-python">def demo():
+    fake_now = [0.0]
+    ledger = BudgetLedger(max_steps=12, max_tokens=20_000, max_usd=0.40,
+                          max_seconds=90.0, finish_at=0.25, retry_floor=5,
+                          clock=lambda: fake_now[0],
+                          sleeper=lambda s: fake_now.__setitem__(0, fake_now[0] + s),
+                          rng=random.Random(11))
+    hits = {"n": 0}
+
+    def flaky_search(q):
+        hits["n"] += 1
+        raise_for_status(200 if hits["n"] % 3 == 0 else 503, "search backend")
+        return f"3 results for {q!r}"
+
+    def broken_lookup(q):
+        raise_for_status(400, "malformed filter expression")
+
+    notes = []
+    topics = ["refund policy", "shipping SLA", "tax rules", "returns window",
+              "warranty terms"]
+    for q in topics:
+        print(ledger.as_prompt_note())
+        if ledger.should_finish():
+            print("&gt;&gt; agent decides to wrap up early\n")
+            break
+        try:
+            notes.append(ledger.call_tool("search", flaky_search, q,
+                                          tokens_per_call=900, usd_per_call=0.02))
+            print(f"&gt;&gt; got: {notes[-1]}\n")
+        except NonRetryable as exc:
+            print(f"&gt;&gt; gave up on {q!r}: {exc}\n")
+
+    try:
+        ledger.call_tool("lookup", broken_lookup, "id = ???", tokens_per_call=300)
+    except NonRetryable as exc:
+        print(f"&gt;&gt; non-retryable, not retried once: {exc}\n")
+
+    print("PARTIAL RESULT:", notes or "(nothing)")
+    print("HANDOFF NOTE: covered", len(notes), "of", len(topics), "topics;",
+          "search backend was flapping with 503s.")
+    print("calls:", ledger.calls, "retries:", ledger.retries,
+          "per-tool:", ledger.tool_retries)
+
+
+demo()
+</code></pre>
+<p>Running it:</p>
+<pre><code class="language-text">BUDGET LEFT: 12 steps | 20,000 tokens | 0.40 USD | 90s
+&gt;&gt; got: 3 results for 'refund policy'
+
+BUDGET LEFT: 9 steps | 17,300 tokens | 0.34 USD | 89s
+&gt;&gt; got: 3 results for 'shipping SLA'
+
+BUDGET LEFT: 6 steps | 14,600 tokens | 0.28 USD | 88s
+&gt;&gt; gave up on 'tax rules': run retry budget spent, 'search' still failing: 503 search backend
+
+BUDGET LEFT: 4 steps | 12,800 tokens | 0.24 USD | 88s
+&gt;&gt; got: 3 results for 'returns window'
+
+BUDGET LEFT: 3 steps | 11,900 tokens | 0.22 USD | 88s
+You are nearly out of budget. Stop exploring. Spend what is left writing the best
+partial answer you have plus a handoff note saying what is done, what is not, and
+what you would try next.
+&gt;&gt; agent decides to wrap up early
+
+&gt;&gt; non-retryable, not retried once: 400 malformed filter expression
+
+PARTIAL RESULT: ['3 results for ...', '3 results for ...', '3 results for ...']
+HANDOFF NOTE: covered 3 of 5 topics; search backend was flapping with 503s.
+calls: 5 retries: 5 per-tool: {'search': 5}
+</code></pre>
+<p>Read that trace and notice what the machinery bought you.
+The run retried where retrying helped, and twice it <em>worked</em> on the second or third try.
+It gave up on one topic when the run-level retry budget ran dry, rather than letting one flaky topic swallow everything.
+It never retried the 400 — not once, because a malformed request is malformed forever.
+And it stopped with two steps still in the tank, spending them on a partial answer and a handoff note instead of dying mid-sentence with nothing to show.</p>
+<p>Three of five topics plus an honest note about why, delivered on time, is a shippable outcome.
+Zero of five topics and a stack trace is an incident.
+The difference is about ninety lines of accounting.</p>
+<h2 id="say-it-in-one-breath"><a class="header" href="#say-it-in-one-breath">Say it in one breath</a></h2>
+<p>“Retries multiply — the SDK retries, the tool wrapper retries, the framework retries the step, and the model decides on its own to call the tool again, so a fifty-step budget quietly becomes five hundred requests; the fix is to count leaf calls rather than steps, retry at exactly one layer with exponential backoff and jitter, cap retries as a <em>ratio</em> of traffic rather than a count so retries switch themselves off precisely when everything is failing, propagate a deadline so backoff can’t outlive the user’s patience, never retry a 400 or a semantic refusal, use idempotency keys so a retry can’t double-charge anyone — and then do the agent-specific bit, which is to put the remaining budget in the prompt so the model can triage, and force a graceful finish that spends the last step on a partial answer and a handoff note instead of dying mid-thought.”</p>
+<h2 id="what-an-interviewer-is-really-testing"><a class="header" href="#what-an-interviewer-is-really-testing">What an interviewer is really testing</a></h2>
+<p>They already know you can spell “exponential backoff.”
+What they’re listening for is whether you’ve noticed the four things below.</p>
+<p><strong>Do you think in multiplication or addition?</strong>
+The junior answer adds up limits: three retries, fifty steps, fine.
+The senior answer multiplies them and asks who owns the product.
+If you volunteer the amplification arithmetic unprompted — and especially if you point out that retrying at multiple layers is the bug, not a belt-and-braces feature — you’ve cleared the bar in one sentence.</p>
+<p><strong>Do you know retries are a <em>system</em> property, not a call property?</strong>
+Per-call retry counts are table stakes.
+Ratio-based retry budgets, circuit breakers, and propagated deadlines say you’ve thought about what happens when a thousand of these run at once against one struggling dependency.</p>
+<p><strong>Do you distinguish retryable from non-retryable — including the semantic case?</strong>
+Anyone can say “retry 5xx, not 4xx.”
+The differentiator is the third category: the call returned 200, and the <em>content</em> is a refusal, and retrying it is the most expensive no-op in your system.</p>
+<p><strong>Do you know what agents add that ordinary services don’t?</strong>
+This is the real question hiding inside the question.
+Three answers earn it: the model retries by <em>choice</em>, invisible to your counters; the model can’t see its budget unless you inject it; and failed attempts pollute context so late retries are dumber than early ones.
+Finish with the graceful-finish idea — that the last 20% of budget should be reserved for producing a useful partial result and a handoff note — and you’ve described a system somebody would actually be willing to run overnight.</p>
+<h2 id="further-reading"><a class="header" href="#further-reading">Further reading</a></h2>
+<ul>
+<li><a href="https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/">Amazon Builders’ Library: Timeouts, retries, and backoff with jitter</a> — the canonical write-up, including the 243x example.</li>
+<li><a href="https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/">AWS Architecture Blog: Exponential backoff and jitter</a> — the experiments behind “full jitter.”</li>
+<li><a href="https://finagle.github.io/blog/2016/02/08/retry-budgets/">Finagle: Retry budgets</a> — retries as a percentage of traffic.</li>
+<li><a href="https://gateway-api.sigs.k8s.io/geps/gep-3388/">Gateway API GEP-3388: Retry Budgets</a> — the same idea being standardised for Kubernetes.</li>
+<li><a href="https://martinfowler.com/bliki/CircuitBreaker.html">Martin Fowler: Circuit Breaker</a></li>
+<li><a href="https://docs.stripe.com/api/idempotent_requests">Stripe: Idempotent requests</a></li>
+<li><a href="https://microservices.io/patterns/data/saga.html">microservices.io: Saga pattern</a></li>
+<li><a href="https://docs.langchain.com/oss/python/langgraph/errors/GRAPH_RECURSION_LIMIT">LangGraph: GRAPH_RECURSION_LIMIT</a> — what a framework-level step cap looks like in practice, and what it does when you hit it.</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../long-horizon-operations/03-measuring-degradation.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../long-horizon-operations/05-false-completion.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../long-horizon-operations/03-measuring-degradation.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../long-horizon-operations/05-false-completion.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>
