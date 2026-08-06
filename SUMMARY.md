@@ -109,7 +109,11 @@
 # Long-Horizon Agent Operations
 
 - [Long-Horizon Operations](long-horizon-operations/README.md)
+  - [The operational reality nobody teaches](long-horizon-operations/01-introduction.md)
   - [Context drift](long-horizon-operations/02-context-drift.md)
   - [Measuring degradation over a long run](long-horizon-operations/03-measuring-degradation.md)
   - [Retry budgets](long-horizon-operations/04-retry-budgets.md)
-
+  - [False completion](long-horizon-operations/05-false-completion.md)
+  - [Checkpoints and resume](long-horizon-operations/06-checkpoint-resume.md)
+  - [Handoff](long-horizon-operations/07-handoff.md)
+  - [Operating a fleet of long-running agents](long-horizon-operations/08-operating-it.md)
