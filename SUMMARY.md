@@ -105,3 +105,11 @@
     - [Pattern 21: Exploration and Discovery](agentic-design-pattern/21-exploration-discovery.md)
   - [Putting it all together](agentic-design-pattern/90-putting-it-together.md)
   - [Appendix: watch-along map for the video](agentic-design-pattern/91-video-map.md)
+
+# Long-Horizon Agent Operations
+
+- [Long-Horizon Operations](long-horizon-operations/README.md)
+  - [Context drift](long-horizon-operations/02-context-drift.md)
+  - [Measuring degradation over a long run](long-horizon-operations/03-measuring-degradation.md)
+  - [Retry budgets](long-horizon-operations/04-retry-budgets.md)
+
