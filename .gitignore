@@ -71,3 +71,6 @@ book/
 
 # scratch quarantine (bridge cannot delete)
 _trash/
+
+# source book (20MB binary, kept locally next to the playbook)
+agentic-design-pattern/*.pdf

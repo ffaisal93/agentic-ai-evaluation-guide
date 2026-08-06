@@ -68,3 +68,8 @@
 
 - [12_production_monitoring](12_production_monitoring/README.md)
   - [Production Monitoring Deep Dive](12_production_monitoring/PRODUCTION_MONITORING_DEEP_DIVE.md)
+
+# Agentic Design Patterns
+
+- [Design Patterns Track](agentic-design-pattern/README.md)
+  - [The Agentic Design Patterns Interview Playbook](agentic-design-pattern/AGENTIC_DESIGN_PATTERNS_PLAYBOOK.md)
