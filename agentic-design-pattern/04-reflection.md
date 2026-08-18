@@ -42,6 +42,20 @@ The loop has four beats, straight from the book: **execute** — the producer ge
 The orchestrator around this loop is doing real work: it carries the state, and the state here is richer than in any previous pattern — the original task, every draft so far, every critique so far — because the producer revises best when it can see what it wrote *and* what was wrong with it.
 That accumulating history is also the pattern's hidden tax, which we'll get to.
 
+Before those two, there's an implementation detail that decides whether the loop works at all, and it's the one candidates almost never mention.
+
+**The producer and the critic need separate message histories.**
+The obvious implementation keeps one conversation and appends everything to it — draft, critique, draft, critique.
+It runs, and it degrades in a specific way: with a single shared history, the critic's own previous critiques are sitting in its context as prior `assistant` turns, so the model is being asked to critique a document while looking at a transcript of itself already having opinions about that document.
+It starts agreeing with its earlier self, the objections get softer each lap, and by round three you get "this is excellent, no further changes" on a draft that still has the same problem it had in round one.
+The loop converges on self-congratulation rather than on quality.
+
+The fix is to maintain two histories and mirror them by swapping roles: what the producer emitted as `assistant` is inserted into the critic's history as `user`, and what the critic emitted as `assistant` goes into the producer's history as `user`.
+Each side sees a clean conversation in which it is the only one with opinions.
+The cost is that you're now paying for two growing contexts instead of one, which makes the compaction question below sharper rather than softer.
+
+Saying that unprompted is a strong signal, because it is the thing you only know if you have built one.
+
 Two design decisions define any reflection system, and interviewers probe both.
 
 First: **what does the critic actually check, and with what?**
