@@ -14,6 +14,8 @@ Production monitoring is therefore not "ops for the agent." It is **continuous e
 
 This chapter covers the full loop: tracing runs, the metrics catalog, online evaluation on sampled traffic, feedback capture, drift and regression detection, alerting, and closing the loop back into your eval sets. It also grounds all of that in the concrete 2025–2026 tooling landscape — OpenTelemetry's GenAI semantic conventions, OpenLLMetry, and the tracing-plus-eval platforms (LangSmith, Langfuse, Arize Phoenix, Helicone, Braintrust) that most teams actually reach for — and in real incidents that teams have lived through.
 
+> **Saying it out loud.** The line to open with is that you don't deploy an agent and finish evaluating it — you deploy it and start evaluating it, on real inputs, forever. Three things break offline eval the moment you ship. The inputs stop being yours, because real users ask things your dataset never imagined and the distribution shifts weekly. The world moves — providers silently update weights, tools change APIs, a retrieval index goes stale — so your code didn't change but your behavior did. And there's no ground truth anymore; offline you had labels, in production you have a stream of traces and some noisy user signals, so you have to manufacture judgment. That's why monitoring isn't ops for the agent, it's continuous evaluation: offline eval answers "is this good enough to ship," monitoring answers "is it still good right now, on what people are actually doing."
+
 ### The mental shift interviewers listen for
 
 A weak candidate treats production monitoring as "add Datadog and page on 5xx." A strong one articulates the shift explicitly: **the unit of observability is the agent *run*, not the HTTP request; the primary metric is *quality*, which you cannot measure directly and must approximate; and the deliverable is a *loop*, not a dashboard.** If you can say that sentence and then defend each clause, you are already ahead of most interviewees. The rest of this chapter is the defense.
@@ -35,11 +37,15 @@ The trap is to only measure the top row because it is free. Latency and cost tel
 
 There is a second axis worth internalizing: **the signal you can afford is inversely correlated with the signal you actually want.** Operational metrics are free and nearly useless for judging quality; true outcome data (did the customer's problem get solved?) is what you want and is the slowest, sparsest, most biased thing you have. Every technique in this chapter is a way to buy signal further down that ladder at a price you can pay at scale: LLM-as-judge buys behavioral signal for pennies per sampled trace; implicit feedback buys a noisy outcome proxy for free. Naming that tradeoff out loud is a green flag in interviews.
 
+> **Saying it out loud.** Picture a factory line you can't see inside of — requests in, answers out — and you're bolting sensors on at four depths: operational (is it up, fast, cheap), structural (what did it actually do, which is spans), behavioral (was the output any good, which is online eval), and outcome (did the user get what they wanted, which is feedback). The trap is measuring only the top row because it's free. Latency and cost tell you the factory is running; they say nothing about whether it's producing scrap, and an agent can be 100% up with healthy p95 and quietly wrong on 30% of requests. The second axis is the one worth naming out loud: the signal you can afford is inversely correlated with the signal you actually want — operational metrics are free and nearly useless for quality, true outcome data is what you want and is the slowest, sparsest, most biased thing you have. Every technique in this chapter is a way to buy signal further down that ladder at a price you can pay at scale.
+
 ---
 
 ## The 2025–2026 Landscape
 
 Before the techniques, orient yourself in the tooling world as it actually stands in 2025–2026, because interviewers increasingly expect you to know the *names* and how the pieces fit — not just the abstractions. The landscape has consolidated around one open standard for *how traces are shaped* and a handful of platforms for *storing, evaluating, and alerting on them*.
+
+> **Saying it out loud.** Name the three layers and you've answered this in thirty seconds — and date the claim, because this layer moves fast. The standard layer is OpenTelemetry's GenAI semantic conventions, which give everyone the same field names so a trace is portable across backends instead of locked to one vendor. The instrumentation layer is OpenLLMetry or OpenInference, which monkey-patch the provider SDKs so you get a populated span tree from a couple of lines of setup. The platform layer is LangSmith, Langfuse, Phoenix, Helicone, Braintrust — and what unifies them as of 2026 is that tracing and evaluation now live in the same product, which is exactly what makes online eval and closing the loop practical. The workflow that ties it together is an LLM judge running on a sample of live traces, asynchronously, charted over time. And the punchline: OTel portability means you're not locked to one backend, so pin the convention version you target and expect fields to keep being added.
 
 ### The standard layer: OpenTelemetry GenAI semantic conventions
 
@@ -51,6 +57,8 @@ The single most important development is that **OpenTelemetry now defines GenAI 
 - **Standardized metrics**: `gen_ai.client.operation.duration` (a latency histogram, filterable by model) and `gen_ai.client.token.usage` (a token histogram, filterable by `gen_ai.token.type` = input/output). An off-the-shelf collector can compute your latency and cost dashboards from these with zero custom parsing.
 
 Status as of this writing: the conventions are **published and in active use but still evolving** (they were incubating/experimental through 2025 and stabilizing piecemeal into 2026), so pin the convention version you target and expect field additions. Greptime's *How OpenTelemetry Traces LLM Calls, Agent Reasoning, and MCP Tools* (greptime.com, **May 9, 2026**) is a good deep read on how reasoning steps and MCP tool calls map onto spans; **Datadog** shipped native ingestion of these conventions and documents the mapping in *Agent Observability natively supports OpenTelemetry GenAI Semantic Conventions* (datadoghq.com).
+
+> **Saying it out loud.** The convention is basically three span types that map exactly onto how an agent works: an `invoke_agent` root that parents `chat` spans for LLM calls and `execute_tool` spans for tool invocations. The always-on attributes are model name, input and output token counts, and finish reasons; the standardized metrics are an operation-duration histogram and a token-usage histogram, which means an off-the-shelf collector can build your latency and cost dashboards with zero custom parsing. The detail that carries the most weight in a real org is that message content — the raw prompts and completions — is an *optional* attribute, off by default. That's a deliberate compliance affordance, not an oversight, and flipping it on is the moment your observability pipeline starts processing personal data. As of 2026 the conventions are published and in active use but still evolving, so pin the version you target.
 
 ### The instrumentation layer: OpenLLMetry and friends
 
@@ -85,6 +93,8 @@ Finally, **drift detection** for LLM apps has matured from a research topic into
 
 Group production metrics into five families. For each, track the aggregate *and* the tail — averages hide the failures that matter.
 
+> **Saying it out loud.** Five families, and for every one of them you track the aggregate and the tail, because averages hide exactly the failures that matter. Quality proxies — online judge score, refusal rate, task completion. Latency in percentiles, never the mean, because LLM latency is heavy-tailed. Cost, and specifically cost per completed task rather than per call, because an agent that retries five times is cheap per call and expensive per outcome. Reliability — tool error rate broken down by tool, step-count distribution, parse-failure rate. And safety, meaning guardrail hit rates. The forcing question I'd apply to every metric in design review: who gets paged and what do they do in the first five minutes? If there's no answer, it's a dashboard, not an alert — un-alerted metrics are documentation, alerted metrics are commitments.
+
 ### 1. Quality proxies
 You rarely have per-request ground truth, so you approximate quality:
 
@@ -94,7 +104,12 @@ You rarely have per-request ground truth, so you approximate quality:
 
 The subtle failure here is conflating *proxy* with *truth*. A judge score is a **measurement of a measurement**: the judge is itself a model with its own error bars, and every quality number you report inherits them. Discipline: for each proxy, know (a) its correlation with human judgment on your task (measure it once, re-measure quarterly), and (b) its failure direction — LLM judges are famously biased toward *longer, more confident* answers, so an answer-length collapse can *hide* behind a stable judge score if the judge rewards brevity oddly. Report proxies as a **vector**, never a scalar; a single "quality: 0.82" invites Goodharting.
 
+> **Saying it out loud.** You almost never have per-request ground truth in production, so everything here is a proxy, and the failure mode is quietly confusing the proxy with the truth. A judge score is a measurement of a measurement — the judge is itself a model with its own error bars, and every quality number you report inherits them. So for each proxy you should know two things: how well it correlates with human judgment on *your* task, measured once and re-measured quarterly, and which direction it fails in. Judges are biased toward longer and more confident answers, so a collapse in answer quality can hide behind a stable judge score. The discipline that follows: report quality as a vector — judge score plus refusal rate plus task completion — never as a single scalar, because one number labelled "quality: 0.82" is an open invitation to Goodhart it.
+
 ### 2. Latency
+
+> **In plain terms.** An agent run is a loop, so its total time is just the sum of every LLM call plus every tool call it made along the way — which is what the formula below says. That means latency can get worse two different ways: each step got slower, or the agent started taking more steps.
+
 Always percentiles, never just the mean — LLM latency is heavy-tailed.
 
 - **p50 / p95 / p99 end-to-end** — wall-clock from request to final answer.
@@ -107,6 +122,8 @@ Always percentiles, never just the mean — LLM latency is heavy-tailed.
 
 Two agent-specific latency traps. First, **queueing/rate-limit latency** hides outside the spans you instrument: if the provider throttles you, the wall-clock gap between "request sent" and "first token" balloons while the `chat` span's own timer may not capture the wait. Instrument the *client-side* send-to-first-token gap explicitly. Second, **tail latency compounds multiplicatively across steps**: a 5-step agent where each step has a p95 of 2s does not have a run p95 of 2s — the run tail is dominated by the probability that *any* step lands in its own tail. This is why an agent that looks fine per-call can have a brutal end-to-end p99. Always chart end-to-end tail separately from per-step tail.
 
+> **Saying it out loud.** Always percentiles, never the mean, and always broken out per step — because an agent run's total latency is steps times per-call latency, and a regression can come from either. Two traps specific to agents. First, queueing and rate-limit latency hides outside the spans you instrument: if the provider throttles you, the gap between "request sent" and "first token" balloons while the chat span's own timer may never see the wait, so instrument the client-side send-to-first-token gap explicitly. Second, tail latency compounds across steps — a five-step agent where each step has a p95 of two seconds does not have a run p95 of two seconds, because the run tail is dominated by the chance that *any* step lands in its own tail. That's why an agent that looks fine per call can have a brutal end-to-end p99, and why you chart end-to-end tail separately from per-step tail.
+
 ### 3. Cost
 - **Cost per request** — derived from token usage × per-model price. Track input and output tokens separately (output is usually 3–5× the price).
 - **Cost per completed task** — the honest denominator. An agent that retries five times is cheap per call and expensive per outcome.
@@ -114,12 +131,16 @@ Two agent-specific latency traps. First, **queueing/rate-limit latency** hides o
 
 Add two dimensions the naive version misses. **Cached vs. uncached input tokens**: with prompt caching now standard across providers, a large system prompt can be 90% cheaper on a cache hit, so your cost model must read the cache-hit token counts from the response, not assume list price on every input token. And **cost concentration**: cost per request is heavy-tailed like latency, so a p99 cost-per-request chart catches the runaway-loop / prompt-injection-spiral requests that a mean hides. Alert on the tail, not the average.
 
+> **Saying it out loud.** Two moves separate a real cost model from a naive one. First, the denominator: cost per completed task, not cost per request, because an agent that retries five times looks cheap per call and is expensive per outcome. Second, cached versus uncached input tokens — with prompt caching standard across providers, a big system prompt can be roughly 90% cheaper on a cache hit, so you have to read the cache-hit token counts off the response rather than assuming list price on every input token. And track output tokens separately, since output is typically three to five times the price of input. The tail matters here too: cost per request is heavy-tailed just like latency, so a p99 cost chart is what catches the runaway loop or the prompt-injection spiral that a mean happily averages away.
+
 ### 4. Reliability
 - **Tool-error rate** — fraction of tool calls that raise, time out, or return a malformed/unparseable payload. Break down by tool name; one flaky API poisons the whole agent.
 - **Loop / step-count distribution** — runaway agents that hit the max-iteration cap are a strong failure signal.
 - **Parse/format-failure rate** — how often the model emits JSON/tool-args the runtime cannot parse.
 
 Distinguish **hard errors** (tool raised / timed out — visible, easy to alert) from **soft errors** (tool returned 200 with a wrong or empty payload the agent then reasons over — invisible in status codes, corrosive to quality). Soft errors are the reliability equivalent of silent quality drift: the only way to catch them is to score the *agent's use* of the tool result, which pushes you back to online eval. Track the **max-iteration-cap hit rate** as a leading indicator: a rising fraction of runs bumping the loop ceiling almost always precedes a cost blowout and a quality drop, because it means the agent is flailing.
+
+> **Saying it out loud.** The distinction to make is hard errors versus soft errors. A hard error is a tool raising or timing out — visible, easy to alert on, easy to fix. A soft error is a tool returning 200 with a wrong or empty payload that the agent then confidently reasons over, and that's invisible in status codes and corrosive to quality. Soft errors are the reliability equivalent of silent quality drift, and the only way to catch them is to score the agent's *use* of the tool result, which pushes you back into online eval. The leading indicator I'd watch is the max-iteration-cap hit rate: a rising fraction of runs bumping the loop ceiling almost always precedes both a cost blowout and a quality drop, because it means the agent is flailing. Break tool error rates down by tool name too — one flaky API poisons the whole agent.
 
 ### 5. Safety & guardrails
 - **Guardrail hit rate** — how often an input or output guardrail fires (PII filter, jailbreak classifier, moderation, schema validator). A *spike* is either an attack or a regression that made the model misbehave.
@@ -130,15 +151,21 @@ Guardrail metrics are double-edged: a *drop* to zero is as alarming as a spike, 
 
 > Rule of thumb: for every metric, decide up front whether you alert on it (needs a threshold and an owner) or merely dashboard it. Un-alerted metrics are documentation; alerted metrics are commitments. A useful forcing question in design review: "Who gets paged, and what do they do in the first five minutes?" If there is no answer, it is a dashboard, not an alert.
 
+> **Saying it out loud.** Guardrail metrics are double-edged in a way most people miss. A spike in guardrail hits is either an attack or a regression that made the model misbehave, which everyone alerts on. But a *drop to zero* is just as alarming, because it almost always means the guardrail silently broke — a classifier endpoint returning 500s and failing open — rather than that the world suddenly got safe. So you alert on deviation in either direction from baseline, and you separately monitor guardrail availability. The framing that lands: a failed-open safety filter is an incident even when nothing bad slipped through, because you've lost the sensor, and a broken sensor reads as good news on every dashboard you own.
+
 ### Segmentation: the dimension that makes metrics actionable
 
 A global metric tells you *something* changed; a *segmented* metric tells you *what*. Every metric above should be sliceable by at least: **model/prompt version**, **tool name**, **user cohort** (new vs. returning, plan tier, geo/language), **request type/intent**, and **entry surface** (API vs. UI). The reason is causal isolation: when the rolling judge score drops, the first question is "everywhere, or in one slice?" A drop confined to `model=gpt-4o` after a provider update, or to `language=de` after a launch in Germany, or to `tool=db_query` after an API change, points straight at the owner. Aggregate metrics detect; segmented metrics diagnose. Build the segmentation in from day one — retrofitting cardinality onto a metrics pipeline is painful.
+
+> **Saying it out loud.** A global metric tells you something changed; a segmented metric tells you what. When the rolling judge score drops, the very first question is "everywhere, or in one slice?" — and a drop confined to one model version after a provider update, or to German after a launch in Germany, or to one tool after an API change, points straight at the owner. So every metric should slice by at least model and prompt version, tool name, user cohort, request intent, and entry surface. The compressed version: aggregate metrics detect, segmented metrics diagnose. And build it in from day one, because retrofitting cardinality onto a metrics pipeline is genuinely painful.
 
 ---
 
 ## Tracing an Agent Run
 
 A **trace** is the complete record of one agent run, decomposed into a tree of **spans**. A span is a single timed operation with a start, end, status, and attributes. Structured traces are the substrate everything else in this chapter is built on — you cannot compute completion rate, attribute cost, or judge quality without them.
+
+> **Saying it out loud.** A trace is the complete record of one agent run, decomposed into a tree of spans, where a span is one timed operation with a start, an end, a status and some attributes. Traces are the substrate everything else in the chapter sits on — you cannot compute completion rate, attribute cost, or judge quality without them. The mental shift to state explicitly is that the unit of observability is the agent *run*, not the HTTP request. And the practical corollary is that instrumentation completeness is itself a metric worth monitoring: if half your chat spans are missing token attributes because someone hand-instrumented a code path, your cost dashboard silently under-counts and nobody finds out.
 
 ### Why an agent needs *nested* spans, not flat logs
 
@@ -156,6 +183,8 @@ invoke_agent  (root span, 8.2s, $0.041, status=OK)
 
 At a glance you see *where* the 8 seconds went and *which* tool failed. That is impossible with unstructured logs. For a *multi-agent* system the tree gets one level deeper — a planner's `invoke_agent` parents a researcher's `invoke_agent`, which parents its own `chat`/`execute_tool` children — and the same span-context propagation that carries `trace_id` across process boundaries is what stitches a sub-agent running in a different service back into the parent run. Getting context propagation right across your queue/RPC boundaries is the single most common thing teams botch; when a sub-agent's spans show up as orphan roots, you have a propagation bug, not a missing instrument.
 
+> **Saying it out loud.** One agent request isn't one LLM call — it's think, call tool A, observe, think, call tool B, observe, answer, possibly delegating to sub-agents along the way. A flat log line saying "request took 8 seconds, cost four cents" throws away exactly the structure you need, whereas a span tree preserves causality and timing so you can see at a glance where the 8 seconds went and which tool failed. For multi-agent systems the tree just gets a level deeper, with a planner's invoke_agent parenting a researcher's. The failure mode worth naming because it's the one teams actually botch: context propagation across queue and RPC boundaries. When a sub-agent's spans show up as orphan roots instead of children, you don't have a missing instrument, you have a propagation bug.
+
 ### The GenAI semantic conventions
 
 OpenTelemetry now ships **GenAI semantic conventions** — a standard vocabulary so traces are portable across Langfuse, Phoenix, LangSmith, Datadog, etc. instead of every vendor inventing its own field names. The three canonical span types map directly onto how agents work:
@@ -170,6 +199,8 @@ Companion metrics are standardized too: `gen_ai.client.operation.duration` (late
 
 Two operational points the conventions encode that matter in practice. First, **content capture is opt-in**: `gen_ai.input.messages` / `gen_ai.output.messages` are optional attributes precisely so you can run rich structural/metric telemetry *without* persisting raw prompts and completions — the privacy default is "metrics yes, content no," and you turn content on deliberately with scrubbing in place. Second, **`finish_reasons` is a cheap quality proxy hiding in plain sight**: a rising share of `length` finishes means truncation (answers getting cut off), and a shift in `tool_calls` vs `stop` ratios often signals the model's control flow changing under a version bump — both are free to compute from a field you already emit.
 
+> **Saying it out loud.** Adopting the standard names buys you portability — the same trace is intelligible to Langfuse, Phoenix, LangSmith or Datadog without custom parsing — and it also encodes two operational decisions worth calling out. Content capture is opt-in by design, so the privacy default is metrics yes, content no, and you turn content on deliberately with scrubbing in place. And there's a free quality proxy hiding in plain sight: finish reasons. A rising share of `length` finishes means answers are getting truncated, and a shift in the ratio of `tool_calls` to `stop` usually means the model's control flow changed under a version bump. Both cost nothing to compute from a field you're already emitting, which makes them the cheapest early-warning signal in the whole catalog.
+
 ### Sampling that preserves signal: head vs. tail sampling
 
 Storing 100% of traces at scale is expensive, but naive uniform sampling throws away exactly the rare failures you care about. The distinction:
@@ -178,6 +209,8 @@ Storing 100% of traces at scale is expensive, but naive uniform sampling throws 
 - **Tail sampling** decides *after* the trace completes, when you know its outcome. This lets you **keep 100% of traces that errored, hit a guardrail, exceeded a latency/cost threshold, or got a thumbs-down, and down-sample only the boring successes.** For agents this is almost always the right policy: the OTel Collector's tail-sampling processor implements exactly this.
 
 The rule: **sample for storage, but bias the sample toward high-information traces.** A monitoring system that keeps a representative 5% *plus* every failure gives you both an unbiased aggregate (weight the sampled successes back up) and a complete failure corpus for debugging and dataset-building.
+
+> **Saying it out loud.** Storing 100% of traces at scale is expensive, but naive uniform sampling throws away exactly the rare failures you care about. Head sampling decides at the start of a trace whether to keep it — cheap, simple, and blind, because it discards errors it hasn't seen yet. Tail sampling decides after the trace completes, when you know the outcome, which lets you keep 100% of traces that errored, hit a guardrail, blew a latency or cost threshold, or got a thumbs-down, and down-sample only the boring successes. For agents that's almost always the right policy, and the OTel Collector ships a tail-sampling processor that does exactly this. The rule to state: sample for storage, but bias the sample toward high-information traces — a representative 5% plus every failure gives you an unbiased aggregate, if you weight the sampled successes back up, and a complete failure corpus to debug and build datasets from.
 
 ### Practical instrumentation
 
@@ -195,7 +228,12 @@ Whatever you choose, **sample thoughtfully**: keep 100% of traces that errored o
 
 Offline you scored every example against labels. Online you have no labels and can't afford to hand-review everything. The pattern is **sample → judge → aggregate**.
 
+> **Saying it out loud.** Offline you scored every example against labels; online you have no labels and can't afford to hand-review anything, so the pattern is sample, judge, aggregate. You take a slice of live traffic — a uniform random sample for an unbiased estimate, plus stratified oversampling of high-risk segments, plus always evaluating anything that errored or got negative feedback, because those are your highest-information traces. Then you run the same rubric-based judge you'd use offline, asynchronously and off the user's critical path, and write the score back onto the trace. That gives you a continuous quality number without a single label. The one constraint that shapes the whole design: the user must never wait for the judge, so it's a read-from-the-log, score, write-back pipeline — not something in the request path.
+
 ### Sampling
+
+> **In plain terms.** Quality here is a proportion — what fraction of runs pass — and proportions are cheap to estimate. The arithmetic below just answers "how many traces do I need to judge before I can tell a real 5-point drop from noise?", and the answer is hundreds, not tens of thousands.
+
 Judging is not free (an LLM judge is another model call; a human reviewer is expensive). So you evaluate a *slice*:
 
 - **Uniform random sample** (e.g., 5% of traffic) for an unbiased quality estimate.
@@ -203,6 +241,8 @@ Judging is not free (an LLM judge is another model call; a human reviewer is exp
 - **Signal-triggered** — always evaluate runs that erred, hit a guardrail, or got negative feedback. These are your highest-information samples.
 
 How large a sample? Enough that the *confidence interval on the pass rate* is tight enough to detect the regression you care about. For a proportion \(p\) the standard error is \(\sqrt{p(1-p)/n}\); to resolve a 5-point drop in pass rate you need the interval half-width well under 0.05, which around \(p\approx0.9\) means on the order of a few hundred judged traces per window — not tens of thousands. This is why sampling works: quality is a proportion, and proportions estimate cheaply. Spend the savings on judging the *tails* densely.
+
+> **Saying it out loud.** People assume online eval means judging everything, and the sample-size math is why it doesn't. Quality is a proportion, and the standard error on a proportion is the square root of p times one minus p over n — so to resolve a five-point drop in pass rate you need the interval half-width comfortably under 0.05, which around a 90% pass rate works out to a few hundred judged traces per window, not tens of thousands. That's the whole reason sampling works, and it means you can spend the savings judging the tails densely instead of the middle. Three sampling modes worth naming together: uniform random for an unbiased estimate, stratified to oversample risky segments so rare failures actually show up, and signal-triggered so anything that errored, tripped a guardrail, or got a thumbs-down is always judged.
 
 ### LLM-as-judge in production
 Run the same rubric-based judge from Chapter 9, but on live outputs instead of a fixed dataset. In production the judge has extra constraints:
@@ -233,15 +273,21 @@ The **async writeback** pattern deserves a diagram because it is the crux of doi
 
 The user never waits for the judge; the score lands on the trace seconds-to-minutes later and flows into the rolling quality metric. This is precisely the workflow LangSmith "online evaluators," Langfuse "LLM-as-a-Judge," Braintrust "online scoring," and Phoenix evals implement out of the box.
 
+> **Saying it out loud.** Say up front that the judge is an instrument with known biases, not an oracle — that honesty is what separates a strong answer from a naive one. The named failure modes worth having cold: position bias, where it favors whichever answer it saw first; verbosity bias, where longer and more confident wins; self-preference, where a model rates its own family higher; and the one people most underestimate, that naive judging of multi-turn conversations agrees with humans far less than it does on single-turn answers, so a judge validated on one-shot Q&A does not transfer to a long agent trajectory. In production it's also a cost and latency line item, so you run it async off the critical path, and the standard shape is a cheap fast model doing a coarse pass on a large sample with an expensive judge re-scoring only the borderline cases. And the discipline: calibrate against a human-labeled gold set on a schedule, because a judge you never re-validate is a metric you shouldn't trust.
+
 ### Human review queues
 LLM judges cannot ground-truth everything, especially subjective quality and safety edge cases. Route a trickle of traces — the judge's borderline cases, sampled thumbs-downs, a random audit slice — into a **human annotation queue**. Humans produce the gold labels that (a) calibrate the judge and (b) become new eval-set rows. Keep the queue small and prioritized or reviewers burn out. A healthy queue is **judge-prioritized**: send humans the traces where the judge is *least confident* or where judge and a cheap heuristic *disagree*, because those carry the most information per minute of reviewer time. Random-only queues waste reviewers on obvious passes.
 
 Langfuse, Phoenix, and LangSmith all support attaching evaluator scores to sampled production traces and charting them over time; this is the mainstream "online eval" workflow. (Sources at the end.)
 
+> **Saying it out loud.** Humans are the only source of gold labels, and they're your scarcest resource, so the design question is what you send them. The answer is not a random slice — it's the traces where the judge is least confident, or where the judge and a cheap heuristic disagree, because those carry the most information per minute of reviewer time. A random-only queue burns reviewers on obvious passes. Those human labels then do double duty: they calibrate the judge, and they become new rows in the offline eval set. And keep the queue small and prioritized, because a queue that grows faster than it drains just produces reviewer burnout and no labels at all.
+
 ---
 ## Feedback Capture
 
 User feedback is the only signal that reflects whether the agent actually *helped*. It comes in two flavors with opposite trade-offs.
+
+> **Saying it out loud.** Two flavors with opposite problems. Explicit feedback — thumbs, ratings, corrections — is the closest thing to truth you'll get, and it's sparse and skewed: typically well under 1% of users click, and the ones who do cluster at delighted or furious. A 90% thumbs-up rate among the 0.5% who rated tells you almost nothing about the median user, and silence is not endorsement. Implicit feedback — regenerate, copy, apply, conversation continuation, did the drafted ticket actually get sent — is plentiful and ambiguous, because a user leaving might mean "perfect" or "gave up in disgust." So the stance is implicit for volume and trend, explicit for ground-truth spot-checks, and validate each implicit proxy against explicit labels before you trust it. The part that makes it all work is the join: a thumbs-down not linked to its trace is a complaint, and a thumbs-down joined to the span tree that produced it is a debuggable defect and a future eval row.
 
 ### Explicit feedback
 The user deliberately rates the output.
@@ -272,6 +318,8 @@ The join is the whole point. A thumbs-down that is *not* linked to its trace is 
 
 Two distinct things degrade a live agent. Distinguish them because the fixes differ.
 
+> **Saying it out loud.** Two very different things degrade a live agent and you should never conflate them, because the fixes are different. Input drift means the questions changed — a new topic cluster, a new language, a product launch bringing novice users — and nothing about your agent moved; the world did. Output-quality drift means the answers got worse on the same inputs, usually because a provider silently updated the model, the retrieval index went stale, or a template rotted. Input drift is the leading indicator and it rarely pages anyone; it files a ticket that says go collect fresh cases from these clusters before the next release, because your offline eval set's representativeness is silently expiring. Output-quality drift is the dangerous one, because latency and cost look perfectly healthy the entire time.
+
 ### Input drift — the *questions* change
 The distribution of incoming requests moves away from what you evaluated against. Nothing about your agent changed; the world did. Symptoms: a new topic cluster, a new language, longer prompts, a product launch bringing novice users.
 
@@ -286,7 +334,12 @@ The distribution of incoming requests moves away from what you evaluated against
 
 Why care about input drift if quality still looks fine? Because it is the **leading** indicator: your offline eval set no longer represents production, so your pre-deploy confidence is silently expiring. Input drift rarely pages anyone on its own — it files a *ticket* that says "go collect fresh cases from these new clusters and add them to the eval set before the next release." It is the input side of the flywheel.
 
+> **Saying it out loud.** The methods here are borrowed straight from classic ML monitoring, applied to prompts and embeddings. The one I'd recommend by default is the domain classifier: train a binary classifier to tell reference-window embeddings from current-window embeddings, and its ROC AUC is your drift score — 0.5 means indistinguishable, near 1.0 means strongly drifted. It's interpretable and robust to dimensionality, which distance-between-mean-vectors and maximum mean discrepancy aren't, in opposite ways: distances are simple but impossible to threshold, MMD is powerful but uninterpretable and compute-heavy. And before any of that, there are cheap tabular proxies — prompt length, language ID, topic-cluster shares, with PSI or KL divergence on them — that catch gross shifts for almost nothing. The reason to bother even when quality looks fine: input drift means your pre-deploy confidence is expiring, which is the input side of the flywheel.
+
 ### Output-quality drift — the *answers* get worse
+
+> **In plain terms.** A control chart is just a way of asking "is this dip bigger than this system's normal wobble?" You measure how much the score naturally bounces around during a healthy period, draw a line below the average scaled by that wobble, and alert when a smoothed version of the score crosses it. EWMA smooths recent scores so one bad trace doesn't fire an alert; CUSUM adds up small persistent dips so a slow decay gets caught early.
+
 Same inputs, worse outputs. This is the dangerous one because it is silent — latency and cost look fine. Causes: a provider model update, a stale retrieval index, prompt/template rot, a dependency change.
 
 **Methods:**
@@ -302,11 +355,15 @@ Same inputs, worse outputs. This is the dangerous one because it is silent — l
 
 The reason to prefer these over a hard threshold is **base-rate stability**: a fixed "alert if judge < 0.75" fires constantly when normal variance dips below 0.75 and never fires if your baseline is 0.74. A baseline-relative, variance-aware test adapts to *your* system's noise floor.
 
+> **Saying it out loud.** The principle worth stating flat out: compare two windows, don't threshold a raw value. "Judge score is 0.72" is meaningless; "judge score dropped from an 0.81 baseline to 0.72, p below 0.01, sustained over six hours" is an incident. Concretely that's either a two-window test — current versus a frozen baseline, using Mann-Whitney rather than a t-test since the scores are bounded — or a control chart, EWMA to smooth per-trace noise or CUSUM to accumulate small persistent drops so slow decay gets caught early. The reason to prefer these over a hard threshold is base-rate stability: a fixed "alert if judge below 0.75" fires constantly if your normal variance dips under 0.75, and never fires at all if your baseline happens to be 0.74. A baseline-relative, variance-aware test adapts to your system's actual noise floor. And watch the cheap proxies alongside — a jump in refusals or a collapse in answer length often precedes the measurable quality drop and costs nothing to compute.
+
 ### Output-quality drift is not always your fault — and that changes the fix
 
 The single most valuable diagnostic move is segmenting the drop by **model/prompt version and time of the provider's last silent update**. If the judge score for `model=gpt-4o` steps down at a timestamp that matches a provider model refresh, and your prompt/code did not change, the root cause is upstream — the fix is to pin the previous model snapshot (if the provider offers dated snapshots), open a canary against the new one, and re-tune the prompt against the new behavior. If instead the drop tracks *your* last deploy, it is prompt/template rot or a code change and the fix is a rollback. Same symptom, opposite owner. A monitoring system that cannot answer "did *we* change, or did *they*?" will send you chasing the wrong fix for hours.
 
 > Detection principle: **compare two windows, don't threshold a raw value.** "Judge score is 0.72" is meaningless; "judge score dropped from a 0.81 baseline to 0.72, p < 0.01, sustained over 6 hours" is an incident.
+
+> **Saying it out loud.** The highest-value diagnostic move is segmenting the drop by model and prompt version against time. If the judge score for one model steps down at a timestamp matching a provider refresh and your code didn't change, the root cause is upstream — pin the previous dated snapshot if the provider offers one, canary the new one, and re-tune the prompt to the new behavior. If the drop tracks your last deploy instead, it's template rot or a code change and the fix is a rollback. Same symptom, opposite owner, and a monitoring system that can't answer "did we change or did they?" will send you chasing the wrong fix for hours. This is also the argument for pinning dated model snapshots rather than floating aliases in the first place.
 
 ---
 
@@ -317,6 +374,8 @@ Metrics without alerts are just wall art. But agents have properties that make n
 - **Everything is noisy and heavy-tailed.** A single 40-second run is normal; alerting on any p99 breach pages you nightly. Alert on *sustained* breaches over a window, not instantaneous spikes.
 - **Quality signals lag.** The judge score for traffic in the last hour may not be computed for another 30 minutes. Your alerting has to tolerate delayed, asynchronous metrics.
 - **Cost can spike without any error.** A prompt-injection loop or a runaway agent burns money while every request returns 200 OK. Alert on **cost-per-request and step-count**, not just error rates.
+
+> **Saying it out loud.** Metrics without alerts are wall art, but agents break naive alerting in three specific ways. Everything is noisy and heavy-tailed, so a single 40-second run is normal and alerting on any p99 breach pages you nightly — you alert on sustained breaches over a window. Quality signals lag, because the judge score for the last hour's traffic might not exist for another thirty minutes, so your alerting has to tolerate delayed asynchronous metrics. And cost can spike with zero errors: a prompt-injection loop or a runaway agent burns money while every request returns 200 OK, which is why you alert on cost per request and step count and not just error rate. The agent-specific addition to the runbook is one line — pull the traces — because the failure may be behavioral, and the span tree tells you whether it's a slow tool, a changed model, more loop iterations, or worse reasoning, each with a different owner.
 
 ### A workable alert set
 
@@ -357,6 +416,8 @@ The difference between a 20-minute incident and a 4-hour one is almost always st
 ### Fighting alert fatigue on purpose
 
 Every page that turns out to be noise trains the on-call to ignore the next one — including the real one. Concrete anti-fatigue practices: (1) alert on **sustained, windowed, baseline-relative** conditions, never instantaneous raw thresholds; (2) require **multi-signal confirmation** for quality pages (judge-score drop *and* a refusal-rate or feedback move) so a judge hiccup alone doesn't wake anyone; (3) route everything that isn't "act in the next 15 minutes" to **tickets and dashboards**, not pages; (4) track your **alert precision** (fraction of pages that led to action) as a first-class metric and tune any alert under ~50% precision. An alert nobody trusts is worse than no alert, because it consumes attention *and* provides false assurance.
+
+> **Saying it out loud.** Every page that turns out to be noise trains the on-call to ignore the next one, including the real one. Four practices, and I'd name them as practices rather than opinions: alert on sustained, windowed, baseline-relative conditions and never instantaneous raw thresholds; require multi-signal confirmation for quality pages, so a judge-score drop has to be corroborated by a refusal-rate or feedback move before anyone gets woken up; route anything that isn't "act in the next fifteen minutes" to tickets and dashboards; and track alert precision — the fraction of pages that led to action — as a first-class metric, tuning anything under about 50%. The closing line: an alert nobody trusts is worse than no alert, because it consumes attention and provides false assurance at the same time.
 
 ---
 ## Worked Example — Instrument, Aggregate, Alert (in-process)
@@ -801,6 +862,8 @@ What this version demonstrates that the first did not:
 
 **Still simplified for runnability:** the judge is a token-count heuristic rather than a real model call; there is no persistence layer, no genuine async queue, no time-bucketing by wall clock, and the regex scrubber would be augmented with an NER model in production. The *shapes* — stream in, scrub, sample-and-judge, roll up, control-chart, alert — are exactly production's.
 
+> **Saying it out loud.** Real monitoring is decoupled, and that's the design point worth defending. The agent emits spans to a durable stream — an OTLP exporter, a Kafka topic, even newline-delimited JSON on disk — and a separate consumer scrubs PII at ingestion, runs a sampled async judge, maintains rolling metrics, and fires drift alerts. Decoupling buys you two things: judging stays off the user's critical path, and you can re-run the consumer over historical traffic when you change a metric definition, which is impossible with in-process objects. The cost structure inside that consumer is worth stating too — latency, cost and tool-error rate are computed on 100% of traces because they're basically free, while the judge runs on something like a 25% sample because it isn't. And PII scrubbing happens before storage, not after, so raw user content never lands in the metrics store at all.
+
 ---
 ## Closing the Loop
 
@@ -835,6 +898,8 @@ Every trip around the loop transfers knowledge from production back into your of
 
 The organizational tell of a team that has *actually* closed the loop: their offline eval set **grows every week**, and each row can be traced back to a real production incident. A static eval set that hasn't changed since launch is a team that is monitoring but not learning.
 
+> **Saying it out loud.** The payoff of all this instrumentation isn't the dashboard, it's the flywheel. Every thumbs-down, guardrail hit, tool error and low judge score is a candidate case; you cluster and dedupe them, turn the representative ones into offline test cases with a checkable success condition, and periodically have humans label a sample the judge also scored so you can measure judge-human agreement and catch the ruler moving. Then the new cases become regression tests, the fix gets validated against them offline before redeploy, and you canary it and watch the same production metrics. What that buys you is that a class of failure you saw once can never silently come back. The organizational tell I'd name in an interview: a team that has actually closed the loop has an offline eval set that grows every week, with each row traceable to a real incident — and a static eval set that hasn't changed since launch is a team that's monitoring but not learning.
+
 ---
 
 ## Production Case Studies & War Stories
@@ -861,6 +926,8 @@ Abstract principles stick when attached to scars. These are composite but faithf
 
 **Lesson.** *"Our code didn't change" is not "our behavior didn't change."* The dangerous regressions are the silent, behavioral ones with no error and no deploy. If your only quality signal is user complaints, your detection latency is measured in weeks and paid in churn. Monitor a quality proxy, or you are not monitoring quality.
 
+> **Saying it out loud.** This is the incident that justifies the whole chapter. Users started saying the coding assistant "feels dumber this week," and every operational dashboard was green — 99.9% availability, normal p95, normal cost, zero change in error rate — while support tickets quietly rose about 15% and nobody connected them. The provider had rolled a new snapshot behind the same model alias, so the code and prompts hadn't changed and every SRE instinct pointed at nothing; the new model was just slightly worse at following the agent's tool-use format and more often produced plausible-but-wrong final answers. A rolling judge score on an EWMA control chart would have stepped down at the snapshot timestamp, and segmenting by model would have pinned it in minutes. The lesson in one line: "our code didn't change" is not "our behavior didn't change," and if your only quality signal is user complaints, your detection latency is measured in weeks and paid in churn.
+
 ### Case study 3 — PII in traces: the observability data *is* the liability
 
 **The incident.** A team turned on full message-content capture (`gen_ai.input.messages` / `gen_ai.output.messages`) to debug a nasty multi-turn failure. It worked — and it also meant every raw user prompt, including names, emails, and in a few cases payment details, was now sitting in the trace store and mirrored to a third-party observability SaaS, retained for 30 days, readable by the whole engineering org. A privacy review flagged it; it became a compliance incident.
@@ -870,6 +937,8 @@ Abstract principles stick when attached to scars. These are composite but faithf
 **The fixes, layered.** Scrub PII at ingestion *before* storage (regex for structured PII like emails/SSNs/cards, augmented with an NER model for names/addresses) — as the log-stream example does in `scrub()`. Prefer metrics-and-structure by default and turn content capture on only for a sampled, short-retention, access-controlled debug slice. Set aggressive retention on anything containing content. Treat "which fields leave our trust boundary to a third-party SaaS" as a design decision, not a default.
 
 **Lesson.** Your traces are a copy of everything your users said. Instrument as if a regulator will read the trace store — because one might.
+
+> **Saying it out loud.** A team turned on full message-content capture to debug a nasty multi-turn failure. It worked — and it also meant every raw user prompt, including names, emails and in a few cases payment details, was sitting in the trace store, mirrored to a third-party SaaS, retained for 30 days, readable by the whole engineering org. That became a compliance incident. Content capture is simultaneously the most useful debugging affordance and the biggest privacy footgun, which is precisely why the OTel conventions make it optional and off by default. The layered fix: scrub structured PII at ingestion with regex plus an NER model for names and addresses, keep content capture to a sampled, short-retention, access-controlled debug slice, and treat "which fields leave our trust boundary" as an explicit design decision. The sentence to end on: your traces are a copy of everything your users said, so instrument as if a regulator will read the trace store.
 
 ### Case study 4 — Alert fatigue: the page that cried wolf
 
@@ -885,6 +954,8 @@ Abstract principles stick when attached to scars. These are composite but faithf
 
 Notice the through-line across all four: **the free, operational signals (up/fast/cheap) were fine in every quality incident.** Decay, PII exposure, and behavioral regressions all live *below* the operational layer. The entire discipline of this chapter is buying signal down the depth ladder — structural, behavioral, outcome — because that is where the failures that actually hurt users live, and where naive monitoring is blind.
 
+> **Saying it out loud.** Notice the through-line across all four incidents: the free operational signals — up, fast, cheap — were fine in every single quality failure. Silent decay after a provider update, PII exposure, behavioral regressions, and alert fatigue all live below the operational layer, which is exactly where naive monitoring is blind. So the entire discipline of this chapter is buying signal further down the depth ladder — structural, then behavioral, then outcome — at a price you can actually pay. If you take one sentence into an interview from these war stories, make it that green dashboards are evidence the factory is running, not evidence it's producing anything worth shipping.
+
 ---
 
 ## Failure Modes & Pitfalls
@@ -899,5 +970,7 @@ Notice the through-line across all four: **the free, operational signals (up/fas
 - **Instrumentation drift.** If spans are added ad hoc, half your runs lack the attributes your dashboards need. Standardize on the OTel GenAI conventions so every trace is uniformly queryable, and monitor instrumentation completeness as its own metric.
 - **Broken sensors read as good news.** A guardrail that failed open, a judge endpoint returning errors, or a metrics pipeline dropping spans all *look* like "everything is fine." Monitor the monitors: alert on a metric going suspiciously quiet, not just on it going bad.
 - **No baseline, no incident.** Without a frozen baseline window you cannot tell drift from normal variance, so you either alert constantly or never. Freeze a baseline per model/prompt version and re-baseline deliberately after each intentional change.
+
+> **Saying it out loud.** If I had to compress the chapter: the unit of observability is the agent run, not the request; the primary metric is quality, which you can't measure directly and must approximate; and the deliverable is a loop, not a dashboard. The failure modes to name cold are proxy-metric gaming, where thumbs-up rate becomes the target and you optimize for flattery instead of correctness; alert fatigue, which costs you the real page; PII in traces, because the observability data is itself the liability; trusting a judge you never validated against human labels; averages hiding tails; and survivorship bias, since the users who churned after a bad experience never left a thumbs-down. Two structural ones people miss: instrumentation drift, where half your runs lack the attributes your dashboards need, and broken sensors reading as good news — a guardrail failing open or a metrics pipeline dropping spans both look like everything's fine. So monitor the monitors, alert on a metric going suspiciously quiet as well as going bad, and freeze a baseline per model and prompt version, because without a baseline you can't tell drift from normal variance and you'll either alert constantly or never.
 
 ---

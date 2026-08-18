@@ -22,6 +22,8 @@ There is a fourth thing, quieter but decisive over a year: **automated eval chan
 
 If you take one idea from this chapter: **evaluation is not a phase, it is a control loop.** The rest is engineering it correctly.
 
+> **Saying it out loud.** So the honest answer to "why automate evals" is that a manual eval rots — not because anyone's lazy, but because a one-time measurement expires the moment the thing you measured changes, and an agent changes every day. Prompts get tweaked, tools get added, the provider silently rolls the model forward, and nobody re-runs the notebook. Automating it buys three things a notebook can't: regression protection before users feel it, a ratchet so quality only moves one way, and institutional memory, because the thresholds live in version control instead of a Slack scroll. The one I'd actually lead with is the cultural payoff — once there's a number attached to the diff, "is the new prompt better?" stops being an argument won by whoever is most senior in the room. The sentence to land on: evaluation isn't a phase, it's a control loop.
+
 ### The cost of not doing it (a concrete failure timeline)
 
 To make the stakes vivid, here is the shape of the incident that this chapter exists to prevent — a composite drawn from how these actually unfold:
@@ -56,6 +58,8 @@ Two adjustments make the analogy work in practice, and both are the source of ev
 Hold those two facts and the rest of the design follows: you need a dataset (not one example), a grader (to turn text into a number), a statistical gate (to turn a noisy number into a trustworthy pass/fail), and a place to run it automatically (CI).
 
 There is a third, subtler adjustment that trips up teams coming from classical testing: **the oracle is expensive and imperfect.** In unit testing the correct answer is known and cheap to check — you wrote `== 4`. In agent eval, deciding whether an open-ended answer is "correct" often requires a second model (an LLM judge), a human, or a carefully engineered deterministic checker, and each of those is either slow, costly, or itself noisy. A huge fraction of the craft in this chapter is **pushing as much of the oracle as possible down the cost/variance ladder** — turning a fuzzy "is this a good answer?" into a crisp deterministic assertion wherever the task allows, and reserving the expensive judge for the residue that genuinely needs it.
+
+> **Saying it out loud.** The framing is that CI already solved this for code — propose a diff, run the tests, block the merge if they fail — and you're applying it to the parts of an agent that aren't code: the prompt, the tools, the retrieval config. Two things break the analogy, and every hard problem in the chapter falls out of them. First, the assertion is statistical, not boolean: it's not `add(2,2) == 4`, it's "books the flight correctly on at least 90% of 200 scenarios." Second, the system under test is nondeterministic, so the same input passes Monday and fails Tuesday — a unit test that flips randomly is a bug, an eval that flips randomly is just Tuesday. And the third one people forget: the oracle is expensive and imperfect, because deciding whether an open-ended answer is right costs a judge call or a human, so most of the craft is pushing that judgment down into cheap deterministic checks wherever the task lets you.
 
 ---
 
@@ -92,11 +96,15 @@ Every automated eval — whether built on promptfoo, DeepEval, LangSmith, Braint
 
 Everything in the rest of the chapter is a decision about one of these seven boxes.
 
+> **Saying it out loud.** Every eval pipeline is the same seven boxes — trigger, dataset, harness, graders, gate, report, alert — and every tool you can name is just a different spelling of those seven. The box teams underinvest in is the dataset, and the box they confuse is the gate: a dashboard informs, a gate blocks, and plenty of teams build a beautiful dashboard, look at it never, and ship the regression anyway. The harness matters more than it sounds, because that's where you capture the trace and not just the final string — for an agent you're grading tool calls and process, not the last paragraph. It's also where you enforce hermeticity, and if your eval hits live third-party APIs you're measuring the internet's uptime as much as the agent's quality. The failure mode worth naming: a "flaky agent" is very often just a leaky harness.
+
 ---
 
 ## The 2025–2026 Landscape: Eval-in-CI as It Actually Exists Today
 
 By 2026 "run your evals in CI" has gone from a novel idea to table stakes, and a clear tool ecosystem has settled out. You will be expected in an interview to name the players, know what shape each one is, and have an opinion about when to reach for which. This section maps the landscape as it stands, with primary sources you can cite.
+
+> **Saying it out loud.** As of mid-2026 — and I'd date that claim, because this layer moves fast — eval-in-CI is table stakes and the tool list has settled into about five names. promptfoo if your unit of change is a prompt or a RAG config and you want YAML plus a PR comment; DeepEval if your team already lives in pytest; LangSmith or Braintrust if you want tracing and hosted experiment diffs sharing one data model; Inspect, from the UK AI Safety Institute, when you need benchmark-grade rigor. None of them is wrong — they're the same seven boxes with a different box made easy — so the real question is which box is your bottleneck. Most mature teams end up with two tools, and that's the tradeoff worth stating: buy the platform for tracing and triage UX, but own the gate math yourself, because that's the part you can't afford to have change under you.
 
 ### The tools, by shape
 
@@ -133,6 +141,8 @@ The most important *conceptual* development of 2025 for anyone gating on LLM out
 
 Why this matters for *your* gate: it explains, with a citation, why pinning `temperature=0` and a `seed` is necessary but **not sufficient** to make a hosted endpoint reproducible — you are a tenant on shared, load-dependent batching you do not control. That is the empirical justification for the whole statistical apparatus later in this chapter: you cannot pin your way to determinism against a multi-tenant endpoint, so you must *quantify and gate on the residual noise* instead of pretending it away. In an interview, being able to name the batch-invariance result and draw the correct conclusion ("so I gate on a confidence bound, not a point estimate") is a strong signal.
 
+> **Saying it out loud.** The interesting update is *why* inference is nondeterministic even at temperature zero. The folk answer — floating-point addition isn't associative and GPUs reorder things — turns out to be only half right; the Thinking Machines Lab result from September 2025 argues the dominant cause is lack of batch invariance. Server-side batch size varies with how many other people are hitting the endpoint, and kernels like RMSNorm, matmul and attention reduce slightly differently at different batch sizes, so your "identical" request is genuinely computed differently run to run and you don't control the batch. With batch-invariant kernels they got a thousand completions to come out bit-identical, where stock vLLM had produced eighty distinct outputs. The conclusion that scores in an interview: pinning temperature and seed is necessary but not sufficient on a multi-tenant endpoint, so you gate on a confidence bound instead of pretending you pinned your way to determinism.
+
 ### Cost control in 2025–2026: the norms that settled
 
 The community converged on a small set of cost patterns that are now considered baseline competence:
@@ -167,11 +177,15 @@ The design rule behind the table: **the PR gate must be fast enough that enginee
 
 There is a fourth tier worth naming because interviewers probe for it: the **pre-merge / merge-queue full eval**. Some teams run the small suite on every push but gate the *actual merge* (via a merge queue like GitHub's) on a medium suite, so the expensive-ish run happens once per merge rather than once per commit. This is the sweet spot for teams whose PRs get many commits: you get fast per-commit feedback and a more rigorous check exactly at the moment of merge, without paying for the big suite on every `git push`.
 
+> **Saying it out loud.** There's a triangle here — cheap, fast, statistically significant — and you get two. Thirty examples in forty seconds for twelve cents is cheap and fast and has so much variance it can't detect a real regression; two thousand judged examples is significant and costs dollars and tens of minutes. You don't resolve that on one run, you resolve it by tiering: a small, mostly-deterministic, path-scoped smoke suite on every PR in under three minutes, a five-hundred-to-two-thousand-example judge sweep nightly while everyone's asleep, and a canary on one to five percent of live traffic for the distribution you can't simulate offline. The design rule is that the PR gate has to be fast enough that engineers never learn to hate it, because the moment they do, they start skipping CI. And the tradeoff to name out loud: path-scoping is a cost optimization, not a safety guarantee — scope the PR tier for speed, never scope nightly, or a cross-cutting change walks right past the filter.
+
 ### Why the PR gate must stay deterministic-heavy
 
 An LLM judge on every PR is a trap: it is slow, it costs money on every commit (and engineers commit dozens of times a day), and it *adds its own noise* to a signal you are trying to keep clean. The high-leverage move is a **classifier cascade** — run cheap deterministic and small-classifier rubrics on all PR examples first, and only escalate the handful of low-confidence cases to an expensive frontier judge. Reported effect is roughly a 10x cost reduction on the PR tier without losing signal. Reserve the full judge sweep for nightly.
 
 A second reason to keep the PR gate deterministic-heavy is *psychological*, and it matters more than the cost: a deterministic check that fails means "you broke something," full stop, and the author fixes it. A judge-based check that fails means "a model thinks you might have made something slightly worse," which invites argument, re-runs, and eventually cynicism. The PR gate's entire value is that engineers *believe its red*. Every noisy judge you add to the hot path spends down that belief.
+
+> **Saying it out loud.** Putting an LLM judge on every PR is a trap, and the reason is psychological before it's financial. A deterministic check going red means "you broke something," full stop, and the author just fixes it. A judge going red means "a model thinks you might have made this slightly worse," which invites argument, re-runs, and eventually cynicism — and the PR gate's entire value is that people believe its red. The money argument is real too: a classifier cascade, where free programmatic checks run on every row and only the low-confidence residue escalates to a frontier judge, is reported at roughly a 10x cost cut on the PR tier. So judges live in nightly and the hot path stays deterministic, which keeps it both cheap and trusted.
 
 ### Scoping to changed paths
 
@@ -200,6 +214,8 @@ The mental model to internalize: **your suite-level score is a random variable, 
 
 Handle it with four (really five) layers, in order:
 
+> **Saying it out loud.** The one sentence to internalize is that your suite-level score is a random variable, not a number — every run is a single draw from a distribution, and the job is to reason about that distribution instead of treating one draw as ground truth. You attack it in layers: cut variance at the source by pinning the exact dated model version and temperature and freezing the retrieval index and tools; sample each case three to five times and aggregate; gate on a confidence bound rather than the point estimate; require regressions to be both significant and meaningful; and quarantine what's irreducibly flaky. Pick the aggregation to match the product question, because pass@k and pass^k encode opposite risk attitudes — "can it ever" is right when a human can retry, "does it succeed every single time" is right for autonomous actions nobody reviews. The failure mode this whole section exists to prevent is the gate that cries wolf: once red means nothing, people re-run until green and a real regression strolls through.
+
 ### 1. Reduce variance at the source
 
 - **Pin what you can.** Set `temperature=0` (or a fixed `seed` where the provider honors it) for gradeable tasks; pin the exact model version string (`gpt-4o-2024-08-06`, not `gpt-4o`) so a provider rollout is a *reviewed* change, not a surprise.
@@ -218,6 +234,8 @@ Reporting the wrong one flatters or maligns the agent unfairly, and a sharp inte
 
 ### 3. Gate on a statistical bound, not a point estimate
 
+> **In plain terms.** Instead of asking "did we score above 85%?", ask "given how few examples we ran, could the true rate actually be below 85%?" The formula below turns an observed pass rate into a range the true rate plausibly lives in, and you compare the bottom of that range to your bar. A small sample gives a wide range, so an unlucky run doesn't flip the gate — it honestly reports that you don't have enough examples to conclude anything.
+
 Do not compare a raw mean to a threshold. Compare a **confidence bound** to the threshold. If your suite of \(n\) examples has \(s\) successes, the point estimate is \(\hat{p} = s/n\), but the honest question is "given noise, could the *true* success rate be below my bar?" Use the lower bound of a binomial confidence interval. The **Wilson score interval** is the right default (it behaves near 0 and 1 where the naive normal interval breaks):
 
 \[
@@ -228,7 +246,11 @@ with \(z = 1.96\) for 95% confidence. **Gate on the lower bound** \(\hat{p}_{-} 
 
 Worth building intuition for the numbers, because interviewers love a concrete feel: at \(\hat{p} = 0.90\), the Wilson lower bound is roughly **0.74 at n=30**, **0.82 at n=100**, **0.87 at n=500**, and **0.88 at n=1000**. Read that as: to *prove* you cleared a 0.85 bar with 95% confidence, you need on the order of hundreds of trials, not thirty. This is the mathematical reason the PR tier (small n) cannot gate on tight quality deltas and the nightly tier (large n) can — it is not a matter of taste, it is the width of the interval.
 
+> **Saying it out loud.** The punchline is that you never compare a raw mean to a threshold; you compare a confidence bound to the threshold. The observed pass rate is just a point estimate with sampling noise in it, so you compute the Wilson lower bound and fail the build only when that bound is below the bar — meaning you're statistically confident the true rate is genuinely under it, not that you had a bad night. Wilson rather than the naive normal interval because it behaves properly near zero and one, which is exactly where good agents live. The numbers give you the intuition: at an observed 90%, the lower bound is about 0.74 at thirty examples, 0.82 at a hundred, and 0.87 at five hundred. So proving you cleared an 0.85 bar with 95% confidence takes hundreds of trials, not thirty — that's the mathematical reason the PR tier can't gate tight quality deltas and the nightly tier can.
+
 ### 4. For regressions, require a significant *and* meaningful drop
+
+> **In plain terms.** This is one rule with three parts: the score has to have gone down, the drop has to be unlikely to be noise, and it has to be big enough that anyone would care. All three have to be true before the build fails.
 
 When comparing a candidate to a baseline, a naive "mean went down → fail" fires constantly on judge noise. The rigorous gate is a conjunction of three conditions:
 
@@ -240,11 +262,15 @@ That is: the mean must drop, the drop must be statistically significant (Welch's
 
 Why **Welch's** t-test specifically and not Student's: Welch does not assume the two runs have equal variance, and eval runs frequently *don't* — a prompt change can make the agent both worse on average and more erratic. Welch is the safe default; using Student's here is a subtle correctness bug that inflates false positives when variances differ. For paired designs (same examples, same seeds, before and after) a **paired** test or bootstrap over per-example deltas is even more powerful, because it removes the example-difficulty variance that dominates the unpaired comparison. If you can pin seeds so the same rows are comparable across runs, pair them — it can shrink the number of examples you need by a large factor.
 
+> **Saying it out loud.** "The mean went down, so fail" is the naive gate, and it fires constantly on judge noise. The rigorous version is a conjunction: the mean dropped, the drop is significant under a Welch's t-test on the per-example score arrays, and the drop exceeds a minimum effect size you actually care about. Requiring all three kills both failure modes at once — the significant-but-trivial 0.3-point dip on a huge sample, and the big-but-noisy 5-point dip on twelve examples. Welch specifically, not Student's, because eval runs frequently have unequal variance: a prompt change can make an agent both worse on average and more erratic, and using Student's there quietly inflates false positives. And if you can pin seeds so the same rows are comparable across runs, pair the test or bootstrap the per-example deltas — that removes example-difficulty variance and can cut the sample size you need by a large factor.
+
 ### 5. Quarantine, don't ignore
 
 Some examples are irreducibly flaky (ambiguous ground truth, judge disagreement). Tag them `@flaky` and move them to a **quarantine suite** that runs and reports but does *not* block the merge. This keeps the main gate green and trustworthy while preserving the signal. The discipline: a test in quarantine is a bug ticket, not a graveyard — review the quarantine list every sprint or it becomes a place tests go to die.
 
 A concrete quarantine policy that works: an example auto-enters quarantine when its *flip rate* (fraction of recent runs where it changed pass/fail with no code change) exceeds a threshold, say 10% over the last 20 nightly runs. It auto-exits when either the underlying ambiguity is fixed (someone tightens the grader or the ground truth) or it stabilizes on its own. Crucially, **the size of the quarantine is itself a monitored metric** — a growing quarantine means your graders or dataset are decaying, and if half your suite is quarantined your gate is mostly decorative. Alert when quarantine exceeds, say, 5% of the suite.
+
+> **Saying it out loud.** Some examples are irreducibly flaky — ambiguous ground truth, a judge that disagrees with itself — and the right move is to quarantine them rather than delete them or tolerate them. Tag them, run them, report them, but never let them block a merge, so the main gate stays green and trustworthy while you keep the signal. Make the policy mechanical: auto-quarantine anything whose flip rate exceeds about 10% over the last twenty nightly runs, and auto-exit when it stabilizes or someone tightens the grader. The trap is that quarantine becomes a graveyard, so treat its size as a monitored metric and alert past roughly 5% of the suite — a bloated quarantine means your graders or your dataset are decaying and the gate is going hollow.
 
 ---
 
@@ -265,6 +291,8 @@ Practical baseline hygiene:
 - **Promote** a candidate's scores to the new baseline only after it merges — so the ratchet moves forward.
 - Keep the baseline **dataset version** pinned alongside the scores; comparing scores across two different dataset versions is meaningless (see silent dataset drift, below).
 - Use a **rolling window** (median of the last N nightly runs) rather than a single previous run as the baseline, so one lucky or unlucky night does not become the ruler everything else is measured against. The median of the last 7 nights is robust to a single outlier in a way that "yesterday's score" is not.
+
+> **Saying it out loud.** You need two kinds of comparison and you use both. Absolute floors encode the non-negotiable bar — JSON validity is 1.0, tool selection at least 0.9 — and they catch the catastrophic break. Relative delta gates against a rolling baseline catch slow drift: ten individually-innocent half-point prompt tweaks that add up to ten lost points nobody noticed. The thing most people miss is per-slice gating — overall 92% to 91% looks fine while the refund intent went 95 to 70 and the Spanish slice went 88 to 60, masked by the FAQ slice getting easier. But slicing has a price: twenty slices tested at p below 0.05 gives you roughly a 64% chance of at least one false alarm per run even when nothing changed, so you add a per-slice effect floor, use Benjamini–Hochberg rather than the overly conservative Bonferroni, and require a minimum slice size — around thirty — before a slice is allowed to block anything. And baseline against the median of the last seven nights, not yesterday, so one unlucky run doesn't become the ruler.
 
 ---
 
@@ -735,6 +763,8 @@ You rarely have to build all of this by hand. The identical seven-box pipeline i
 - **Braintrust** — `Eval(...)` with `scorers=[...]` runs experiments that auto-compare against a baseline in CI and surface per-example regressions.
 - **Inspect** — a `Task(dataset, solver, scorer)` you run with `inspect eval`, ideal when you want benchmark-grade rigor and a shared format with the research community.
 
+> **Saying it out loud.** If you build this by hand it's four files, and I'd walk through them in order: a stats module holding the Wilson bound and the Welch test, unit tests for that stats module, the eval test that runs the agent over a versioned golden set, and the workflow YAML that tiers PR versus nightly. The one everyone skips is unit-testing the gate math, and it's the highest-value test in the system — a sign error in the Welch test either waves through every regression or blocks every green build, and you can catch it with synthetic score arrays and no model calls at all. Four properties make the gate trustworthy: it gates on the Wilson lower bound so a small sample fails honestly rather than randomly, it enforces a per-slice floor with a minimum-n guard, quarantined cases report but never block, and the three-condition regression gate only runs nightly where you have the statistical power. Promote the baseline in a post-merge job, never on a branch, so the ruler moves only by review and the ratchet turns one way. And the ecosystem tools are the same pipeline in different syntax — promptfoo's `assert` blocks, DeepEval's `assert_test` raising below threshold, Braintrust auto-diffing against a baseline experiment — so you're choosing which box to outsource, not a different architecture.
+
 ---
 
 ## Cost and Runtime Management
@@ -754,7 +784,11 @@ Eval suites cost real money (every judged example is 1–3 model calls) and real
 
 Two guardrails worth wiring in: a **per-run cost ceiling** (abort and alert if a run exceeds \(N\) dollars — cheap insurance against an infinite-loop agent burning tokens) and a **cached-vs-live ratio** in the report so you notice when caching silently stopped working and costs quietly 10x'd.
 
+> **Saying it out loud.** Cost and runtime both scale with the dataset, and if you ignore them one of two things happens: you blow the budget, or the gate gets slow enough that people turn it off. The levers in payoff order are deterministic-first grading with a cascade, response caching keyed on prompt plus input plus model version, tiering so the dollars sit in nightly instead of on every commit, then path scoping, sharding and stratified sampling. Two guardrails to wire on day one: a per-run dollar ceiling that aborts and alerts — cheap insurance against an agent stuck in a tool-call loop burning tokens — and a cached-versus-live ratio in the report so you notice when caching silently stopped working and the bill quietly 10x'd. The bug everyone hits exactly once: if the cache key omits the exact model version, a provider rollout serves you stale cached outputs and the regression is invisible because you never actually called the new model. And runtime is really a patience budget — a twelve-minute PR gate gets skipped within a month, so keep that tier under about three minutes.
+
 ### A back-of-envelope cost model
+
+> **In plain terms.** The formula below is just: how many examples, times how many times you run each one, times the price of one agent call plus whatever fraction of rows get escalated to an expensive judge. Every cost lever in this chapter is one of those four terms — and only two of them are safe to shrink.
 
 Interviewers like to see you reason quantitatively about this. A simple model:
 
@@ -763,6 +797,8 @@ Interviewers like to see you reason quantitatively about this. A simple model:
 \]
 
 where \(f_{\text{judge}}\) is the fraction of rows that escalate to the frontier judge after the cascade. Plug in numbers: a nightly of \(n = 1000\), \(k = 3\), agent cost \(c_{\text{agent}}\) = 2 cents/call, judge cost \(c_{\text{judge}}\) = 3 cents/call, and *no* cascade (\(f = 1\)) costs \(1000 \times 3 \times (0.02 + 0.03)\) = 150 dollars/night, or ~4,500 dollars/month. Add a cascade that escalates only 15% of rows (\(f = 0.15\)) and it drops to \(1000 \times 3 \times (0.02 + 0.15 \times 0.03)\) ≈ 74 dollars/night — roughly half — and layering response caching on the unchanged majority of nightly rows takes the *marginal* cost of a night with no dataset change close to zero. The lesson the arithmetic teaches: the cascade fraction \(f\) and the cache hit rate are the two dials that actually move the bill; sampling \(k\) down hurts your statistics faster than it helps your budget.
+
+> **Saying it out loud.** If they ask you to size it, do the arithmetic out loud, because that's the part that sounds like experience. Thousand-example nightly, three samples each, two cents per agent call and three cents per judge call with no cascade: a thousand times three times five cents is 150 dollars a night, about 4,500 a month. Put in a cascade that escalates only 15% of rows to the frontier judge and it drops to roughly 74 dollars a night, and caching the unchanged majority takes the marginal cost of a night with no dataset change close to zero. The lesson buried in the arithmetic is which dials matter: the cascade fraction and the cache hit rate move the bill, while cutting your sample count hurts your statistics faster than it helps your budget.
 
 ### The runtime side
 
@@ -785,11 +821,15 @@ A typical well-run applied-AI team in 2025–2026 converges on something like th
 
 The meta-lesson: the tooling is interchangeable, but the *disciplines* — floors on PR, deltas at night, incident-to-golden, judge calibration, posting on green — are what separate a gate people trust from a dashboard people ignore.
 
+> **Saying it out loud.** If someone asks what a mature setup actually looks like, describe the disciplines rather than the vendor, because the vendor is interchangeable. Every PR runs a sixty-example, path-scoped, deterministic-heavy suite in under two minutes gating on absolute floors, and it almost never fails — which is exactly why people still trust its red a year later. Every night a fifteen-hundred-example suite runs the full judge sweep, computes per-slice deltas against the median of the last seven nights, and posts to a Slack channel green or red; posting on green is deliberate, because a channel that only speaks up on failure trains people to dread it. The golden dataset has a named owner, and every production incident ends with "add the failing case to the golden set" — over a year that incident-to-golden pipeline does more for representativeness than any upfront dataset design. And the judge is calibrated against a few hundred human labels quarterly, because that calibration run is how you find out the provider moved your ruler.
+
 ### War story 2: The too-strict flaky gate that blocked every release
 
 A team set a PR gate at "success rate ≥ 0.95, hard threshold, single sample, 40 examples." It looked rigorous. In practice, a 40-example single-sample estimate of a ~0.95-true-rate process has enormous run-to-run variance — the observed rate routinely swung between 0.90 and 1.00 on *identical code*. So the gate failed maybe one run in three at random. Engineers learned within a week that red meant nothing, and the culture became "just hit re-run until it's green." Then a *real* regression landed — tool-selection quietly dropped — and it sailed through, because the one red check it produced was indistinguishable from the dozens of noise-reds everyone had been re-running past all month.
 
 **Root cause:** gating a noisy point estimate against a hard threshold on a tiny sample. The gate wasn't too strict in the sense of "bar too high" — it was too strict in the sense of "pretending a noisy measurement was exact." **Lesson:** the fix was not to lower the bar; it was to gate on the Wilson lower bound (which on n=40 is honest about its own uncertainty and stops flaking) and to move the tight quality delta to the nightly tier where n is large enough to actually measure it. A gate that cries wolf is worse than no gate, because it launders a real failure into the noise. The credibility of red is the entire asset; a flaky gate spends it to zero.
+
+> **Saying it out loud.** Here's the cautionary number. A team gated at "success rate at least 0.95, hard threshold, single sample, forty examples," which looks rigorous and is actually close to a coin flip — at a true rate around 0.95, a forty-example single-sample estimate routinely swings between 0.90 and 1.00 on identical code, so the gate failed roughly one run in three at random. Within a week the culture was "hit re-run until it's green," and then a real tool-selection regression landed and sailed straight through, because its one red check was indistinguishable from a month of noise-reds. The root cause wasn't that the bar was too high; it was pretending a noisy measurement was exact. The fix was gating on the Wilson lower bound, which at n=40 is honest about its own uncertainty, and moving the tight quality delta to nightly where the sample size can actually support it. The line to remember: a gate that cries wolf is worse than no gate, because it launders a real failure into the noise.
 
 ### War story 3: Silent dataset drift and the phantom regression
 
@@ -808,6 +848,8 @@ A team's "helpfulness" score jumped 6 points overnight with no code change. Cham
 A team gated every merge on a fixed 50-example suite. Success rate climbed steadily from 0.82 to 0.99 over two months, and everyone felt great — until customer complaints kept rising in lockstep. Investigation found engineers had been (entirely rationally, given the incentive) pasting failing eval cases and their ideal answers straight into the system prompt. The agent had essentially memorized the test. The 0.99 measured the prompt's ability to recite 50 answers, not to serve users.
 
 **Root cause:** a small, static, fully-visible eval set became the optimization target — textbook Goodhart. **Lesson:** keep a **held-out** slice that never informs prompt edits and is only ever *reported*, not optimized against; rotate and grow the golden set continuously (the incident-to-golden pipeline helps here); and treat a suddenly-perfect score as a smell to investigate, not a trophy. When the visible suite and the held-out suite diverge, you are overfitting — and the held-out number is the one that predicts production.
+
+> **Saying it out loud.** This is Goodhart's law with a body count. A team gated every merge on a fixed fifty-example suite and watched success climb from 0.82 to 0.99 over two months — while customer complaints climbed right alongside it, because engineers had been pasting failing eval cases and their ideal answers into the system prompt. The 0.99 was measuring the prompt's ability to recite fifty answers, not to serve users. The defenses are a held-out slice that never informs prompt edits and is only ever reported, rotating and growing the golden set through the incident-to-golden pipeline, and treating a suddenly-perfect score as a smell to investigate rather than a trophy. When the visible number and the held-out number diverge, the held-out one is the one that predicts production.
 
 ---
 
@@ -832,6 +874,8 @@ A team gated every merge on a fixed 50-example suite. Success rate climbed stead
 **Untested gate math.** The gate is code that can block a release. A sign error in the Welch test or an off-by-one in the Wilson bound will silently wave through every regression or block every green build. Unit-test the gate with synthetic score arrays (as in `test_stats.py`) — it is the cheapest, highest-value test in the whole system.
 
 **Cache poisoning by an unpinned model.** If the response cache key omits the model version, a provider rollout serves you stale cached outputs and the regression is invisible because you never actually called the new model. Always include the exact model version in the cache key.
+
+> **Saying it out loud.** Being able to name these cold is what makes you sound like you've operated one of these rather than read about it. The headline set: a flaky gate people route around, overfitting to a small fixed eval set, silent dataset drift where someone edits the golden answers so this week and last week are measured with different rulers, judge drift where the provider rolls your grader and the bar moves under everyone, and nightly failures nobody sees because there's no alert wired to a channel a human watches. Two less-discussed ones worth having ready: a non-hermetic harness leaking real-world entropy, so what looks like a flaky agent is really a leaky test, and gating the mean instead of the tails, where a healthy average hides an occasional PII leak. The rule for that last one is a clean soundbite — averages are for quality, zero-tolerance max-violation checks are for safety. And the meta-failure is untested gate math: a sign error in the Welch test silently waves through every regression, and it's the cheapest test in the whole system to write.
 
 ---
 
@@ -895,6 +939,8 @@ Treat this like any system-design interview: clarify, sketch, justify, then disc
 **4. Address the cross-cutting concerns without being asked** (this is what separates a senior answer): nondeterminism → confidence-bound gating; cost → cascade + caching + tiering + per-run ceiling; dataset integrity → versioning + hashing + reviewed PRs; judge integrity → pinned snapshot + quarterly human calibration; observability → report on every run, alert on nightly, post-on-green. Name the failure mode for each box (flaky gate, silent drift, judge drift, unseen nightly failure) and the specific defense.
 
 **5. Discuss scale.** As the org grows: shard the suite across runners; move from per-file datasets to a dataset service with versioning; introduce a held-out set to fight overfitting; add a merge queue; and eventually a dedicated eval platform (Braintrust/LangSmith) for the reporting/triage UX while keeping the gate math in-house.
+
+> **Saying it out loud.** The skeleton is: clarify, draw the seven boxes, tier the triggers, then volunteer the cross-cutting concerns before they're asked. Clarify first, and the question that actually matters is whether a false block or a missed regression is worse — a payments agent and a brainstorming toy get completely different thresholds. Then draw it: a deterministic, path-scoped PR tier gating on floors plus a Wilson bound; an optional merge-queue tier running a medium suite once per merge instead of once per commit; a nightly with the full judge sweep, per-slice Welch deltas against a rolling-median baseline, and an alert because nobody's awake; post-merge baseline promotion so the ruler only moves through review; and a canary on live traffic whose failures feed back as new golden cases. The senior move is the next step — naming nondeterminism, cost, dataset integrity, judge integrity and observability with one specific defense each, unprompted. Then scale it: shard across runners, graduate from files to a versioned dataset service, add a held-out set, and buy a platform for triage UX while keeping the gate math in-house.
 
 ### Tradeoff table: PR-smoke vs nightly-full
 
@@ -1050,6 +1096,8 @@ Grouped by topic, with primary sources. URLs verified against the 2025–2026 ec
 - **The dataset and the judge are measuring instruments.** Version and hash the dataset; pin and calibrate the judge. Silent dataset drift and judge drift both manufacture phantom regressions that burn days.
 - **Gate per slice and on tails**, not just the mean: an aggregate can hide a collapsed subpopulation or a catastrophic safety tail.
 - **A gate's credibility is its entire value.** A flaky gate is worse than no gate because it launders real failures into noise. Spend the credibility carefully: unit-test the gate math, quarantine irreducible flakiness, and keep the red trustworthy.
+
+> **Saying it out loud.** If you had to compress the whole chapter into one answer: evaluation is a control loop, not a phase; every pipeline is the same seven boxes; and the score is a random variable, not a number. That third one drives everything else — you gate on a Wilson lower bound instead of a point estimate, and you require a regression to be both statistically significant under Welch and larger than an effect floor you actually care about. Tier the triggers so cheap deterministic floors run on the PR, where red has to stay trustworthy, and the statistically hungry judge sweep runs nightly, where the sample size can support it. Treat the dataset and the judge as measuring instruments — version and hash the dataset, pin and calibrate the judge — because silent drift in either one manufactures phantom regressions that burn days of investigation. And the closer: a gate's credibility is its entire value, which is why a flaky gate is worse than no gate at all.
 
 ---
 

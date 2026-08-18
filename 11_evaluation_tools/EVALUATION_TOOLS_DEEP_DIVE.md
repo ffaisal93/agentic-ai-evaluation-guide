@@ -38,6 +38,8 @@ have fused**: you cannot grade what you cannot trace, and you cannot debug a
 regression you cannot replay. Half of this chapter is about that fusion and the
 tools that either respect it or fight it.
 
+> **Saying it out loud.** You can design the world's best rubric and still ship a broken agent, because the rubric lives in your head and nowhere in your infrastructure — tooling is the entire gap between "I have an evaluation idea" and "my team runs it on every commit and gets paged when it drops." Two things make the choice high-stakes. Tooling is sticky: where you send your traces, what format you store results in, and what API your graders call are decisions you live with for years, and migrating a year of production traces is a project, not an afternoon. And for agents specifically, the thing you're evaluating isn't a prompt-response pair anymore — it's a trajectory, a nested tree of model calls, tool calls, retries and sub-agents, and most of the interesting failures live in that tree rather than in the final answer. A correct final answer reached through a broken plan is still a bug, because it won't generalize. That's why evaluation and observability have fused: you can't grade what you can't trace, and you can't debug a regression you can't replay.
+
 ---
 
 ## Core intuition: eval tooling is five jobs, not one
@@ -82,6 +84,8 @@ tracing backend is plumbing that should be boring, cheap, and swappable. When
 someone proposes spending money, ask *which job* the money buys and *how long*
 that job's value lasts — you will find you want to own the durable jobs (graders,
 data) and rent the perishable ones (dashboards, managed storage).
+
+> **Saying it out loud.** Strip the branding off and every tool in this space is some subset of five jobs: the harness that runs your agent over a dataset, the graders that turn output into a score, the storage that lets you compare this month's run to last month's, the tracing that captures what happened inside a single run, and the reporting that turns numbers into decisions. The single most useful fact about the market is that most tools do a subset, not all five — so the question isn't "is this tool good," it's "which of the five jobs does it do, how well, and what do I still have to bolt on?" Two lenses sharpen it further. A tool's origin tells you where it'll be strong, because eval frameworks grew up batch and offline while observability platforms grew up streaming and online, and the other half almost always feels bolted on. And the five jobs have very different half-lives: a grader encodes your definition of quality and is worth owning forever, a dashboard is worth exactly the decisions it changes this quarter. So own the durable jobs — graders and data — and rent the perishable ones.
 
 ---
 
@@ -170,6 +174,8 @@ stack.** A well-written scorer is ~30 lines of Python that calls a model with a
 rubric and parses a number. Do not let a platform convince you that its
 proprietary scorer is the reason to lock in — you can carry graders anywhere.
 
+> **Saying it out loud.** The point of this whole category is one sentence: graders are the most portable component of your stack. A well-written scorer is about thirty lines of Python that calls a model with a rubric and parses out a number, so no platform should ever convince you that its proprietary scorer is the reason to lock in — you can carry graders anywhere. Ragas is the reference for RAG-specific metrics like faithfulness and context precision, Autoevals from Braintrust is usable entirely outside Braintrust, and G-Eval is a technique — a chain-of-thought judge scored against a rubric — rather than a product, implemented in several frameworks. The buy-versus-build line that follows: buy tracing, build graders. Tracing is undifferentiated plumbing you don't want to maintain; graders are your definition of quality and belong in your repo.
+
 ### Category 4 — All-in-one platforms + dashboards (all five jobs, hosted)
 
 - **LangSmith** — LangChain's commercial platform: tracing/observability,
@@ -247,6 +253,8 @@ developments you are expected to know are real, not just the product names.
    2026)** — a signal that "LLM observability is a database problem" is now the
    consensus. Expect more of the category to be absorbed into data-platform and
    APM vendors.
+
+> **Saying it out loud.** Four shifts, and knowing they're real is what separates you from someone reciting product names. Agents replaced chatbots as the thing being evaluated, so every vendor spent 2025 retooling from "log a prompt and completion" to "capture a nested trajectory" — which is exactly why tracing and eval fused. OpenTelemetry won the tracing-format war, with GenAI semantic conventions split into their own repo and given dedicated agent spans like create_agent, invoke_agent, plan and execute_tool; they're still at Development stability so expect churn, but even a moving standard beats a proprietary schema. LLM-as-judge went from novelty to default and then got audited, so the sophistication now is in validating the judge against human labels and pinning its version, not in having one. And capital arrived — Langfuse being acquired by ClickHouse in January 2026 is the signal that the industry now treats LLM observability as a database problem.
 
 ### The tooling map, tool by tool (eval-vs-tracing · OSS-vs-hosted · what changed)
 
@@ -330,12 +338,16 @@ The practical takeaway: **standardize on OTel now, keep your graders and data in
 open formats, and treat every hosted UI as rentable.** The market will keep
 consolidating; the only durable protection is portability you built in yourself.
 
+> **Saying it out loud.** If you compress the whole landscape into one takeaway, mark it as of 2026 and say: standardize on OpenTelemetry now, keep your graders and data in open formats, and treat every hosted UI as rentable. The unit of evaluation moved from a prompt-response pair to an agent trajectory; the tracing format moved from per-vendor schemas to portable gen_ai spans; the judge moved from an experiment to a version-pinned, human-validated default grader; online and offline eval stopped being separate worlds now that judges run on live production traces; and red-teaming became a built-in ship gate rather than something a person did by hand. The market is going to keep consolidating, and the only durable protection is portability you built in yourself — which is a cheap thing to do on day one and an expensive thing to retrofit in year two.
+
 ---
 
 ## How to choose — a decision guide
 
 Do not start from tools. Start from **which of the five jobs is your bottleneck
 today**, then pick the smallest thing that unblocks it.
+
+> **Saying it out loud.** Don't start from tools — start from which of the five jobs is your bottleneck today, then pick the smallest thing that unblocks it. "I can't see what my agent is doing in production" is a tracing bottleneck, so self-hosted Langfuse or OTel-native Phoenix, or Helicone if you want the fastest possible proxy integration. "I can't tell if a change made it better" is an offline-eval bottleneck: promptfoo for the fastest first result, DeepEval if you like pytest, Inspect when the number has to survive scrutiny. "My RAG answers are wrong and I don't know why" means adding Ragas metrics on top of whatever harness you already have. And "I want one place for everything and I have budget" is LangSmith or Braintrust — Braintrust if evals are the center of gravity, LangSmith if production tracing is. The maturity rule underneath all of it: don't buy a platform to solve a problem you haven't hit, because dashboards and collaboration features are worth money only once multiple humans argue about results weekly.
 
 ### By primary need
 
@@ -379,6 +391,8 @@ today**, then pick the smallest thing that unblocks it.
   A tool with 200 features and a proprietary ingest is more expensive than a
   tool with 20 features that speaks OTel, every time.
 
+> **Saying it out loud.** Five heuristics, and the first one is the whole philosophy: buy tracing, build graders. After that — prefer tools that read and write open formats over ones that trap data in a proprietary schema; don't buy a platform for a problem you haven't hit yet; match the tool's origin to your problem, batch-origin tools like promptfoo and Inspect for CI, stream-origin tools like Langfuse and Helicone for production. And the one people consistently get wrong: count the integration surface, not the feature list. The real cost of a tool is the code you write to feed it plus the code you write to get data back out, so a tool with 200 features and a proprietary ingest is more expensive than a tool with 20 features that speaks OpenTelemetry — every time.
+
 ### A scoring rubric for tool selection
 
 When two tools look equivalent on the landing page, score them on these axes and
@@ -393,6 +407,8 @@ the tie breaks itself. Rate each 1–5.
 | Trace fidelity | Does it capture nested agent trajectories, not just flat calls? | For agents, a flat logger is nearly useless. |
 | Judge tooling | Judge caching, version pinning, human-label calibration? | Decides whether your eval numbers are trustworthy. |
 | Cost model | Priced on traces? seats? spans? What happens at 10x volume? | Trace-volume pricing is where hosted bills explode. |
+
+> **Saying it out loud.** When two tools look identical on the landing page, score them one to five on seven axes and the tie breaks itself. Portability — can I export all my data in an open format, does it speak OTel — is the biggest long-term risk because it determines your cost to leave. Then job coverage, but for jobs it does deeply rather than checkbox; self-hostability, which gates regulated use entirely; integration cost, the hidden recurring tax; trace fidelity, meaning does it capture nested agent trajectories rather than flat calls, because for agents a flat logger is nearly useless; judge tooling, meaning caching, version pinning and human-label calibration, which decides whether your numbers are trustworthy at all; and the cost model. That last one deserves a specific question: is this priced on traces, seats or spans, and what happens at 10x volume? Trace-volume pricing is where hosted bills explode.
 
 ---
 
@@ -418,6 +434,8 @@ Even then, **build the thin layer, buy/borrow the thick ones.** Reuse OTel for
 tracing, an existing store (Postgres, or Phoenix/Langfuse) for storage, and an
 off-the-shelf dashboard. The part worth writing yourself is the harness glue and
 your domain-specific graders.
+
+> **Saying it out loud.** Most teams should not build, and the honest reason is that the pull toward "we'll just write our own" is strong and usually wrong — you underestimate storage, concurrency, retries, versioning and the dashboard, and you end up maintaining a worse Langfuse. Build only when one of four things is true: your system under test is weird enough that no off-the-shelf harness models it, your data legally can't touch a third party and self-hosting an OSS tool somehow isn't enough, you need a grading notion no library expresses — trajectory scoring against a ground-truth plan, or audited clinical or legal metrics — or you're a platform team whose product *is* evaluation. And even then the rule is build the thin layer, buy or borrow the thick ones: reuse OTel for tracing, an existing store for storage, an off-the-shelf dashboard, and write only the harness glue and your domain-specific graders yourself.
 
 ### Minimal architecture
 
@@ -454,6 +472,8 @@ Design rules that keep it maintainable:
 - **Results are append-only** and keyed so you can diff any two runs.
 - **Trace and result share an ID** so a bad score links straight to its call
   tree.
+
+> **Saying it out loud.** Four design rules keep a custom harness maintainable, and I'd say them as rules rather than preferences. Graders are pure functions independent of the harness, which is what makes them testable and portable. Everything is versioned — dataset version, prompt and code version, model version — because a score without those three is meaningless for comparison. Results are append-only and keyed so you can diff any two runs. And the trace and the result share an ID, which is the whole trick behind "click a bad score, see the exact call tree." That last one sounds like plumbing and it's actually the difference between an eval system people debug with and one they merely report from.
 
 ---
 
@@ -700,6 +720,8 @@ runner from a toy:
 - **Storage is append-only JSONL** — trivially diffable, greppable, and
   loadable into pandas or any dashboard. No lock-in.
 
+> **Saying it out loud.** If you're walking someone through a runner you built, the design decisions matter more than the code. The judge model is injected rather than hard-coded, which makes the grader testable with a fake, vendor-neutral, and safe to run offline. A crashing case becomes a failing result rather than a lost one, because silently dropping errors is the single most common way eval numbers lie. The judge fails closed — unparseable judge output scores zero, never a silent pass — since judges will occasionally return prose where you asked for JSON. Every result carries a trace_id, which is the join key back to your tracing backend. And storage is append-only JSONL, which is diffable, greppable, loadable into pandas, and impossible to be locked into.
+
 ### Wiring to an OSS tool's API pattern
 
 To send the same runs to an OSS platform instead of local JSONL, you swap the
@@ -900,6 +922,8 @@ The lesson is the recurring one: **own the graders, rent the harness or the
 backend.** Whichever adapter you pick, the definition of quality stayed in your
 code and stayed portable.
 
+> **Saying it out loud.** Two adapters, two philosophies, and comparing them is the clearest way to explain what integration cost actually means. Langfuse is a push model: you own the loop and the graders, the tool stores and visualizes, and your existing runner drops in with about a forty-line reporter — maximum control, minimum magic. Inspect inverts control: you declare a task as dataset plus solver plus scorer and it owns concurrency, sandboxing, logging and the viewer, which is far less code at the cost of expressing your eval in its vocabulary. The moment your grader is "trajectory matches a ground-truth plan," you either find a scorer that fits or write one in its API. One practical gotcha worth naming because it burns everyone once: the SDKs batch network writes, so a script that exits without flushing silently drops its last batch — that's the real answer to "why are my traces missing?" And whichever you pick, the definition of quality stayed in your code: own the graders, rent the harness or the backend.
+
 ---
 
 ## OpenTelemetry & standardization
@@ -952,6 +976,8 @@ and expect churn. Even a moving standard is more portable than a proprietary
 schema. See the OpenTelemetry GenAI SIG for current status.
 <https://opentelemetry.io/blog/2026/genai-observability/> ·
 <https://github.com/open-telemetry/semantic-conventions-genai>
+
+> **Saying it out loud.** The most important recent development is that tracing became a standard rather than a per-vendor format. OpenTelemetry's GenAI semantic conventions define the span hierarchy an agent actually produces — an invoke_agent root over chat spans and execute_tool spans — plus standard attributes for model, token counts and finish reasons, with message content captured only if you opt in. As of 2025-2026 those conventions were split into their own repository and grew dedicated agent spans: create_agent, invoke_agent, invoke_workflow, plan and execute_tool. Why you should care in one sentence: if your agent emits standard spans, you can point them at Phoenix today, Langfuse tomorrow and Datadog next year without re-instrumenting a line, which is the strongest antidote to lock-in in this whole chapter. The honest caveat is that the conventions are still at Development stability and some attribute names have already been renamed between versions — so adopt them, pin the version, and expect churn, because even a moving standard is more portable than a proprietary schema.
 
 ### A tiny OTel instrumentation sketch
 
@@ -1084,6 +1110,8 @@ flag is set or a case is flagged interesting), and set retention. Observability
 is not free; budget it like any other production dependency and *measure its
 overhead* before it measures you.
 
+> **Saying it out loud.** A team turned on full prompt and response content capture on every span, in production, at a few hundred QPS, sampling 100% — and within a day they had double-digit milliseconds of p95 latency from serialization and egress, a surprise storage bill, and a trace backend falling behind. The part that's most useful in dev turned out to be the killer in prod. The root cause is treating dev-grade observability settings as production settings, and the fix is three specific dials: sample in production rather than capturing everything, make content capture opt-in per span so metadata is always on and payloads only when a case is flagged interesting, and set retention. The line to land: observability is not free — budget it like any other production dependency and measure its overhead before it measures you.
+
 ### War story B — the lock-in trap
 
 **What happened.** A team went all-in on a single hosted platform's proprietary
@@ -1101,6 +1129,8 @@ config change plus a backfill, not a re-write. Ask every vendor "how do I export
 *all* my data, in what format?" *before* you sign — and build the export even if
 you never plan to leave.
 
+> **Saying it out loud.** A team went all-in on one hosted platform's proprietary tracing and eval schema. Eighteen months later, price and data-residency pressure made them want to leave, and "leaving" turned out to mean re-instrumenting every service and abandoning a year and a half of trace history that only existed in the vendor's schema — the migration was quoted in engineer-quarters. The root cause was simply that there was no portability layer: the instrumentation spoke the vendor's dialect instead of OTel, and results lived only in the vendor's store. Had they emitted standard gen_ai spans and mirrored results into their own store from day one, switching backends would have been a config change plus a backfill. The question to ask every vendor before you sign: how do I export all my data, and in what format — and then build the export even if you never plan to use it.
+
 ### War story C — the judge that drifted
 
 **What happened.** A team's headline quality metric quietly jumped one week with
@@ -1114,6 +1144,8 @@ Weeks of "improvement" were an artifact of the grader moving, not the agent.
 `(rubric, input, output)` so identical cases are stable, and keep a small
 human-labeled **gold set** you re-score on every judge change to detect drift.
 Your grader is an instrument; calibrate it or your numbers are fiction.
+
+> **Saying it out loud.** A team's headline quality metric jumped one week with no code change, and the celebration turned into an investigation: the provider had transparently updated the judge model, and the new one scored more leniently. Weeks of apparent improvement were the ruler moving, not the agent. That's worth generalizing, because a judge is a biased instrument rather than an oracle, and you should be able to name the biases cold — position bias, where it favors whichever answer it saw first; verbosity bias, favoring longer and more confident answers; self-preference, where a model rates its own family higher; and the one people most underestimate, that naive judging of multi-turn conversations agrees with humans far less than on single-turn answers, so a judge validated on one-shot Q&A does not transfer to a long agent trajectory. The fixes are concrete: pin the judge model version, cache verdicts on the rubric-input-output triple so identical cases stay stable, and keep a small human-labeled gold set you re-score on every judge change. Your grader is an instrument — calibrate it or your numbers are fiction.
 
 ---
 
@@ -1162,6 +1194,8 @@ line: SDKs that batch writes and drop the last batch if you never call `flush()`
 and sampling configs that quietly discard the exact rare trace you needed. If
 traces are "sometimes missing," suspect these before you suspect the backend.
 
+> **Saying it out loud.** Six failure modes worth naming, and the most insidious isn't technical. Tool lock-in, where a year of history lives in a proprietary schema and migration means re-instrumenting everything. Tracing overhead, because full content capture on high-QPS traffic costs latency, money and storage. Judge cost and drift, since you're running a second model on every case and that model changes under you. Stack sprawl, where teams end up paying for three platforms because each was adopted for one feature. Grading the wrong thing well, because no harness saves you from a bad rubric — a polished tool that scores fluency when you needed factuality just makes a wrong answer arrive faster and prettier. And dashboard theater: a beautiful wall of green numbers nobody has connected to a real decision. The test I'd apply to every tile is "if this metric moved, would we actually do anything?" — if not, delete it, and never show a lone number without a baseline and a diff.
+
 ---
 
 ## Starter stack recommendation
@@ -1185,6 +1219,8 @@ If you want a concrete, opinionated default that is cheap, portable, and scales:
 The through-line: **buy the plumbing (tracing), keep it standards-based (OTel),
 and own the graders.** That combination gives you most of the value of the
 expensive platforms while keeping you free to leave any of them.
+
+> **Saying it out loud.** If someone wants the opinionated default, here it is: self-hosted Langfuse or Phoenix for tracing — Phoenix if you want OTel-native from day one — instrumented via OpenLLMetry so the spans are standard. promptfoo for offline evals in the first week because it's the fastest path to a real comparison table, graduating to DeepEval or Inspect as the rubrics get serious. Ragas wherever you have retrieval. Graders written in your own repo with the judge model injected, because that's your quality IP. Append-only JSONL plus a notebook for storage and reporting until multiple humans need to look at results together. And buy a hosted platform only when collaboration pain is real and recurring, not before. The through-line to say out loud: buy the plumbing, keep it standards-based, own the graders — that combination gets you most of the value of the expensive platforms while leaving you free to walk away from any of them.
 
 ---
 
@@ -1269,6 +1305,8 @@ quality. Cover data flow, portability, cost control, and governance.
 - **Online + offline share the store**, so a production regression can be turned
   into a CI regression test by promoting the failing trace into a dataset.
 
+> **Saying it out loud.** For the org-scale design question, six talking points carry it. One instrumentation standard everywhere — OTel gen_ai spans — so every backend stays swappable and the platform survives a vendor change. A central OTel Collector as the choke point where sampling, PII redaction and routing live, so cost and governance controls sit in one place instead of scattered across apps. trace_id as the universal join key linking a CI eval score, a production trace, and an online judge verdict to the same unit of work. Buy exactly one job — the collaboration UI — where a hundred-person org has genuine multi-human pain, and keep tracing, graders and data open so the purchase is never load-bearing. Treat governance as a first-class layer: a shared versioned grader library, a judge registry with pinned versions and gold-set calibration, dataset versioning, and retention policy enforced at the Collector. And make online and offline share a store, so a production regression can be promoted into a CI regression test by turning the failing trace into a dataset row.
+
 ### Tradeoff tables
 
 **OSS vs hosted:**
@@ -1325,6 +1363,8 @@ quality. Cover data flow, portability, cost control, and governance.
 - The team can state, per tool, which of the five jobs it does — and has retired
   duplicates.
 - A production failure can be promoted into a CI regression test.
+
+> **Saying it out loud.** If you want the whole chapter in one answer: name the five jobs, say which one is your bottleneck, standardize on OpenTelemetry so every backend stays swappable, own your graders in your own repo with the judge model injected, and buy a hosted platform only for the perishable job of collaboration once the pain is proven. The red flags in someone else's answer are naming tools before naming the bottleneck, a proprietary tracing schema with no export story, an unpinned and unvalidated judge, and a dashboard full of numbers nobody makes decisions from. The green flags are portability by construction, versioned datasets and graders, trace_id joining scores to call trees, and a stated buy-versus-build philosophy rather than a shopping list. And since this market moves fast, date your claims — everything here reflects the landscape as of 2026, and I'd re-verify specifics against each project's docs before committing a stack.
 
 ### Q&A bank
 

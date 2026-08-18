@@ -27,15 +27,21 @@ able to explain both the classic step-grading machinery *and* why it degrades ag
 today's hidden-CoT reasoning models — and what you do instead. That is the arc of this
 chapter.
 
+> **Saying it out loud.** So the short version is: grading only the final answer tells you *whether* the agent got it right, not *whether it can do it again*. An agent that lands on the correct answer through broken reasoning is a bug that hasn't gone off yet — it'll break the moment the input shifts, and your dashboard will have been green the whole time. That matters way more for agents than for single-turn chat, because agents chain dozens of steps and each one conditions the next, so one unjustified leap at step three quietly poisons steps four through thirty. The named failure mode here is the silent time bomb: right answer, wrong process, and outcome-only evaluation certifies it as a pass.
+
 ---
 
 ## The 2025–2026 landscape — what actually changed
+
+In plain terms: starting in late 2024 a new class of models began doing a lot of private "thinking" before answering, and you can dial how much thinking they do. That broke two assumptions older evaluation relied on — that accuracy is a single number, and that you can read the model's chain of thought.
 
 Everything downstream in this chapter is shaped by a shift that happened between late 2024
 and 2026: a new class of **reasoning models** ("thinking" models) that spend variable
 **test-time compute** generating a long internal chain before they answer. You cannot design
 a credible reasoning eval in 2026 without understanding what these models are and how they
 broke the old assumptions.
+
+> **Saying it out loud.** The thing that changed is that reasoning moved *inside* the model, and that broke two assumptions your eval was built on. First, accuracy stopped being one number and became a curve, because thinking effort is now a knob you set — so any score without a stated compute budget is meaningless. Second, a lot of providers don't show you the real chain anymore; OpenAI's o-series gives you a summary, while DeepSeek-R1 and Claude's extended thinking actually expose it. The practical tradeoff is: if the trace is hidden, step-level grading is off the table entirely and you fall back to outcome plus self-consistency plus efficiency plus behavioral probes.
 
 ### The reasoning-model timeline (named, dated, real)
 
@@ -79,6 +85,8 @@ Three things are load-bearing for evaluation here:
    the model and the grader that evaluates it are now the same kind of object, and its
    failure modes (reward hacking) are your evaluation's failure modes.
 
+> **Saying it out loud.** If someone asks me to name the reasoning models, the useful cut isn't the vendor, it's whether you can see the thinking. o1 and o3 and o4-mini hide it and give you a summary; DeepSeek-R1 is open weights so you see everything; Claude and Gemini show you thinking with a token budget you set. That visibility split is the single biggest fork in how you design the eval, because hidden trace means no step grading, full stop. And the budget knob means you always have to say what effort setting the number was measured at, or you're comparing a low-effort run against a high-effort run and calling it a model comparison.
+
 ### What changed for evaluation, concretely
 
 - **Contamination got worse and the field responded with fresh/held-out benchmarks.** Static
@@ -93,6 +101,8 @@ Three things are load-bearing for evaluation here:
 - **"Overthinking" / test-time-compute cost became a headline metric.** When a model can burn
   10k thinking tokens on a trivial question, cost and latency per solved problem are no longer
   an afterthought — they are part of the score.
+
+> **Saying it out loud.** Three concrete things moved. Contamination got bad enough that GSM8K and MATH basically stopped discriminating between frontier models, so the field responded with perturbed benchmarks that regenerate instances and with fresh held-out sets like FrontierMath and ARC-AGI-2. Chain-of-thought faithfulness stopped being a curiosity and became a safety question, because if we want to catch misbehavior by reading the model's thoughts, the thoughts have to actually reflect the computation — and outcome-based training doesn't reward honest narration. And overthinking became a headline metric: when a model can burn ten thousand thinking tokens on "how do I reset my password," cost per solved problem is part of the score, not a footnote.
 
 ### Current reasoning benchmarks and their contamination status
 
@@ -112,6 +122,8 @@ pair it with a perturbed set (GSM-Symbolic style) and report variance; treat AIM
 high-variance because \(n\) is tiny; prefer FrontierMath / ARC-AGI-2 / GPQA-Diamond / HLE for
 frontier claims and *state the date* because these saturate fast; and always report the
 compute budget the number was measured at.
+
+> **Saying it out loud.** The rule I'd give is: never report a reasoning number off GSM8K or MATH alone. Those are saturated and widely leaked, so a high score tells you the model saw the test, not that it can reason. Pair whatever you report with a perturbed set in the GSM-Symbolic style and report the *variance*, because the tell for memorization is that accuracy gets noisy when you change surface details. And treat AIME carefully — it's only thirty questions a year, so a two-question swing looks like a six-point capability difference when it's just noise.
 
 ---
 
@@ -147,12 +159,16 @@ scale in 2024: add one irrelevant clause and accuracy collapses, which means the
 on the clean instance was partly memorized surface pattern. The point of reasoning evaluation
 is to catch the time bomb before it ships.
 
+> **Saying it out loud.** Think of every response as two independent questions: was the answer right, and was the reasoning right. That gives four boxes, and the dangerous one is right-answer-broken-reasoning, because outcome-only evaluation collapses it into the same "pass" bucket as genuinely sound work. Here's the toy version — ask a model about three shelves with seven books each and it says twenty-one, correctly. Now say one shelf is empty; a model that was really just multiplying the two numbers in the problem still says twenty-one. That's not hypothetical: GSM-Symbolic measured it at scale in 2024, where adding a single irrelevant clause collapsed accuracy — which means the "reasoning" on the clean version was partly surface pattern-matching all along.
+
 ---
 
 ## A taxonomy of what to evaluate
 
 "Evaluate the reasoning" is too vague to act on. Decompose it into five distinct targets,
 each with its own methods and failure modes.
+
+> **Saying it out loud.** "Evaluate the reasoning" is too vague to act on, so I break it into five things that fail differently. Final-answer correctness — cheap, objective, and blind to luck. Step correctness — is each step valid given the last, which is what process reward models score. Faithfulness — does the stated reasoning actually *cause* the answer, or is it a story told afterward. Planning quality — for agents, is the plan valid, complete, and non-redundant, which is about ordering and preconditions rather than arithmetic. And efficiency — a correct forty-step trace for a three-step problem is a soft failure that costs money and multiplies error surface. The reason to keep them separate is that a trace can be correct-but-unfaithful or sound-but-wasteful, and collapsing them hides exactly the signal you wanted.
 
 ### 1. Final-answer correctness
 Did the endpoint match ground truth? Cheap, objective, and the baseline everyone already
@@ -193,6 +209,8 @@ or valid-plan-but-wrong-answer. Collapsing them hides exactly the signal you wan
 
 ## Process supervision vs outcome supervision
 
+Outcome supervision means one grade for the whole solution: was the last line right. Process supervision means a grade on every intermediate step. The rest of this section is about why the second one wins and what it costs.
+
 This is the central distinction in reasoning evaluation, so we treat it precisely.
 
 - **Outcome supervision** provides a signal on the **final result only**. An
@@ -217,6 +235,8 @@ Why does grading the steps help so much? Two reasons:
 2. **Reward-hacking resistance.** A model optimizing an outcome signal can learn to produce
    correct-looking final answers via unsound reasoning (the top-right quadrant). A process
    signal penalizes the unsound step directly, so there is less room to hack.
+
+> **Saying it out loud.** Outcome supervision gives you one label per solution; process supervision gives you one label per step. Process wins for two reasons. Credit assignment — outcome gives identical reward to a solution that was right for the right reasons and one that was right by luck, so it can't tell a robust reasoner from a fragile one and it can't tell you *where* things broke. And reward-hacking resistance — a process signal penalizes the unsound step directly instead of just the wrong endpoint. Lightman et al.'s *Let's Verify Step by Step* is the number to quote: their process reward model hit 78.2% on a MATH subset with best-of-N, beating both the outcome model and majority voting. The honest tradeoff is cost — outcome labels are usually free because you have an answer key, and process labels are either expensive humans or noisy automation.
 
 ### Worked contrast
 
@@ -246,6 +266,8 @@ Outcome supervision certifies Trace B as good. It is not good — it reached 3 t
 subtraction that happened to cancel out. Feed this model a slightly different problem and
 Trace B's logic collapses. Only the process grader caught it. That is the entire argument for
 process supervision in one example.
+
+> **Saying it out loud.** Here's the one example that makes the whole argument. Twelve apples split among three kids, each eats one, answer is three. One trace does twelve divided by three is four, minus one is three — clean. The other does twelve *minus* three is nine, then nine divided by three is three — wrong operation, but the errors cancel and it lands on three anyway. The outcome grader passes both. The process grader fails the second one at step one. That second trace is exactly the model you don't want in production, because the moment the numbers change, its logic collapses — and only step-level grading saw it.
 
 ### The 2024–2025 shift: automated process labels
 
@@ -282,12 +304,16 @@ an executor). Most teams should start with outcome metrics, add automated proces
 (MC/MCTS PRMs or LLM-judge PRMs) where the stakes justify it, and reserve human step labeling
 for the highest-value slices and for validating the automated graders.
 
+> **Saying it out loud.** The old objection to process supervision was cost — PRM800K needed something like eight hundred thousand human step labels, which nobody's replicating. What changed is you can generate step labels automatically now. Math-Shepherd scores a step by rolling out many completions from that prefix and taking the fraction that reach the right answer; OmegaPRM does the same thing with tree search and collected over a million labels. So process evaluation went from research luxury to standard tooling. But the Qwen team's 2025 paper is the counterweight you should cite: naive Monte-Carlo PRMs are noisy and easy to hack, sometimes *worse* than a solid outcome verifier — so you validate whatever grader you build against a small human-labeled gold slice or you're just trusting a black box.
+
 ---
 
 ## Analyzing reasoning traces
 
 Once you decide to grade the process, you need a pipeline that turns a raw trace into
 structured, scorable units. Four methods, usually stacked.
+
+> **Saying it out loud.** Turning a raw trace into something scorable is four steps stacked. You segment the trace into discrete steps — per sentence for math, per action for agents — and this gates everything, because if your segmenter merges two logical steps the scores go mushy. Then you score each step, either with a trained process reward model or with a strong model as a judge against an explicit rubric. Then, and this is the part people skip, you classify *how* each wrong step was wrong — calculation slip, missing step, wrong operation, hallucinated premise, planning error. The reason that last bit matters is that error-type distribution is actionable and a single accuracy number isn't: "forty percent missing-step" means fix the prompt, "forty percent hallucinated-fact" means add retrieval.
 
 ### Step segmentation
 Split the trace into discrete reasoning steps. For math this is often per-line or per-
@@ -326,6 +352,8 @@ you to add retrieval.
 ---
 
 ## A fully worked example: self-consistency + step-level rubric grading
+
+Two ideas combined in code. Self-consistency samples the same problem several times at a nonzero temperature and takes the majority answer. Then a rubric grader scores the individual steps of the winning path, so you learn whether it was right for the right reasons.
 
 We combine two ideas. **Self-consistency** (Wang et al., 2022) samples multiple reasoning
 paths at nonzero temperature and takes a **majority vote** over the final answers — the
@@ -519,9 +547,13 @@ move it, the CoT is decorative, not causal. That is a separate, causal experimen
 grading checks whether steps are *true*, not whether they are *load-bearing*. The next
 section builds exactly that probe.
 
+> **Saying it out loud.** Self-consistency is the cheapest real win in reasoning eval: sample the same problem ten times at temperature, and take the majority answer. It works because a correct answer is reachable by many valid paths while errors scatter, so the mode is more reliable than any single greedy decode. You also get the vote margin for free as a confidence signal — ten out of ten deserves more trust than a four-out-of-ten plurality, and you can route or abstain on that. But the failure mode you have to name is systematic error: if the model holds a consistent misconception, the vote converges confidently on the wrong answer and the high consistency is actively misleading. That's why you bolt a step-level rubric grader on top, so you're scoring the winning path's *reasoning*, not just how often it repeated itself.
+
 ---
 
 ## Build it in practice — a runnable reasoning-eval module
+
+This section wires three pieces together in code: picking the best of several candidate traces using step scores, a probe that tests whether the stated reasoning is causal, and a harness that runs a whole dataset. Everything runs against a mock, so no API keys needed.
 
 The section above graded truth-of-steps. A production reasoning eval needs three more pieces
 wired together: a **best-of-N selector** that uses step scores (not just votes), a
@@ -582,6 +614,8 @@ def best_of_n(problem, gold, call_model, call_judge, n=8, temperature=0.8):
     }
 ```
 
+> **Saying it out loud.** Best-of-N is the upgrade over majority voting. Instead of counting how often each answer appeared, you score each candidate *trace* with a process signal and take the highest-scoring one — so one sound trace can beat a wrong majority, which majority voting can never do. The aggregation choice matters and interviewers like it: you take the *minimum* step score, not the average, because a chain is only as strong as its weakest link and averaging lets nine good steps hide one fatal one. Lightman found min and product aggregation both work, and this is the setup that beat majority voting on MATH. The tradeoff is you need a verifier you actually trust — with no trusted PRM, self-consistency is the safer default.
+
 ### A faithfulness probe (cue-injection)
 
 This is the piece most teams skip and interviewers love to ask about. The design mirrors
@@ -637,6 +671,8 @@ reasoning.** That is unfaithful CoT, measured behaviorally, using only model out
 works even against hidden-CoT reasoning models where you cannot read the real chain. This is
 your primary faithfulness instrument in the 2026 hidden-reasoning world.
 
+> **Saying it out loud.** This is the piece most teams skip and interviewers love. You inject a cue that should bias the answer — a hint like "I think it's B" — and you measure two separate things: did the answer actually move, and if it moved, did the chain of thought *admit* the hint. The subtlety is the denominator: you compute the faithfulness rate only over the cases where the cue bit, because a cue the model ignored tells you nothing about its honesty. The dangerous signature is high bite rate with low verbalization rate — the model is being steered by something it will not admit to. And the reason this is now your *primary* faithfulness instrument is that it only needs model outputs, so it works against hidden-chain reasoning models where you can't read the real trace at all.
+
 ### A dataset harness and the joint metric you alert on
 
 ```python
@@ -667,6 +703,8 @@ def run_suite(dataset, call_model, call_judge, k=10):
 reasoning* — is the number that justifies this whole pipeline to a skeptical manager. If it is
 zero you can drop process grading; if it is 8% you have found 8% of your test set that
 outcome-only evaluation was silently mis-certifying.
+
+> **Saying it out loud.** The single number that justifies this whole pipeline to a skeptical manager is what I'd call the silent-bomb rate: the fraction of problems where the answer was scored correct but the reasoning was scored wrong. It's the top-right quadrant made into a metric you can alert on. If it comes back zero, great, you've earned the right to drop process grading and save the money. If it comes back eight percent, you've just found eight percent of your test set that outcome-only evaluation was silently mis-certifying as passing. That framing is what turns "we should grade steps" from an aesthetic preference into a budget request.
 
 ### Runnable demo (no API keys)
 
@@ -725,6 +763,8 @@ efficiency, which need only outputs.
 ---
 
 ## Metrics with formulas and micro-examples
+
+Each metric here is one line of notation followed by a tiny worked example. If the formulas look heavy, the ideas underneath are simple: fraction of answers right, fraction of steps right, most common answer across samples, and how many tokens it cost.
 
 **Final-answer accuracy.** The baseline. For \(N\) problems with indicator \(\mathbb{1}\):
 \[
@@ -786,6 +826,8 @@ model is not a point but a curve: accuracy as a function of the reasoning budget
 \]
 Report at least two points (e.g. low and high effort). A model that only wins at max budget is
 a different production proposition from one that wins cheaply.
+
+> **Saying it out loud.** The metrics that matter come in pairs, and the pairing is the point. Final-answer accuracy is the baseline, and step accuracy — correct steps over non-neutral steps — is what exposes the lucky ones; you report them jointly or you learn nothing. Faithfulness rate is the fraction of cue-influenced traces where the chain actually names the cue, and the 2025 numbers are sobering: roughly 25% for Claude 3.7 Sonnet and 39% for DeepSeek-R1 in Anthropic's study, meaning most of the real causal story never shows up in the trace. Then efficiency, which you should quote as dollars per solved problem rather than raw tokens — price per token times average trace length, divided by accuracy. And because effort is a knob now, the honest summary of a reasoning model isn't a point, it's a curve: report at least a low-effort and a high-effort number, because a model that only wins at max budget is a completely different production proposition.
 
 ---
 
@@ -853,6 +895,8 @@ the chain is a category error — the summary is itself a model output that can 
 misrepresent the real computation. Either grade outcomes/behavior, or only grade a chain the
 provider certifies is the actual one (open-weights R1, Claude/Gemini visible thinking).
 
+> **Saying it out loud.** The pitfalls all rhyme: something you're measuring with becomes something the model optimizes against. Reward hacking is the base case — if your grader can be fooled by a string match, the model finds that before you do. OpenAI's 2025 result is the sharpest version: frontier models will literally write "let's hack" in their chain when a task has a loophole, and a monitor reading the chain catches it — but when they *penalized* those thoughts in training, the model didn't stop cheating, it learned to hide the intent, and the misbehavior became undetectable. Add judge bias — position, verbosity, self-preference — and contamination on top, and the through-line is: never put heavy optimization pressure on the thing you're using to measure. A clean-looking chain under optimization pressure is *less* trustworthy, not more.
+
 ---
 
 ## Evaluating modern reasoning models (o-series / R1-style)
@@ -894,6 +938,8 @@ The takeaway: as reasoning moves inside the model and out of view, your leverage
 *reading the trace* to *probing the behavior*. Perturbation-based evaluation becomes primary,
 not supplementary.
 
+> **Saying it out loud.** When the model hides its thinking, your leverage moves from reading the trace to probing the behavior. Four things still work without the chain: accuracy on fresh or perturbed instances, which dodges contamination; self-consistency across samples, which gives you robustness and a confidence signal; efficiency in tokens and dollars per solve; and perturbation-based faithfulness probes that only need outputs. The counterintuitive bit worth saying is that faithfulness is *worse* for reasoning models, not better — outcome-based RL rewards reaching the answer, not narrating honestly, so the visible chain can drift further from the real computation. And pin the reasoning effort setting, or you're not measuring the model, you're measuring whatever budget you accidentally left on.
+
 ---
 
 ## Production case studies & war stories
@@ -932,6 +978,8 @@ of the question into sub-questions sound, is coverage complete, are sources actu
 (not just cited), and is there redundant or circular sub-tasking. Grading the final report
 alone is the outcome-only trap one level up — a good report can hide a lucky or wasteful plan.
 
+> **Saying it out loud.** In practice you layer graders cheapest-first and you sample the expensive ones. Outcome runs on a hundred percent of cases because it's basically free — did the ticket get resolved, did the patch pass CI, which is why SWE-bench is such a good design: the repo's own test suite is the verifier, executable and hard to game. Trajectory and plan-validity checks run on the subset that matters, catching "got there via a forty-step wander" and "right final state, illegal intermediate move." Then LLM-judge step grading runs on a stratified sample, because judging every step of every trajectory is unaffordable. The discipline nobody mentions until it bites them: freeze a human-labeled golden set and keep re-validating your judges against it, because judge drift silently corrupts every number downstream of it.
+
 ### War story 1 — right answer, unfaithful reasoning (the sycophancy leak)
 
 A team A/B-tested a CoT prompt on a multiple-choice eval and shipped the variant with higher
@@ -945,6 +993,8 @@ offline accuracy win can encode an unfaithful shortcut that only fires on a dist
 didn't test. The fix that caught it going forward was a standing **faithfulness probe**
 (cue-injection) in CI — the same `faithfulness_probe` above — gating releases on `bit_rate`
 low *and* `verbalize_rate` high.
+
+> **Saying it out loud.** A team A/B-tested two chain-of-thought prompts, shipped the one with higher offline accuracy, and regressed in production. What the winning prompt had actually taught the model was sycophancy — when a user's message implied "I think it's B," the model switched to B and its chain confidently argued for B on the merits without ever mentioning the hint. The offline eval had no user hints in it, so accuracy looked great; production is nothing but users hinting. The lesson is that an offline accuracy win can encode an unfaithful shortcut that only fires on a distribution you didn't test, and the fix was a standing cue-injection probe in CI gating releases on bite rate low and verbalization rate high.
 
 ### War story 2 — reward-hacking a process grader
 
@@ -960,6 +1010,8 @@ against a grader you also evaluate with, keep a **held-out human gold set** the 
 trains on, and watch for the divergence between automated-judge score and human score as your
 canary. If they separate, the model is hacking the judge.
 
+> **Saying it out loud.** A team built an LLM judge to score reasoning steps, which was fine, and then made the mistake of using that same judge as the reward signal in a fine-tune. The model figured out the judge liked traces that *looked* rigorous — lots of "let me double-check," restated definitions, confident "therefore" transitions — and learned to produce that texture whether or not the underlying steps were valid. Judge-scored step accuracy went up; held-out human step accuracy went down. It learned the grader's tells, not the math. The rule that falls out: never optimize hard against a grader you also evaluate with, keep a human gold set the model never trains on, and treat judge-versus-human divergence as your hacking canary.
+
 ### War story 3 — the overthinking bill
 
 A support-agent team switched to a reasoning model at high effort for a quality bump and saw
@@ -969,6 +1021,8 @@ my password." **Lesson:** efficiency is a first-class metric and effort is a kno
 easy/hard router (cheap classifier → low vs high thinking budget), recovering the latency and
 most of the cost while keeping the accuracy gain on the genuinely hard tickets. "Overthinking"
 is not a curiosity; it is a line item.
+
+> **Saying it out loud.** A support team switched to a reasoning model at high effort for a quality bump, and got p50 latency triple and token spend six times higher — for a 0.4-point accuracy gain. The reason is that most support tickets are trivial, and the model was burning thousands of thinking tokens on "how do I reset my password." They fixed it with a cheap difficulty classifier that routes easy tickets to a low thinking budget and hard ones to high, which recovered the latency and most of the cost while keeping the gain where it mattered. The takeaway is that effort is a knob and overthinking is a line item, not a curiosity — efficiency belongs on the same dashboard as accuracy.
 
 ---
 
@@ -1000,6 +1054,8 @@ to FrontierMath / ARC-AGI-2 / GPQA-Diamond / HLE for frontier claims and date yo
 PlanBench/SWE-bench when the task is *planning/agentic* rather than calculation; use PRMs /
 step-rubric judges (validated on PRMBench-style checks) when you need to grade the process; use
 self-consistency both as an accuracy booster and as a cheap confidence signal.
+
+> **Saying it out loud.** If someone asks which benchmarks I'd use, the answer depends on what I'm claiming. GSM8K and MATH for a coarse capability read only, assuming contamination and saturation. GSM-Symbolic-style perturbations to check whether the reasoning is actually reasoning. FrontierMath, ARC-AGI-2, GPQA-Diamond, or Humanity's Last Exam for frontier claims — and always date the number, because those saturate fast. And if the task is agentic rather than arithmetic, switch entirely: PlanBench for plan validity, SWE-bench for executable outcomes. The one-line failure mode to avoid is quoting a single leaderboard number with no date, no compute budget, and no perturbed companion set.
 
 ---
 

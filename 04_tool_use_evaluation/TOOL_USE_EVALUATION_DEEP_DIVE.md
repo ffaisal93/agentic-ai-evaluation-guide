@@ -15,6 +15,8 @@ A chat model that hallucinates a fact produces text a human can read and doubt. 
 The consequence: **you cannot evaluate tool use by reading transcripts or scoring final answers alone.** You must inspect the *structured call trace* — the sequence of `(tool_name, arguments)` tuples the agent emitted — and compare it against a specification of what correct behavior looks like. Everything in this chapter is about how to build that comparison rigorously.
 One more property makes tool-use failures uniquely corrosive: **they are asymmetric in cost.** A read that returns the wrong row wastes a few cents of tokens; a write that mutates the wrong row can cost a refund, a reputation, or a compliance breach. A good evaluation harness therefore does not treat all calls as equal-weight classification targets — it weights the loss by the *blast radius* of the tool. Reading `get_weather("Paris")` wrong and calling `wire_transfer(amount=50000)` wrong are not the same event and must not average into the same scalar. This is the through-line of the chapter: measure per-dimension, and weight by consequence.
 
+> **Saying it out loud.** Tool use is where the model stops talking and starts acting, and that changes the failure surface completely. When a chat model hallucinates a fact, a human reads it and can doubt it; when an agent hallucinates an *argument*, a machine executes it without doubt. Three things make it worse: the errors are structured rather than prose, so text-quality metrics are blind to them; the success signals lie, because a tool returns a status code, not correctness — `refund(order="A123", amount=500)` can return 200 OK while being the wrong order and the wrong amount; and the error compounds downstream, so a subtly wrong id at step two poisons everything after it while the agent narrates a fluent, correct-sounding summary of a wrong result. And the costs are asymmetric: getting `get_weather` wrong burns a few cents, getting `wire_transfer(amount=50000)` wrong is a different kind of event entirely. So the through-line is measure per dimension and weight by blast radius — never average a read and a wire transfer into one scalar.
+
 
 ---
 
@@ -40,12 +42,16 @@ Definitions worth pinning down:
 - **Safety** covers **non-idempotent / destructive** operations (writes, deletes, payments, sends) where a spurious or duplicated call causes irreversible harm — a stricter bar than read-only tools.
 For destructive tools this taxonomy needs a fourth safety sub-case beyond irrelevance, over-call, and under-call: **duplication under retry.** When a `charge_card` or `send_email` call times out, the *result* is unknown but the *effect* may already have happened. A correct agent either uses an idempotency key so a retry is a no-op, or reads state (`get_recent_charges`) before re-issuing. An evaluation that only checks "did the final charge exist" will pass an agent that charged twice; you must count **effect multiplicity** — how many times the side effect actually fired — not just whether it fired at least once.
 
+> **Saying it out loud.** Tool use isn't one skill, it's seven, and you evaluate them separately because an agent can be excellent at one and catastrophic at another. Selection — did it pick the right tool, including the null tool of just answering. Argument construction, which splits into schema validity, cheap and mechanical, versus semantic correctness, which needs ground truth. Execution-result handling, chaining and ordering, error recovery, efficiency, and safety. The one people forget is irrelevance detection — recognizing that no tool applies — which naive agents fail by over-calling, so if your suite has no no-tool tasks you've only measured half of selection. And for destructive tools there's a fourth safety case beyond over-call and under-call: duplication under retry, where a `charge_card` times out with the effect already fired. That's why you count *effect multiplicity* — how many times the side effect actually happened — not just whether it happened at least once.
+
 
 ---
 
 ## 3. Ground truth for tools
 
 To score a call trace you need a reference. There are three families of ground truth, in increasing order of flexibility (and cost).
+
+> **Saying it out loud.** There are three families of ground truth and they trade rigidity for cost. Exact-match on the call itself — compare the emitted call structurally to a reference, which is cheap but punishes valid alternatives. Executable or state-based checks — actually run it and diff the resulting world state against a golden end state, which is the gold standard for anything that writes. And golden trajectories, the full ordered list of expected calls, which is the most informative and by far the most expensive to author and maintain. The rule of thumb is: if the task has an observable end state, grade the end state, because that's the only reference that doesn't care how the agent got there.
 
 ### 3.1 Exact-match on calls (AST comparison)
 
@@ -55,6 +61,8 @@ Two refinements make exact-match usable in practice:
 
 - **Value sets, not single values.** A reference argument is often a *set* of acceptable values: `{"units": ["metric", "celsius"]}` because either is a correct rendering. BFCL's checker accepts a call if each argument matches any allowed value for that parameter.
 - **Optional vs required parameters.** The reference marks which parameters must be present and which are optional; supplying an omittable default is not an error.
+
+> **Saying it out loud.** AST matching means you parse the model's call into a structure and compare it as a structure, not as a string — because `f(a=1, b=2)` and `f(b=2, a=1)` are the same call and string matching says they're different. That's what BFCL calls AST accuracy: check the function name, then check each argument, ignoring formatting, key order, and whitespace. Two refinements make it usable in practice: reference arguments are *sets* of acceptable values, so 'metric' or 'celsius' both pass, and the reference marks which parameters are required versus optional, so supplying a default isn't an error. Skipping either refinement is the fastest way to build an eval that fails correct agents.
 
 ### 3.2 Executable / state-based checks
 
@@ -66,10 +74,14 @@ Instead of matching the call *text*, you **run** it and check the *effect*. Two 
 State-based checks elegantly solve the **"any valid path" problem** (§3.4) for writes — but they say nothing about *efficiency* or *read-only* correctness, so you pair them with trajectory checks.
 Multi-turn state deserves special emphasis because it is where 2025–2026 benchmarks moved the goalposts. In single-turn evaluation the world is stateless: you score one call against one reference and reset. In multi-turn evaluation (BFCL V3, τ-bench, τ²-bench) the backend is a *persistent database* that the agent mutates across many turns, and the reference is the **end-state of that database plus the set of facts the agent must have surfaced to the user.** Scoring becomes: run the whole episode against a sandboxed backend seeded to a known initial state, then diff the final state against the golden end-state with a canonicalizing comparator (sort collections, ignore auto-generated timestamps/ids, normalize money to minor units). Two things make this hard in practice — **hidden coupling** (a write in turn 3 invalidates an assumption the agent made in turn 1) and **user-simulator noise** (the LLM playing the user may volunteer or withhold information inconsistently, so you must run many seeds and report variance, not a point estimate).
 
+> **Saying it out loud.** Instead of matching the call text, run it and check the effect — and for anything that writes, that's the only honest way to grade. Executable accuracy invokes the function and asserts the return value; state-based evaluation, which is what τ-bench and BFCL V3 do, runs the whole episode against a sandboxed backend seeded to a known state and then diffs the final database against a golden end state. That elegantly solves the any-valid-path problem, because it doesn't care how the agent got there. Two things make it hard in practice: hidden coupling, where a write in turn 3 invalidates an assumption the agent made in turn 1, and user-simulator noise, since the LLM playing the user volunteers information inconsistently — so you run many seeds and report variance, not a point estimate. And your comparator has to canonicalize: sort collections, ignore auto-generated timestamps and ids, normalize money to minor units.
+
 
 ### 3.3 Golden trajectories
 
 For chaining and process quality, the reference is an entire **golden trajectory**: an ordered (or partially-ordered) list of calls with their expected arguments and expected returns. You score the agent's trajectory against it with alignment metrics (§5): how many reference steps were hit, in a valid order, with correct args. Golden trajectories are the most informative and the most expensive to author and maintain.
+
+> **Saying it out loud.** A golden trajectory is the full reference path — an ordered, or better, partially-ordered list of calls with expected arguments and expected returns — and you score the agent against it with alignment metrics. It's the most informative reference you can have, because it localizes exactly which step broke rather than just telling you the episode failed. It's also the most expensive to author and the most brittle to maintain, since every tool signature change invalidates it. So the practical pattern is: state-diff for the outcome, golden trajectories only for the high-value flows where knowing *where* it broke is worth the maintenance bill.
 
 ### 3.4 The "any valid path" problem
 
@@ -81,9 +93,13 @@ Practical resolutions, in order of preference:
 2. **Encode the reference as a partial order + value sets** — mark independent calls as order-insensitive, dependent calls as ordered, and each argument as a set of acceptable values. Score with order-insensitive matching (the code in §6 does this).
 3. **Use a rubric/LLM-judge** for the residual genuinely-open cases, with the schema and task as context — but treat judge scores as noisy and calibrate against human labels.
 
+> **Saying it out loud.** The central difficulty in tool evaluation is that many correct trajectories exist. Asking for the weather in Paris and Tokyo, either order is right — those calls are parallel and order-insensitive — and some tasks admit genuinely different tool *choices*, like search-then-filter versus one richer query. Over-strict matching punishes correct agents; over-loose matching passes wrong ones, and there's no setting of a single knob that fixes both. Three resolutions in order of preference: match on outcome rather than path whenever there's an observable end state; otherwise encode the reference as a partial order plus value sets, so independent calls can appear in any order and each argument accepts a set; and reserve a calibrated LLM judge for the genuinely open residual. If you take one thing: the reference format needs to express a partial order, because a single golden path is the assumption that quietly makes every home-grown tool eval wrong.
+
 ---
 
 ## 4. Metrics
+
+**In plain language.** Seven metrics follow, each with a formula and a small worked number. The notation is just bookkeeping: \( P \) is the list of calls the agent actually made, \( G \) is the reference list of calls it should have made, and each call is a name plus a dictionary of arguments. Everything below is a different way of comparing those two lists.
 
 Notation: an episode produces a list of *predicted* calls \( P = [p_1, \dots, p_m] \) and a reference \( G = [g_1, \dots, g_n] \). Each call is a pair \( (\text{name}, \text{args}) \).
 
@@ -103,6 +119,8 @@ For irrelevance detection, report it as a **confusion matrix** instead of a sing
 
 *Micro-example.* Over 4 tasks the reference tools are `[sql, none, search, none]` and the agent emits `[sql, search, search, none]`. Selection accuracy = 3/4 = 0.75. On the two irrelevance tasks (positions 2,4) the agent got 1 right → IrrelevanceAcc = 0.5 (it over-called on task 2).
 
+> **Saying it out loud.** Selection accuracy is a classification problem over the tool set, and the crucial detail is that 'no tool' is a valid label. Report irrelevance as a confusion matrix rather than a single number, because over-calling and under-calling are different failures with different production costs — a spurious destructive call is a catastrophe, a missing read is an annoyance. Worked example: across four tasks the reference is sql, none, search, none, and the agent emits sql, search, search, none — selection accuracy is 3 of 4, but on the two irrelevance tasks it only got one, so irrelevance accuracy is 0.5. Aggregate accuracy hid the fact that this agent is tool-happy.
+
 ### 4.2 Argument accuracy
 
 Given the tool name is correct, the fraction of arguments that match the reference value set. For a single call with reference args \( g \):
@@ -115,6 +133,8 @@ where \( K_g \) is the set of reference parameter keys. Report both **per-argume
 
 *Micro-example.* Reference `book(date=2026-08-04, seats={1,2})`; prediction `book(date=2026-08-04, seats=3)`. Per-arg = 1/2 = 0.5; exact-call = 0.
 
+> **Saying it out loud.** Given the tool name is right, argument accuracy asks what fraction of the arguments match the reference value set — and you report it two ways. Per-argument accuracy gives partial credit and is useful for debugging; exact-call accuracy, meaning every argument correct, is the honest number for anything high-stakes. Worked: reference is `book(date=2026-08-04, seats={1,2})`, the agent emits `book(date=2026-08-04, seats=3)` — per-argument is 0.5, exact-call is 0. For a destructive tool, only the second number means anything, because half-right arguments on a write are just a wrong write with a good excuse.
+
 ### 4.3 Execution success rate
 
 Fraction of emitted calls that execute without error (schema-valid, no exception, non-error status):
@@ -124,6 +144,8 @@ Fraction of emitted calls that execute without error (schema-valid, no exception
 \]
 
 Crucial caveat: **high ExecSuccess with low ArgAcc means the agent is confidently calling the wrong thing successfully.** Always read the two together.
+
+> **Saying it out loud.** Execution success is the fraction of calls that come back without an error — schema-valid, no exception, non-error status. On its own it's nearly useless, and the reason is the sentence to memorize: high execution success with low argument accuracy means the agent is confidently calling the wrong thing successfully. A 200 OK on the wrong order id is not a success signal; it's the absence of a syntax error. So always read execution success next to argument accuracy, because the *gap* between them is exactly the wrong-but-plausible failure mode that ships bad writes.
 
 ### 4.4 Chain completion (trajectory success)
 
@@ -135,6 +157,8 @@ Did the agent complete the full dependency chain and reach the goal? Binary per 
 
 A softer version is **step recall** — fraction of reference steps hit — which gives partial credit and helps localize *where* chains break.
 
+> **Saying it out loud.** Chain completion is binary per episode: did the agent complete the whole dependency chain, in a valid order, with data flowing correctly from one call to the next. It's the metric that catches the specific bug where the id the agent booked doesn't match any id the search actually returned — the agent invented a plausible value instead of reading the previous observation. The softer companion is step recall, the fraction of reference steps hit, which gives partial credit and localizes *where* chains break rather than just telling you they did. Report both: the binary one for gating, step recall for debugging.
+
 ### 4.5 Recovery rate
 
 Of the episodes that hit at least one tool error, the fraction where the agent subsequently reached task success:
@@ -145,6 +169,8 @@ Of the episodes that hit at least one tool error, the fraction where the agent s
 
 Complement with **maladaptive-retry rate**: fraction of errors followed by an *identical* retry (same name + args) — a sign the agent is not learning from the error message.
 
+> **Saying it out loud.** Recovery rate is, of the episodes that hit at least one tool error, the fraction that still reached success — and you have to pair it with maladaptive-retry rate, the fraction of errors followed by an identical retry with the same name and same arguments. That second number is the tell: an agent that re-issues the exact same failing call isn't reading the error message at all. And there's a trap here worth naming — for destructive tools, 'recovered' is not automatically a virtue, because a double charge also produces a trailing success. Safe recovery means changing the call, escalating, or reading state first, not just eventually getting a green.
+
 ### 4.6 Redundant-call rate (efficiency)
 
 \[
@@ -154,6 +180,8 @@ Complement with **maladaptive-retry rate**: fraction of errors followed by an *i
 where "necessary" calls are those whose removal would change the outcome (approximated by: not a duplicate of an earlier call with identical args and unchanged state, and on the path to the goal). A related headline number is **call efficiency** \( = n_{\text{golden}} / m \) — reference call count over actual — capped at 1.
 
 *Micro-example.* Agent emits 5 calls; two are identical repeats of an earlier `get_balance()` with no state change. \( u = 3 \), RedundantRate \( = (5-3)/5 = 0.4 \).
+
+> **Saying it out loud.** Redundant-call rate is the fraction of emitted calls that weren't necessary, where necessary roughly means removing it would change the outcome — so a duplicate `get_balance()` with no state change in between is pure waste. Worked: five calls emitted, two are identical repeats, so three were necessary and the redundant rate is 0.4. The reason it earns a place next to accuracy is economics — an agent that succeeds in 12 calls at $0.40 a task may simply be unusable regardless of its success rate. Track calls per task and dollars per task right beside the accuracy number, or you'll ship something correct and unaffordable.
 
 ### 4.7 Reliability: pass@k vs pass^k
 
@@ -166,9 +194,13 @@ A single run hides variance. τ-bench introduced **pass^k**, the probability tha
 
 pass@k *rewards* lucky single successes; pass^k *punishes* inconsistency. For production tool agents, pass^k is the honest metric: τ-bench found strong models whose pass@1 looked healthy but whose pass^8 collapsed below 25% in the retail domain — i.e., they rarely do the same task correctly eight times running.
 
+> **Saying it out loud.** pass@k is the probability that at least one of k trials succeeds — it rewards luck. pass^k, said 'pass hat k', is the probability that *all* k succeed — it measures consistency. For production tool agents, especially anything with destructive tools, pass^k is the honest metric, because an agent that succeeds once in eight tries is not deployable no matter how good pass@8 looks. The number that makes this concrete is from τ-bench: strong models with healthy-looking pass@1 saw pass^8 collapse below 25% in the retail domain — meaning they rarely do the same task correctly eight times running. That's the single most quoted 'agents aren't reliable yet' datapoint, and it's as of τ-bench's published runs, not a claim about today's models.
+
 ---
 
 ## 5. A fully worked scoring example
+
+**In plain language.** The code below is the scorer, in miniature. It compares the agent's calls to a reference structurally rather than as strings, allows each argument a *set* of acceptable values, marks some parameters optional, and handles parallel calls that can legitimately arrive in any order by doing a greedy best-match assignment. Out the other end come the per-dimension metrics from the previous section.
 
 The code below scores an agent's emitted tool calls against an expected specification. It does **structured** comparison (not string match), supports **value sets** and **optional** parameters, and handles **order-insensitive parallel calls** via a greedy best-match assignment. It returns per-dimension metrics from §4.
 
@@ -361,6 +393,8 @@ if __name__ == "__main__":
 
 Running it prints selection 1.00, arg 0.75 (3 of 4 graded args correct), exact-call 0.50 (the `book` call had a wrong `seats`), a redundant rate of 0.33 (the spurious `delete_booking`), and one hallucinated tool. Note the design choices that matter: **AST-style value-set matching** (`SFO`/`sfo` normalize equal), **partial credit per argument** alongside a **strict exact-call** number, **order-insensitive matching within a parallel group**, and explicit accounting of **spurious/hallucinated** calls. For production use you would layer in state-based checks (§3.2) and a data-flow validator that confirms `flight_id` passed to `book_flight` actually appeared in a prior `search_flights` result.
 
+> **Saying it out loud.** Three design choices in this scorer are the ones worth defending out loud. First, structured comparison rather than string matching — the single most common bug in home-grown tool evals is that `f(a=1,b=2)` and `f(b=2,a=1)` come out unequal. Second, value sets instead of single expected values, because a reference that admits only one rendering of a date or a unit will fail correct agents all day. Third, order-insensitive matching for parallel calls via a greedy assignment, which is how you stop punishing the agent that asked about Tokyo before Paris. Everything else is bookkeeping — those three are what separates a scorer that measures capability from one that measures how closely the agent imitated whoever wrote the reference.
+
 ---
 
 ## 6. Hard cases
@@ -374,6 +408,8 @@ Running it prints selection 1.00, arg 0.75 (3 of 4 graded args correct), exact-c
 **Non-idempotent and destructive tools.** For `send_email`, `charge_card`, `delete_*`, a *duplicated* or *spurious* call is not a minor inefficiency — it is real harm. Evaluate these with stricter rules: any extra destructive call is a critical failure; the agent should prefer read-then-confirm patterns; and idempotency keys (if the API supports them) should be checked. Reliability metrics (pass^k) matter most here because "usually correct" is not good enough when the tail event charges a customer twice.
 
 **Uncertain writes / underspecified requests.** "Cancel my order" when the user has three orders. The correct behavior is often to **ask a clarifying question, not to call a write tool** on a guess. Ground truth for these cases should reward the *no-op-plus-question* trajectory and penalize a confident wrong write — which means your reference format must be able to express "the correct action here is to ask, not to act."
+
+> **Saying it out loud.** Five cases worth having ready. Hallucinated tools — a call to a function that isn't in the registry, which is a hard failure regardless of other scores, and good harnesses also test confusable names like `get_user` versus `get_users`. Wrong-but-plausible arguments, the most dangerous of all, because they're schema-valid and they execute — only semantic ground truth catches them, which is why argument accuracy has to sit next to execution success. Irrelevance, where the right move is to answer directly and a tool-happy agent gets penalized. Non-idempotent and destructive tools, where a duplicated call isn't inefficiency, it's harm, so any extra destructive call is a critical failure and pass^k matters most. And underspecified writes — 'cancel my order' when there are three — where the correct trajectory is a clarifying question, which means your reference format has to be able to say 'the right action here is to ask, not to act.'
 
 ---
 
@@ -390,6 +426,8 @@ Running it prints selection 1.00, arg 0.75 (3 of 4 graded args correct), exact-c
 
 How to read this tour: **BFCL** is your microscope for call-level correctness and irrelevance; **τ-bench** is your microscope for *reliability* and policy-following in multi-turn service settings; **ToolBench** stresses breadth and real APIs (with reproducibility caveats); **API-Bank** cleanly separates the *decision to call* from the *ability to call*. **MCP** is the interface layer — increasingly what your tools are actually described in, and therefore what your evaluation harness should ingest natively.
 
+> **Saying it out loud.** Here's the one-liner that maps each benchmark to the question it answers. BFCL is the call-level microscope — is the name right, are the arguments right, did it correctly decline to call. τ-bench and τ²-bench are the reliability and policy-following microscope for multi-turn service settings, scoring the final database state and reporting pass^k. ToolBench gives you breadth over 16,000-plus real APIs, with the reproducibility caveat that live third-party APIs go down and change — which is why StableToolBench replaced them with a cached simulator. API-Bank cleanly separates knowing *when* to call from knowing *which* and *how*. And MCP isn't a benchmark at all, it's the interface layer — which matters because it turns tool descriptions into things your evaluation has to test.
+
 ---
 
 ## 8. Failure modes & pitfalls in evaluating tool use
@@ -403,6 +441,8 @@ How to read this tour: **BFCL** is your microscope for call-level correctness an
 - **Benchmark contamination & staleness.** Popular leaderboards leak into training data and static API snapshots drift. Rotate held-out private tasks; prefer state-based checks that are harder to game than fixed reference strings.
 - **LLM-judge without calibration.** Using a model to grade calls is convenient but noisy and biased; calibrate against human labels and report agreement before trusting it.
 - **Ignoring cost/latency.** An agent that "succeeds" with 12 calls and $0.40 per task may be unusable. Track calls-per-task and dollars-per-task next to accuracy.
+
+> **Saying it out loud.** Nine ways to build a tool eval that lies to you, and the first one is the most common: string-matching function calls, where the same call with reordered keyword arguments scores as wrong. Then scoring only the final answer, which lets a fluent summary over a wrong tool result pass clean. Then conflating execution success with correctness — a 200 OK on the wrong order id is a successful disaster. Then omitting irrelevance tasks, which measures half of selection and quietly rewards over-calling. Then over-strict single golden paths, single-run reporting on a high-variance system, contamination and staleness in the popular leaderboards, an uncalibrated LLM judge, and ignoring cost and latency entirely. If you can only fix two: parse to a structure before comparing, and add no-tool tasks.
 
 ---
 
@@ -454,6 +494,8 @@ The **Berkeley Function-Calling Leaderboard** (Gorilla group, UC Berkeley) is th
 
 **Evaluation implication.** If you cite "we hit X% on BFCL," an interviewer will ask *which version and which split*. V4 web/memory is a different animal from V1 AST accuracy; a model can top V1 and be mediocre at V3 multi-turn state.
 
+> **Saying it out loud.** BFCL is the most-cited call-level benchmark and it's a moving target, so the version is the whole answer. V1 in early 2024 established AST accuracy and executable accuracy over single-turn calls plus a relevance/irrelevance split. V2, called Live, replaced synthetic prompts with user-contributed data to fight contamination. V3 in September 2024 is the big conceptual jump — multi-turn, multi-step, state-based checking against a stateful backend, plus the categories that actually matter for agents: missing-parameter, where the agent must ask rather than guess, and missing-function, where it must recognize it can't proceed. V4 from July 2025 goes agentic with web search, memory across three backends, and format sensitivity under 26 cosmetic perturbations. The practical consequence: if you say 'we hit X% on BFCL,' the immediate follow-up is which version and which split, because a model can top V1 AST accuracy and be mediocre at V3 multi-turn state.
+
 ### 10.2 τ-bench → τ²-bench: tool-agent-user, reliability, and dual control
 
 **τ-bench** (Sierra, June 2024; "A Benchmark for Tool-Agent-User Interaction in Real-World Domains," arXiv:2406.12045) evaluates agents in **realistic multi-turn dialogue** in *retail* and *airline* domains. Its two enduring contributions:
@@ -465,11 +507,15 @@ The **Berkeley Function-Calling Leaderboard** (Gorilla group, UC Berkeley) is th
 
 **Why this matters for building.** τ-bench/τ²-bench are the reference design for a *product-grade* tool-use eval: sandboxed stateful backend, LLM user-simulator, state-diff reward, reliability over many seeds, and policy-adherence checks. When you design your own harness (§11, §12), you are essentially building a domain-specific τ-bench.
 
+> **Saying it out loud.** τ-bench's two enduring contributions are worth stating precisely. One, state-based reward with an info check — an episode passes only if the database's final state matches the golden end state *and* the agent actually told the user what it needed to, which kills 'right words, wrong action' and 'right action, silent about it' at the same time. Two, pass^k, which exposed that agents strong on a single try are often wildly inconsistent, with frontier models' pass^8 collapsing well below pass^1 in retail. τ²-bench, June 2025, raises it to dual control in a telecom domain where the *user* also has tools and can act — so the agent has to guide the user through actions it can't perform itself, and the key finding is that agents which do fine when they're the only actor drop sharply when the user acts too. That isolates a coordination failure from a reasoning failure. And a good humility note: the Amazon AGI τ²-bench-verified follow-up corrects task, policy and database misalignments in the original — even flagship benchmarks carry annotation bugs you should audit before quoting a number.
+
 ### 10.3 ToolBench / StableToolBench and API-Bank: breadth and graded ability
 
 - **ToolLLM / ToolBench** (OpenBMB, ICLR 2024; arXiv:2307.16789) covers **16k+ real RapidAPI tools** with single- and multi-tool instructions, solved with a DFSDT search and scored by **ToolEval** (**pass rate** + LLM-judge **win rate** vs. a reference). Its weakness is *reproducibility*: live third-party APIs go down or change, so runs aren't comparable over time. Repo: <https://github.com/OpenBMB/ToolBench>.
 - **StableToolBench** (2024; arXiv:2403.07714) fixes that by replacing live APIs with a **cached, LLM-simulated API server**, trading a little realism for reproducible, always-on evaluation — the pattern you should copy for your own CI (a recorded/mock tool sandbox, not live prod APIs). Repo/paper: <https://arxiv.org/abs/2403.07714>.
 - **API-Bank** (EMNLP 2023; arXiv:2304.08244) cleanly separates the **decision to call** from the **ability to call** with graded levels — **Call**, **Retrieve+Call**, **Plan+Retrieve+Call** — and remains the crispest framework for diagnosing *which* sub-skill an agent lacks (knowing *when*, knowing *which*, knowing *how*). Older/smaller API set, but conceptually clarifying.
+
+> **Saying it out loud.** ToolBench covers 16,000-plus real RapidAPI tools and scores with a pass rate plus an LLM-judge win rate against a reference solution — huge breadth, and one fatal operational flaw: live third-party APIs go down and change, so runs aren't comparable over time. StableToolBench is the fix, replacing live APIs with a cached, LLM-simulated API server — trading a little realism for reproducibility, and that's the pattern you should copy in your own CI, a recorded or mocked tool sandbox rather than live production APIs. API-Bank is the conceptually crispest of the three, because its graded levels — Call, then Retrieve-plus-Call, then Plan-plus-Retrieve-plus-Call — separate knowing *when* to call from knowing *which* and knowing *how*. That decomposition is what tells you which sub-skill your agent is actually missing.
 
 ### 10.4 MCP: the tool interface is standardizing — and it changes what you evaluate
 
@@ -486,9 +532,13 @@ Why an evaluation chapter cares about a *plumbing* standard — four concrete sh
 
 **One-line summary for an interview:** *"BFCL is the call-level microscope, τ-bench/τ²-bench is the multi-turn reliability and dual-control microscope, ToolBench/StableToolBench is breadth-with-reproducibility, API-Bank separates when/which/how, and MCP is the interface layer that turns tool descriptions and async task-handling into things you must evaluate — not just plumbing."*
 
+> **Saying it out loud.** MCP is plumbing, so why does an evaluation chapter care? Four concrete shifts. One, the tool *description* becomes the object under test — it's natural-language text the model reasons over, and description quality dominates selection accuracy, so you A/B test descriptions and run format-sensitivity perturbations instead of treating docs as constants. Two, third-party servers become part of your trust boundary, which makes tool poisoning through descriptions or return values, name collisions where two servers both expose `search`, and over-broad scopes first-class safety evals. Three, async and long-running tools break turn-synchronous scoring, so your scorer has to model pending tasks, polling, and cancellation rather than assuming one call gives one immediate result. Four, standardized schemas make harnesses portable — build your scorer around the MCP tool shape and it can point at any server. Note that the spec has moved repeatedly; treat any version-specific mechanic here as of its stated date and check the current spec before relying on it.
+
 ---
 
 ## 11. Build it in practice: a runnable tool-call scorer
+
+**In plain language.** This is the CI-grade version of the section 5 scorer. It ingests real provider payloads — OpenAI's `tool_calls` shape and MCP-style shapes — normalizes them, compares structurally with value sets, treats parallel calls as a partial order rather than a fixed path, checks that arguments actually trace back to a previous call's output, flags hallucinated tools, scores should-not-call tasks, and aggregates pass@k and pass^k across trials. It's plain Python with no dependencies.
 
 The §5 scorer teaches the idea. This section is the *thing you would actually ship in CI* — it ingests real provider payloads (OpenAI `tool_calls` **and** MCP/generic shapes), does AST-style structured comparison with value sets, handles **order-insensitive parallel calls** as a partial order, runs a **data-flow (chain) check** that an argument traces to a prior call's output, flags **hallucinated tools and args**, scores **irrelevance / should-not-call** tasks, folds in an **execution log** for exec-success and **error-recovery**, and aggregates a dataset with **pass@k vs pass^k**. It is dependency-free (Python 3.10+ stdlib) and the `__main__` block runs four illustrative tasks.
 
@@ -889,6 +939,8 @@ pass^1 = 0.625  pass^3 = 0.179
 
 Read the numbers the way you would in a review. `B_wrong_arg` has `selection=1.00` but `arg=0.50` and `exact=0.00` — the agent picked the right tool and confidently passed the wrong `seats`, exactly the wrong-but-plausible failure of §6; the invented `delete_booking` shows up as `halluc_tool=1`, not as a silent efficiency ding. `C_chain_recovery` passes its data-flow check because the booked `flight_id` (`F777`) actually appeared in the `search_flights` output, and `recovered=True` because a success followed the injected `503`. `D_irrelevance` scores `over_called=True` and drives aggregate `irrelevance_acc` to `0.0` — the suite refuses to let a tool-happy agent hide. And the reliability block is the punchline: **pass@3 = 0.98 vs pass^3 = 0.18** for the same 5-of-8 task. In production you would swap the in-memory `execC` for a real **sandbox** (§12): seed a database, let the agent act, and diff final state instead of trusting the reference call text.
 
+> **Saying it out loud.** Four design decisions here are the ones an interviewer will poke at. Parse first, compare second — normalize provider quirks into one uniform call object, and record a malformed call as `__unparsable__` rather than dropping it, because a call the model emitted and you couldn't parse is a finding, not a non-event. Value sets plus three matchers — an allowed set, a `from_call` provenance check that an argument traces to a prior output, and an arbitrary predicate like 'is a valid ISO date' — which covers exact, semantic, and structural checks in one grammar. Partial order rather than a single golden path, so parallel calls in any order are fine but a later-group call appearing before an earlier group is flagged as an order violation. And consequence-aware accounting: hallucinated tools and destructive over-calls get their own counters instead of being blended into argument accuracy, because a wire transfer and a weather lookup must not average into the same scalar.
+
 ---
 
 ## 12. Production case studies & war stories
@@ -905,6 +957,8 @@ The teams that run tool-using agents in production converge on a small set of pr
 - **LLM-as-judge only where structure runs out — and calibrated.** For genuinely open steps (was this clarifying question reasonable?), a rubric-driven judge is used, but *gated*: teams measure the judge's agreement with human labels on a holdout, report it, and re-check it when the judge model changes. A judge whose agreement isn't measured is a random-number generator with good manners.
 - **Read/write asymmetry baked into scoring.** Read tools get partial credit and semantic tolerance. Write/charge/delete tools get **binary, strict, and heavily weighted** scoring plus a **safety gate** that can fail the whole episode on a single spurious destructive call regardless of task success.
 - **Injected-failure suites.** A dedicated set where the sandbox is rigged to return 5xx, timeouts, empty results, and malformed payloads, purely to measure recovery and maladaptive-retry — because you cannot wait for prod to supply enough failures to characterize the behavior.
+
+> **Saying it out loud.** Six practices that teams converge on regardless of vertical. Golden trajectories mined from production rather than hand-written, because your own confirmed-successful sessions reflect your traffic distribution in a way no benchmark does — hand-authoring only fills the gaps for rare tools and dangerous edges. State-based checks against a hermetic sandbox that resets per run, since a test that mutates shared state poisons the next one. A tiered pyramid: schema and AST checks on every commit in milliseconds, golden-trajectory state-diffs pre-merge in minutes, pass^k over many seeds nightly on anything that writes or charges, and shadow monitoring in production. LLM judges only where structure runs out, and calibrated — an unmeasured judge is a random number generator with good manners. Read/write asymmetry baked into the scoring, so writes get binary strict scoring plus a safety gate that can fail an episode on one spurious destructive call. And a dedicated injected-failure suite, because you can't wait for production to supply enough 5xxs to characterize recovery.
 
 ### 12.2 War story #1: the wrong-but-plausible argument that shipped a bad write
 
@@ -925,6 +979,8 @@ Every layer said green. The tool was **correct** (`issue_refund`). The arguments
 
 *The lesson, in one line:* **a `200 OK` on a schema-valid call is not a success signal; it is the absence of a syntax error.** Grade the *effect on the world*, and make ambiguous writes ask.
 
+> **Saying it out loud.** This is the refund that went to the wrong order. The customer said 'refund the duplicate charge on order 8842,' the catalog had both 8842 and 8842-R — a return-shipping fee — and the agent called `issue_refund` on 8842-R for the full payment total. Every layer said green: right tool, schema-valid arguments, a real order id, execution returned 200 OK, and the summary read beautifully. The offline eval scored the final answer for helpfulness and passed it; reconciliation caught it three days later. Three fixes became permanent eval: state-diff ground truth on the *ledger end state* instead of the call text, so the wrong order fails instantly; a value-provenance check requiring the refund amount to trace to a specific line item from a prior `get_order` call; and a rewritten reference for underspecified writes that rewards the clarifying question and penalizes a confident guess. The line: a 200 OK on a schema-valid call is not a success signal, it's the absence of a syntax error.
+
 ### 12.3 War story #2: the timeout that charged the customer twice
 
 *The incident.* A billing agent called `charge_card(customer, amount=4999)`. The payment processor was slow; the call **timed out** at the agent's HTTP layer *after* the charge had actually posted. The agent, seeing a timeout (which reads like a failure), did the "sensible" thing: **retried the identical call.** The customer was charged **twice**. Worse, the offline eval had a *recovery* test that *rewarded* retry-after-error — so it had actively trained the team to think this agent's retry behavior was good.
@@ -938,6 +994,8 @@ Every layer said green. The tool was **correct** (`issue_refund`). The arguments
 
 *The lesson:* **"recovered" is not a virtue for destructive tools unless it is *safe* recovery.** Measure the number of real side effects, require idempotency, and treat *unknown* outcomes differently from *known failures*.
 
+> **Saying it out loud.** A billing agent calls `charge_card` for $49.99, the processor is slow, the HTTP layer times out *after* the charge posted, and the agent does the sensible-looking thing and retries the identical call. Customer charged twice. The cruel detail is that the offline eval had a recovery test that *rewarded* retry-after-error, so it had actively taught the team this agent's retry behavior was good — because the metric measured 'did a success follow an error,' and a double charge does produce a trailing success. The eval conflated retry with *safe* retry. Three fixes: effect-multiplicity scoring, where the sandbox counts how many times the side effect fired and two charges on a one-charge task is a critical failure overriding task success; required idempotency keys on retried writes so the backend collapses duplicates; and read-before-retry on ambiguous outcomes, with the injected-failure suite explicitly distinguishing a timeout, which means unknown, from an explicit 5xx whose body confirms no-op, which is safe to retry.
+
 ### 12.4 War story #3: the tool-description edit that quietly tanked selection
 
 *The incident.* Selection accuracy on a subset of tasks dropped ~9 points overnight with **no model change**. The cause: someone "tidied" an MCP tool's description, shortening `search_orders` — *"Find orders by customer, date range, status, or SKU; use this before any refund or cancellation"* — to a terse *"Search orders."* The model stopped reaching for it before refunds and started guessing order ids.
@@ -948,9 +1006,13 @@ Every layer said green. The tool was **correct** (`issue_refund`). The arguments
 
 *The lesson:* **treat tool descriptions and schemas as code.** In an MCP ecosystem they are load-bearing model inputs; gate them with the same eval you gate the model with.
 
+> **Saying it out loud.** Selection accuracy dropped about 9 points overnight with no model change at all. Someone had 'tidied' an MCP tool description, shortening 'Find orders by customer, date range, status, or SKU; use this before any refund or cancellation' down to 'Search orders' — and the model stopped reaching for it before refunds and started guessing order ids. The reason this is a lesson and not a curiosity is that in an MCP world the tool description *is part of the prompt the model reasons over*, so a cosmetic doc edit is a behavioral change. The team had no gate because they filed descriptions under documentation rather than model inputs. The fix was putting descriptions and input schemas under version control with a selection-eval gate in CI, plus format-sensitivity runs so they'd know how brittle each tool's selection was before it bit them. Treat tool descriptions and schemas as code.
+
 ### 12.5 The composite takeaway from the war stories
 
 Every incident above shares a shape: **a layer reported success while the world was wrong.** HTTP said OK; the summary read fine; the retry "recovered"; the description "looked cleaner." Production tool-use evaluation is the discipline of *not trusting local green signals* — grading the end-state, counting real side effects, gating the inputs (descriptions/schemas) as well as the outputs, and weighting everything by blast radius.
+
+> **Saying it out loud.** Every one of those incidents has the same shape: a layer reported success while the world was wrong. HTTP said OK, the summary read fine, the retry 'recovered,' the description 'looked cleaner.' So production tool-use evaluation is really the discipline of not trusting local green signals — you grade the end state rather than the call text, you count real side effects rather than whether an effect happened at least once, you gate the inputs like descriptions and schemas as well as the outputs, and you weight everything by blast radius. If you say one sentence about tool-use evaluation in an interview, say that one.
 
 ---
 

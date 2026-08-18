@@ -20,6 +20,8 @@ Three intuitions carry the whole chapter:
 
 A fourth intuition worth internalizing before interviews: **a dataset is a claim about a distribution.** Every task you include is an implicit assertion that "this is the kind of thing our agent will face, and this is what success looks like." When the claim is wrong — because you sampled the easy tail, or invented tasks a real user never asks, or annotated the gold answer by intuition — the benchmark measures a world your agent will never inhabit. Coverage, difficulty calibration, and provenance are all just ways of making that distributional claim honest.
 
+> **Saying it out loud.** The framing I'd open with is that a benchmark dataset is a measuring instrument — the metric is the reading device, the dataset is the ruler itself, and you can read a bent ruler very precisely. That's why a perfectly calibrated metric on a contaminated or mislabeled dataset is worse than an honestly noisy one: it produces a confidently wrong number that looks trustworthy. Three things follow. Garbage tasks beat good models — Northcutt's work found correcting a 6% label-error slice in ImageNet was enough to flip ResNet-18 above ResNet-50, so the data, not the model, decided the ranking. A benchmark answers exactly one question and you should be able to write it in a sentence before you score anything. And every public benchmark starts decaying the moment it's published, because the internet ingests it and the next pretraining run swallows it.
+
 ---
 
 ## 2. Anatomy of a good benchmark dataset
@@ -38,6 +40,8 @@ Whether you use one off the shelf or build your own, a benchmark dataset has the
 
 The single most useful reframe: **a benchmark is not the tasks, it is the pair (tasks, verifier).** Two teams shipping "the same" 500 GitHub issues but with different test harnesses have built two different rulers that will disagree. When you cite a benchmark you are implicitly citing its verifier and its harness; when you build one, the verifier is where most of your engineering — and most of your bugs — will live (§4, Step 3).
 
+> **Saying it out loud.** The reframe that does the most work: a benchmark isn't the tasks, it's the pair — tasks plus verifier. Two teams shipping the same 500 GitHub issues with different test harnesses have built two different rulers that will disagree, which is why quoting a benchmark number without the harness is meaningless. Beyond that pair you want the same load-bearing parts every time: ground truth, a difficulty spread with labeled tiers, per-task metadata so you can slice, public-versus-private splits, and a datasheet. If any of those are missing, be suspicious. And the part where the bugs actually live is the verifier — not collecting the tasks, but writing the thing that decides pass or fail.
+
 ### 2.1 What ground truth looks like for agents
 
 For agents, "ground truth" is rarely a single string. It comes in three common shapes:
@@ -49,6 +53,8 @@ For agents, "ground truth" is rarely a single string. It comes in three common s
 > Rule of thumb: prefer *executable* ground truth (tests, state diffs) over *judged* ground truth (LLM-as-judge, human rubric) whenever the domain allows it. Executable checks do not drift, do not have mood, and cost nothing to re-run.
 
 There is a fourth, increasingly common shape you should be able to name: **rubric / judged ground truth**, where a human rubric or an LLM-as-judge scores an open-ended response (a research report, a chat turn, a design doc). It is unavoidable when the output space is too large for an exact match and there is no executable world to diff — but it is the *most* fragile, because the "ground truth" now lives in a prompt or a rubric that can drift, disagree with itself, and be gamed. When you must use it, pin the judge model version, hold out a human-labeled calibration slice, and report judge–human agreement as its own kappa (Chapter 3 covers judge calibration; this chapter covers the *data* side — the rubric and the calibration set are dataset artifacts you must version). A defensible hierarchy of ground truth, best to worst: **executable state diff > passing tests > exact/normalized answer match > human rubric > single LLM judge with no calibration.** Climb as high as your domain allows.
+
+> **Saying it out loud.** For agents, ground truth isn't usually a string — it comes in about four shapes, and you should be able to rank them. Best is executable state: the DB row got updated, the item is in the cart, which is how τ-bench and WebArena score. Then passing tests, like SWE-bench's FAIL_TO_PASS and PASS_TO_PASS sets. Then normalized exact match against a short unique answer, which is GAIA's approach. Worst is a rubric or an LLM judge, which you'll need for open-ended outputs but which is the most fragile ground truth there is — the "truth" now lives in a prompt that can drift, disagree with itself, and be gamed. The rule of thumb to say out loud: prefer executable ground truth over judged ground truth wherever the domain allows, because executable checks don't drift, don't have moods, and cost nothing to re-run — and if you must use a judge, pin its version and report judge-versus-human kappa as part of the dataset.
 
 ### 2.2 Case studies: how the majors built their data
 
@@ -70,11 +76,15 @@ WebArena's move — ship the *environment*, not screenshots — is the deepest d
 
 The pattern across all four: **objective, executable verifiers + explicit human quality control + difficulty tiers + a plan for contamination.** Copy that pattern. Notice what they share: none of them trusts a single string label produced by intuition, all of them either execute or exact-match, all of them did explicit human validation, and the strongest ones (GAIA, LiveCodeBench, τ-bench) built contamination resistance into the *distribution* (private answers, time-sliced problems, LLM-simulated users) rather than bolting it on afterward.
 
+> **Saying it out loud.** The useful thing about the big four isn't their scores, it's that they all solved the same problem four ways. SWE-bench Verified is the data-quality lesson: 93 developers triple-annotated 1,699 scraped tasks down to 500, and GPT-4o went from about 16% to about 33% on the same model — the ruler got fixed, the model didn't change. GAIA is the validity lesson: 466 hand-written questions, each constrained to one unambiguous answer you can't get from a single search, with a human ceiling around 92% used as the gate that the task is hard rather than ambiguous. τ-bench is the statefulness lesson: you don't write a question and an answer, you write a world — schema, seed data, a policy document, a tool surface, and a goal-state predicate — and score by database equality. WebArena goes furthest and ships the environment itself, so the world becomes the golden reference and nothing can be solved by memorized text. The pattern to name: executable verifiers, explicit human QC, difficulty tiers, and contamination resistance designed into the distribution rather than bolted on.
+
 ---
 
 ## 3. The 2025–2026 landscape: how today's agent datasets are actually built and validated
 
 If you walk into a senior interview in 2026 and describe benchmark construction the way papers did in 2021 — scrape, split, publish — you will sound a generation behind. The field has converged on a set of practices in response to three pressures: **frontier models saturate static benchmarks within months**, **contamination is now assumed rather than feared**, and **agents need stateful, executable, multi-trial tasks** that a Q&A pair cannot express. This section is the briefing on what "good" looks like right now.
+
+> **Saying it out loud.** If you describe benchmark construction the 2021 way — scrape, split, publish — you'll sound a generation behind, so here's the current picture as of 2026, dated because it moves. Three pressures reshaped everything: frontier models saturate static benchmarks within months, contamination is now assumed rather than feared, and agents need stateful executable tasks that a question-answer pair simply can't express. What that produced is human-validation pipelines as table stakes, living benchmarks with timestamped tasks, a real contamination-detection toolkit, verifier-gated synthetic data as a coverage minority, and documentation norms — datasheets for humans, Croissant for machines. The one-sentence version: modern benchmarks ship executable artifacts with an explicit validity gate, not string labels. If your custom benchmark is a spreadsheet of prompts and expected answers, you're building 2021's ruler.
 
 ### 3.1 Human-validation pipelines are now standard, not exceptional
 
@@ -87,6 +97,8 @@ SWE-bench Verified (Aug 2024) made **human validation of a scraped benchmark a m
 5. **Report the agreement** and the fraction removed, so downstream users can see how noisy the raw source was.
 
 The number that should stick with you: on the *original* SWE-bench, roughly **38%** of sampled tasks were underspecified and roughly **61%** had tests that could reject a valid patch. Those are not edge cases; that is the *majority* of a widely cited benchmark. The 2025 follow-up "Are 'Solved Issues' in SWE-bench Really Solved Correctly?" pushed further, showing that even *passing* patches are often not genuine fixes — the tests pass but the patch is wrong — which means an executable verifier is necessary but not sufficient. ([SWE-bench Verified — OpenAI](https://openai.com/index/introducing-swe-bench-verified/), [arXiv 2503.15223](https://arxiv.org/html/2503.15223v1))
+
+> **Saying it out loud.** The recipe is five steps and you should be able to recite it: over-sample the raw source, write an explicit rubric with named failure categories and a severity scale rather than a thumbs up or down, triple-annotate independently, ensemble conservatively by taking the worst severity so one credible objection kills a task, and report both the agreement number and the fraction you removed. The number that should stick is from the original SWE-bench: roughly 38% of sampled tasks were underspecified and roughly 61% had tests that could reject a valid patch. Those aren't edge cases — that's the majority of a benchmark the whole field was citing. And the 2025 follow-up pushed it the other way: even passing patches often aren't genuine fixes, which means an executable verifier is necessary but not sufficient. The posture to copy is treating your dataset build as the experiment, with a protocol, a rubric, annotators, an agreement number, and an errata process.
 
 ### 3.2 GAIA and τ-bench: authoring for validity and reliability
 
@@ -107,6 +119,8 @@ Because static benchmarks decay, the strongest 2024–2026 benchmarks are **livi
 
 The design principle: **make time a first-class dimension of the dataset.** Timestamped tasks turn "is this contaminated?" from a forensic guess into a slicing operation.
 
+> **Saying it out loud.** The strongest recent benchmarks are living rather than frozen — they add fresh tasks on a schedule and publish creation dates, so you can score a model only on problems released after its training cutoff. LiveCodeBench does this by continuously pulling timestamped competitive-programming problems; LiveBench refreshes monthly across math, coding and reasoning and retires categories once they saturate. GSM1k is the one-shot version of the same idea: rebuild a saturated benchmark from scratch, keep it private, and measure the overfitting gap — some model families dropped up to about 8 points. The design principle worth naming is that time becomes a first-class dimension of the dataset. Once tasks are timestamped, "is this contaminated?" stops being a forensic guess and becomes a slicing operation you can run in one line.
+
 ### 3.4 Contamination detection has matured into a toolkit
 
 By 2026 contamination detection is a named subfield with three families of method, each with different access requirements (full mechanics in §7; here is the landscape):
@@ -116,6 +130,8 @@ By 2026 contamination detection is a named subfield with three families of metho
 - **Membership inference / memorization probes** — statistical tests on the model itself. **Min-K% Prob (Detecting Pretraining Data, arXiv 2310.16789)** flags text whose k% least-likely tokens are anomalously *not* low-probability, a signature of memorization; **Min-K%++ (arXiv 2404.02936, ICLR'25)** improves the baseline. Guided/quiz prompting and perturbation probing are the black-box cousins. ([arXiv 2310.16789](https://arxiv.org/abs/2310.16789), [Min-K%++](https://arxiv.org/html/2404.02936v2), [survey arXiv 2502.14425](https://arxiv.org/html/2502.14425v2))
 
 The senior-level nuance: **no single method is proof.** N-gram overlap has false negatives (paraphrase) and false positives (common boilerplate); membership-inference methods have modest AUC on modern large models and are sensitive to distribution shift between "member" and "non-member" probe sets. You *triangulate* — surface overlap + a recency cliff + a memorization probe agreeing is a case; any one alone is a hint.
+
+> **Saying it out loud.** There are three families of contamination detection and each needs different access. Surface overlap — n-grams and substrings against whatever training corpus you can reach — is cheap, catches direct copies, and is completely blind to paraphrase. Canary strings are a GUID planted in the dataset that trainers are asked to filter on; that doesn't prevent ingestion, it makes ingestion detectable. And membership-inference probes like Min-K% and Min-K%++ run statistical tests on the model itself, looking for the fingerprint of memorization in token logprobs. The senior-level point is that no single method is proof: n-gram overlap has false negatives on paraphrase and false positives on boilerplate, and membership inference has modest AUC on modern large models and is sensitive to how you picked your non-member probe set. So you triangulate — surface overlap plus a recency cliff plus a memorization probe all agreeing is a case; any one alone is a hint.
 
 ### 3.5 Synthetic data for evals: from novelty to normal, with guardrails
 
@@ -128,6 +144,8 @@ Synthetic task generation (see §8) went mainstream because frontier models can 
 
 The honest framing for an interview: synthetic data is a **coverage and scaling tool bolted onto human-validated cores and executable verifiers**, never a replacement for either.
 
+> **Saying it out loud.** The 2026 consensus isn't "generate your benchmark," it's "generate candidates, then verify and human-filter" — the Self-Instruct pattern of over-generate then filter hard, with modern guardrails on top. Four rules carry it. The generator is never the model you're evaluating, because using model X to author tasks that grade model X measures agreement with X's priors, not capability. There's a verifier in the loop, so a synthetic task only survives if an independent executable check confirms its gold answer — unverified LLM labels are treated as radioactive. Synthetic stays a labeled minority sitting on a real-data core, and the synthetic fraction gets reported rather than hidden. The honest framing for an interview: synthetic data is a coverage and scaling tool bolted onto human-validated cores and executable verifiers, never a replacement for either.
+
 ### 3.6 Dataset documentation norms: datasheets and Croissant
 
 Two documentation standards are now expected of a serious release:
@@ -136,6 +154,8 @@ Two documentation standards are now expected of a serious release:
 - **Croissant (MLCommons, 2024)** — a **machine-readable** metadata format (JSON-LD, built on schema.org) that describes a dataset's resources, fields, splits, and semantics so tools can load and audit it uniformly. Hugging Face, Kaggle, and OpenML emit Croissant; it is the "package.json for datasets." The 2025 work connecting Croissant to MCP makes datasets discoverable and loadable by agents directly. ([announcement, Mar 2024](https://mlcommons.org/2024/03/croissant_metadata_announce/), [spec](https://docs.mlcommons.org/croissant/docs/croissant-spec.html), [Croissant+MCP, Oct 2025](https://mlcommons.org/2025/10/croissant-mcp/))
 
 The relationship to remember: a **datasheet is the prose a human reads to decide whether to trust and how to use the data; Croissant is the structured metadata a machine reads to load, validate, and track it.** A mature release ships both, plus semantic versions and per-task content hashes (§9).
+
+> **Saying it out loud.** Two documents, two audiences. A datasheet, in the Gebru et al. sense, is prose a human reads to decide whether to trust the data and how to use it — motivation, composition, how it was collected, who annotated it and what agreement they reached, intended and out-of-scope uses, license, and who maintains it. Croissant, from MLCommons, is the machine-readable half: JSON-LD built on schema.org describing files, fields, splits and types, which Hugging Face, Kaggle and OpenML all emit. Think of Croissant as the package.json of a dataset. A mature release in 2026 ships both, plus semantic versions and per-task content hashes — and the line worth landing is that a dataset without a datasheet is an instrument with no calibration certificate.
 
 ### 3.7 The landscape in one table
 
@@ -170,6 +190,8 @@ Off-the-shelf benchmarks are tempting because they give you comparability. They 
 - **Don't trust a single leaderboard cell.** Reproduce at least a slice yourself. Leaderboards mix harnesses, prompt formats, and sometimes silent test-set fixes.
 
 > The one-line policy: **treat a public benchmark number as a claim you must be able to reproduce, with a pinned (dataset revision, harness, model, trials) tuple, or you do not cite it.**
+
+> **Saying it out loud.** Off-the-shelf benchmarks buy you comparability and give you about a dozen ways to fool yourself. The single policy that covers most of it: treat a public benchmark number as a claim you must be able to reproduce with a pinned tuple — dataset revision hash, harness, model version, number of trials — or you don't cite it. "SWE-bench" is ambiguous; "SWE-bench Verified, 500 instances, this HF revision, this scaffold, eight trials" is not, and two claims of "SWE-bench Verified 55%" can be a factor of two apart in real capability once you know the scaffolds. The don'ts that matter most are: don't tune on the test set, don't compare across harness versions as if they were the same experiment, and don't assume the benchmark measures what its name says — SWE-bench measures "resolve a scraped GitHub issue whose PR had good tests," which is much narrower than software engineering. And popularity causes contamination, so the more cited a static benchmark is, the more crawled its solutions are.
 
 ---
 
@@ -216,6 +238,8 @@ define question ─▶ source tasks ─▶ author gold + verifier ─▶ verify 
 ```
 
 Each arrow is a gate that can send a task back or out. The gates — not the collection — are what make it a benchmark rather than a pile of tasks.
+
+> **Saying it out loud.** Treat it as a small research project with gates, not a spreadsheet someone fills in on a Friday. Step one is writing the one sentence — "can our support agent resolve a billing dispute end to end, correctly updating the ledger, under our refund policy" — because that single sentence fixes the actor, the task family, the success condition and the constraints, and therefore the shape of your ground truth. Then you source from production logs before invented tasks, because real logs are both in-distribution and, conveniently, post-cutoff and private. Then you author the verifier alongside the gold answer, and — this is the step everyone skips — you verify the verifier in both directions: the reference solution must pass and a deliberately wrong solution must fail. Calibrate difficulty with a weak model, a strong model and a human so you get an easy-medium-hard spread, because a task every system passes or every system fails carries zero information about ranking. And set explicit ship gates: kappa at least 0.7 on label correctness, every taxonomy cell at N tasks or more, no task over your contamination threshold.
 
 ---
 
@@ -485,13 +509,19 @@ if __name__ == "__main__":
 
 What the toolkit gives you, mapped to the earlier theory: `gate_on_agreement` operationalizes §7 (do not publish below \( \kappa = 0.7 \)); the three contamination functions operationalize §8; `synth_pipeline` operationalizes the §9 safe-synthetic rules (different generator, verifier gate, dedup, human filter, reported fraction); and `content_hash`/`release_hash` operationalize §11 versioning. Wire these into CI and a benchmark cannot regress silently: a PR that lowers agreement, raises contamination, or mutates a task hash fails the build.
 
+> **Saying it out loud.** If you want to make dataset QA real rather than aspirational, it's three runnable jobs wired into CI. One, compute inter-annotator agreement and return the specific tasks reviewers split on, because the per-item disagreement is more actionable than the aggregate. Two, screen for contamination three ways — a canary probe, an n-gram overlap scan, and a recency slice that needs no corpus at all. Three, run synthetic generation through an independent verifier gate, dedup, and a human-filter queue so nothing is auto-admitted. Then gate the build on all of it: a PR that lowers agreement, raises contamination, or mutates a task's content hash fails, which is what stops a benchmark from silently regressing. The caveat to state honestly is that the n-gram scanner is a screen, not a proof — it catches near-verbatim copies at your chosen n and will never catch paraphrase leakage.
+
 ---
 
 ## 7. Validating quality: inter-annotator agreement
 
 If two competent humans disagree about whether a task's answer is correct, the *task* is broken, not the annotators. Inter-annotator agreement (IAA) quantifies this. Raw percent agreement is misleading because raters agree partly **by chance** — if 90% of items are "pass," two raters who guess "pass" blindly agree 81% of the time while knowing nothing. Chance-corrected agreement fixes this. IAA is the single most important quality number to report about a hand-labeled benchmark: it is the calibration certificate on your ruler.
 
+> **Saying it out loud.** The one-liner here is that if two competent reviewers disagree about whether a task's answer is correct, the task is broken — not the reviewers. Inter-annotator agreement is how you put a number on that, and the reason you can't just use raw percent agreement is chance: if 90% of items are "pass," two raters guessing blindly agree 81% of the time while knowing nothing. Chance-corrected measures — Cohen's kappa for two raters, Fleiss for a panel, weighted kappa or Krippendorff's alpha when the labels are ordinal — fix that. Target kappa of at least 0.7 on label correctness before you publish any score from the set; below that you rewrite the tasks and the rubric rather than argue with the annotators. The framing that scores: agreement is the calibration certificate on your ruler, and it's the single most important quality number to report about a hand-labeled benchmark.
+
 ### 7.1 Cohen's kappa (two annotators)
+
+> **In plain terms.** Kappa asks: how much better than lucky guessing did our two reviewers agree? You take the fraction of items they actually agreed on, subtract the fraction they'd agree on purely by chance given how often each one says "pass," and rescale so 1 is perfect and 0 is chance-level. The worked example below shows why the raw number can flatter you.
 
 Cohen's \( \kappa \) compares observed agreement to chance agreement:
 
@@ -534,6 +564,8 @@ So despite 75% raw agreement, chance-corrected agreement is only **~0.49 — "mo
 
 **The kappa paradox — a trap interviewers set.** Kappa can be *low even when agreement is high* if the labels are very imbalanced (say 95% "pass"). Because \( p_e \) is then huge, there is little room above chance and \( \kappa \) collapses toward 0 even at 95% raw agreement. The fix is to *not* read kappa in a vacuum: report raw agreement, the marginal distribution, and kappa together, and on skewed sets consider prevalence-adjusted measures (PABAK) or Gwet's AC1. The senior-level takeaway: kappa measures agreement *beyond chance given your label distribution*; a low kappa on a skewed set may mean "the labels are easy and imbalanced," not "the annotators are bad." Diagnose before you act.
 
+> **Saying it out loud.** The worked example is the thing to memorize, because it shows the trap. Two reviewers label 100 outputs and agree on 75 of them, which sounds fine — but each reviewer says "pass" a bit over half the time, so chance agreement alone is 51%, and kappa comes out to about 0.49. That's "moderate," which means a real fraction of your tasks are ambiguous enough that trained reviewers split on them, and every score you compute on that set inherits the noise. Then there's the kappa paradox, which interviewers like to set as a trap: if labels are 95% one class, chance agreement is huge, so kappa collapses toward zero even at 95% raw agreement. So never read kappa in a vacuum — report raw agreement, the marginal distribution and kappa together, and on skewed sets reach for PABAK or Gwet's AC1. Low kappa on a skewed set can mean "the labels are easy and imbalanced," not "the annotators are bad."
+
 ### 7.2 Interpreting kappa (Landis & Koch scale)
 
 | \( \kappa \) | Interpretation |
@@ -548,6 +580,8 @@ So despite 75% raw agreement, chance-corrected agreement is only **~0.49 — "mo
 For a benchmark you will publish scores from, target **\( \kappa \ge 0.7 \)** on label correctness. Below that, revise task wording and rubrics before proceeding — low agreement is a data-quality bug, not a personality difference. The Landis & Koch bands are *conventions*, not laws; some fields demand \( \kappa \ge 0.8 \) for clinical-grade labels. State the threshold you chose and why.
 
 ### 7.3 Fleiss' kappa (three or more annotators)
+
+> **In plain terms.** Fleiss is Cohen's kappa generalized to a panel: instead of a two-by-two grid, you count how many raters put each item in each category, measure how much they clumped together within items, and compare that to how much clumping you'd get by chance. The per-item piece is the useful part — it tells you exactly which tasks the panel split on.
 
 When each item is rated by \( n \) raters (possibly a different panel per item) across \( k \) categories, use Fleiss' \( \kappa \). Build \( N \times k \) matrix \( M \) where \( M_{ij} \) = number of raters assigning item \( i \) to category \( j \) (each row sums to \( n \)).
 
@@ -586,6 +620,8 @@ A subtle but important choice: when your labels are the **0–3 severity scale**
 
 **Contamination** is when your evaluation data (or something too close to it) has leaked into the model's training set, so the model "solves" tasks by recall rather than capability. It is the single most under-reported source of inflated agent scores, and in 2025–2026 it is *assumed* by default — the question is not "is it contaminated?" but "how much, and can I bound it?"
 
+> **Saying it out loud.** Contamination is when your eval data — or something close enough, like the fixing PR or a paraphrase in a tutorial — leaked into the model's training set, so the model recalls the answer instead of reasoning to it. It's the most under-reported source of inflated agent scores, and the honest 2026 posture is that the question isn't "is it contaminated" but "how much, and can I bound it." It happens five ways worth naming: direct ingestion of the dataset, solution leakage where the patch and its discussion are on the public web, paraphrase leakage that n-grams can't see, benchmark-in-benchmark reuse, and — the most common one inside a real org — dev-to-test bleed, where your own team tunes prompts against the held-out set until it's effectively training data. That last one has no crawler to blame; only a policy prevents it.
+
 ### 8.1 How it happens
 
 - **Direct ingestion.** You benchmark on a public dataset; a later pretraining crawl scoops up the dataset, its GitHub repo, and every blog post quoting it.
@@ -621,6 +657,8 @@ The last row is the GSM1k method (§12): Scale AI found a Spearman **r² ≈ 0.3
 
 > Discipline beats cleverness here: a well-guarded held-out set of 50 fresh tasks is worth more than a 5,000-task public benchmark everyone (and every crawler) has seen. The half-life of a public benchmark's trustworthiness is now measured in *months*, not years.
 
+> **Saying it out loud.** Detection is the consolation prize; prevention is the actual answer, and it's four moves. Hold out a private test set — GAIA keeps 300 answers back — because that's the only genuinely robust defense. Ship a canary GUID so that even if the set gets crawled, ingestion becomes detectable and trainers have something to filter on. Timestamp everything and keep a slice provably created after the newest model's cutoff, so a score cliff between pre- and post-cutoff tasks becomes your cheapest signal. And time-box your own usage: log every scoring run against the private set and make repeated runs require sign-off, because the cheapest contamination to prevent is the one you cause. The line to end on: a well-guarded 50-task fresh set is worth more than a 5,000-task public benchmark every crawler has seen, because the half-life of a public benchmark's trustworthiness is now measured in months.
+
 ---
 
 ## 9. Synthetic data for evals
@@ -644,6 +682,8 @@ LLM-generated tasks are attractive: cheap, scalable, and able to hit coverage ga
 **Rules for using synthetic eval data safely:** (1) always pass every synthetic task through **human filtering** and an **independent verifier** (the `synth_pipeline` in §6.4); (2) use a *different, stronger* model to generate than the ones you evaluate, and never the one under test; (3) keep synthetic tasks a labeled *minority* of the benchmark, sitting on top of a real-data core; (4) **report the synthetic fraction**; (5) dedup against existing tasks to preserve diversity. Synthetic data is a coverage tool, not a foundation.
 
 **The one sentence to say in an interview:** "I use synthetic data to *reach coverage I can't find in logs* — rare, adversarial, privacy-sensitive cases — but only as a human-filtered, verifier-confirmed, reported minority on top of a real-data, human-validated core. I never let the model I'm grading author the tasks that grade it, and I never trust an LLM-written gold label without an executable check."
+
+> **Saying it out loud.** Synthetic tasks are genuinely useful for exactly one job: reaching coverage you can't find in logs — rare cases, adversarial users, policy corners, privacy-sensitive analogues, persona and locale expansion. The risks are specific and worth naming rather than hand-waving: the generator's blind spots become the benchmark's blind spots, self-contamination means tasks written by model X are trivially easy for X and its siblings, distribution drift clusters everything around the generator's priors instead of real messy users, LLM-authored gold answers are frequently just wrong, and naive over-generation collapses into near-duplicates. So the rules are: different and stronger generator than anything under test, an independent verifier confirming every gold label, human filtering on top, dedup for diversity, keep it a minority of the set, and report the synthetic fraction. The sentence to have ready: I never let the model I'm grading author the tasks that grade it, and I never trust an LLM-written gold label without an executable check.
 
 ---
 
@@ -784,6 +824,8 @@ A benchmark you cannot cite exactly is a benchmark you cannot trust. Treat datas
 | Semantic version + changelog | Anyone comparing scores over time | what changed, when, why | SemVer convention |
 | Content/release hashes | Anyone reproducing a number | did I run the exact data you did | your pipeline |
 
+> **Saying it out loud.** Treat datasets like software releases, because a benchmark you can't cite exactly is a benchmark you can't trust. Immutable semantic versions — adding tasks is a minor bump, changing a verifier is a breaking change — and never mutate a released version in place, because a silent fix to one task is the most insidious way to make last quarter's numbers incomparable with this quarter's. Content-hash every task and publish a release hash, which turns "which SWE-bench did you run?" from an argument into a string comparison. Retire broken tasks rather than deleting them, publish an errata revision others can cite, and track creation date per task so recency slicing stays possible. And know the license of every source: scraped code carries the repo's license, transcripts carry privacy obligations, another benchmark's tasks carry its license — a single non-commercial task can poison the redistributability of the whole release.
+
 ---
 
 ## 12. Production case studies & war stories
@@ -822,6 +864,8 @@ The recurring theme: the teams that trust their numbers are the ones that treat 
 
 **Lesson.** "Ground truth" is a claim, not a fact, and even canonical benchmarks carry a few percent of wrong labels — enough to invert model comparisons. This is *the* argument for measuring label correctness (IAA, independent gold review) before trusting any ranking, and for reporting per-slice results: a small mislabeled slice can dominate a close comparison. For agents, where a single ambiguous task can flip a leaderboard, the effect is larger, not smaller.
 
+> **Saying it out loud.** This is the number I'd reach for whenever someone treats labels as facts. Northcutt and colleagues audited the test sets of ten of the most cited ML benchmarks and found an average of at least 3.3% label errors, with about 6% in the ImageNet validation set — and the consequence wasn't cosmetic. Once you correct for the mislabeled slice, ResNet-18 overtakes ResNet-50, meaning the lower-capacity model was actually better on correctly-labeled data and the label noise had been hiding it. So benchmark rankings were partly an artifact of wrong labels, on the most scrutinized datasets in the field. That's the whole argument for measuring label correctness with inter-annotator agreement and independent gold review before you trust any ranking. And for agents it's worse, not better — a single ambiguous task with a wrong golden answer can flip a leaderboard when your set is a few hundred tasks, not fifty thousand.
+
 ### 12.5 War story: the self-inflicted contamination of a "held-out" set
 
 **What happened (composite, representative of many eval teams).** A team keeps a "held-out" eval set and, over six months, iterates prompts, tool schemas, and scaffolds against it daily — because it is the only realistic set they have. Dev score climbs steadily from 61% to 78%. Production quality does not move. The held-out set had quietly become training data: the team had *fit the scaffold to the specific tasks*, learning their idiosyncrasies rather than the capability. There was no crawler to blame; the leak was the team's own workflow.
@@ -839,6 +883,8 @@ The recurring theme: the teams that trust their numbers are the ones that treat 
 | Held-out overfit | Dev-to-test bleed | Held-out vs production gap growing | Logged, infrequent private-set runs |
 
 Every one traces to a *data* property — verifier fidelity, contamination, label correctness, or split hygiene — that a metric can never fix. That is the chapter's whole thesis in one table.
+
+> **Saying it out loud.** If you line up the incidents, every one traces to a data property that no metric could ever fix. SWE-bench's original tests were too strict and rejected valid patches; the 2025 follow-up showed they were also too weak in places and blessed patches that weren't real fixes — same root cause, an untested verifier, in both directions. GSM8k's saturation turned out to be partly memorization, caught by rebuilding it privately as GSM1k. ImageNet's rankings partly reflected wrong labels. And the held-out set that quietly became training data was pure split hygiene. Verifier fidelity, contamination, label correctness, split hygiene — those four are the chapter's thesis. The tell for each is cheap to compute: reference-solution rejection rate, a recency cliff, an agreement number, and a growing gap between your held-out score and production outcomes.
 
 ---
 
@@ -859,6 +905,8 @@ Every one traces to a *data* property — verifier fidelity, contamination, labe
 | **Too small** | Score swings wildly between runs | Power-check size; report confidence intervals |
 | **Kappa paradox misread** | Low \( \kappa \) on obviously-clean skewed labels | Report raw agreement + marginals; use PABAK/AC1 when skewed |
 | **Unpinned harness** | Two "same" benchmark numbers differ 2x | Pin (dataset revision, harness, model, trials) tuple |
+
+> **Saying it out loud.** Naming the failure modes cold is what makes you sound like you've built one of these. The ones I'd lead with: ambiguous tasks showing up as low kappa; wrong golden answers, where strong agents "fail" things humans solve trivially; verifiers that are too strict or too weak, which is the same bug in two directions; flat difficulty, where every system scores about the same so the set has no discriminative power; contamination, whose tell is a cliff between pre- and post-cutoff tasks; and test-set overfitting, whose tell is a dev score climbing while production stays flat. Two subtler ones worth having ready: aggregate-only reporting hides total failure on a whole category, and silent in-place mutation makes old and new scores incomparable with nobody noticing. And the sizing one — if your benchmark is small enough that scores swing between runs, you don't have a benchmark, you have an anecdote; the confidence half-width on a proportion is roughly 1.96 times the square root of p times one minus p over N, which means distinguishing 70% from 75% takes low hundreds of tasks per slice.
 
 ---
 
@@ -996,6 +1044,8 @@ The adversarial column (user lies, demands out-of-policy refunds, tries prompt i
 
 **What separates a senior answer:** naming the ground-truth *shape* (state-based, not a judge) and why, insisting the verifier is tested in both directions, designing coverage as a *matrix* with adversarial/escalation cells, scoring for *reliability* (pass^k) not average, and treating contamination and documentation as first-class from the start — not bolt-ons.
 
+> **Saying it out loud.** For the design question, walk the pipeline out loud and make the choices explicit. Start with the one sentence that fixes the actor, family, success condition and constraints. Then name the ground-truth shape and why — for a billing-dispute agent it's state-based, so each task ships a seed database, a policy document, a tool surface and a goal-state predicate, scored by database equality plus a policy assertion, which means no judge and no drift. Source from anonymized production transcripts stratified by intent, then have domain experts author the cells the logs miss, and draw the coverage matrix on the whiteboard — intent by difficulty by tool count, with an adversarial column and a should-escalate row, because that's exactly where support agents fail and where naive benchmarks are empty. Then verify the verifier both directions, calibrate difficulty against a weak model, a strong model and a human, and score with pass^k rather than average success, because an agent that refunds correctly 60% of the time is not deployable. What marks it senior is treating contamination and documentation as first-class from the start — private slice, canary, timestamps, datasheet, Croissant, hashes — rather than bolt-ons at the end.
+
 ### 15.4 Tradeoff table: human vs. synthetic labels
 
 | Dimension | Human labels | Synthetic (LLM-generated) labels |
@@ -1040,6 +1090,8 @@ The adversarial column (user lies, demands out-of-policy refunds, tries prompt i
 | Coverage "looks fine" (hoped for) | Coverage matrix with ≥N per cell, adversarial cells filled |
 
 If you can run this two-column audit out loud against a benchmark someone hands you, you have demonstrated the judgment this chapter is meant to build.
+
+> **Saying it out loud.** If you want one takeaway for the whole chapter: your evaluation is only as good as its data, and you can audit any benchmark someone hands you in about two minutes. Ask for the datasheet and provenance; ask whether the verifier was ever tested against known-wrong solutions; ask for chance-corrected agreement, not raw agreement; ask whether there's a private held-out slice, a canary, and timestamps; ask for the pinned tuple of dataset revision, harness, model and trials; and ask whether the gold answers were LLM-authored and unchecked. Then ask about the shape of the reporting — one aggregate number from one run with no confidence interval is an anecdote, and per-slice, per-difficulty, pass^k with intervals is an evaluation. The closer: contamination and label error aren't exotic edge cases, they're the default state of a popular benchmark, and treating them as first-class is the difference between measuring capability and measuring recall.
 
 ---
 
