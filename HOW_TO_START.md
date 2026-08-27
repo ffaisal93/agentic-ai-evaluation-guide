@@ -18,7 +18,7 @@ Before you start, make sure you have:
 
 ### Step 1: Understand Agentic AI Fundamentals (30-60 minutes)
 
-**Read this first**: `01_agentic_ai_fundamentals/README.md`
+**Read this first**: [`01_agentic_ai_fundamentals/README.md`](01_agentic_ai_fundamentals/README.md)
 
 This explains:
 - What agentic AI is
@@ -81,7 +81,7 @@ Evaluation complete!
 
 ### Step 4: Understand What Just Happened (15 minutes)
 
-**Read**: `01_agentic_ai_fundamentals/README.md`
+**Read**: [`01_agentic_ai_fundamentals/README.md`](01_agentic_ai_fundamentals/README.md)
 
 This explains:
 - What each file does
@@ -206,7 +206,7 @@ By the end of this journey, you'll understand:
 ## 🎯 Next Steps
 
 1. **Right now**: Complete Steps 1-4 above
-2. **Today**: Read through `01_agentic_ai_fundamentals/README.md` and understand the code
+2. **Today**: Read through [`01_agentic_ai_fundamentals/README.md`](01_agentic_ai_fundamentals/README.md) and understand the code
 3. **This week**: Work through topics 2-5 (Frameworks, Metrics, Tool Use, Reasoning)
 4. **This month**: Complete topics 6-9 (Safety, Multi-Agent, Real-World, Automated)
 5. **Ongoing**: Topics 10-12 (Benchmarks, Tools, Monitoring)
@@ -227,5 +227,5 @@ If you get stuck:
 
 **Ready? Let's start!** 🚀
 
-Begin with Step 1: Read `01_agentic_ai_fundamentals/README.md`
+Begin with Step 1: Read [`01_agentic_ai_fundamentals/README.md`](01_agentic_ai_fundamentals/README.md)
 

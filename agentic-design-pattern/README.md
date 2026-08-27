@@ -40,7 +40,7 @@ watch a section, pause, and immediately practice the matching answer.
 The numbered chapters (`01_` through `12_`) are about **evaluating** agents — measuring whether they
 work, catching regressions, monitoring them in production. This folder is about **architecting** them.
 The two meet constantly: Pattern 19 in the playbook is the interview-level view of evaluation, and it
-points into those chapters for the depth. Similarly, `AGENT_ENGINEERING_FOUNDATIONS.md` at the repo
+points into those chapters for the depth. Similarly, [`AGENT_ENGINEERING_FOUNDATIONS.md`](../AGENT_ENGINEERING_FOUNDATIONS.md) at the repo
 root covers hands-on building — frameworks, MCP, RAG, memory, cost engineering — with runnable code.
 
 A reasonable path through all three: read the playbook to learn the shapes and rehearse talking about

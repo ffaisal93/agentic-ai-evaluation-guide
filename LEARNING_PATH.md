@@ -129,7 +129,7 @@ This guide is organized by **learning topics**, not time periods. Work through e
 ## 🚀 Quick Start Guide
 
 ### Step 1: Understand the Basics
-Read `01_agentic_ai_fundamentals/README.md` to understand what agentic AI is.
+Read [`01_agentic_ai_fundamentals/README.md`](01_agentic_ai_fundamentals/README.md) to understand what agentic AI is.
 
 ### Step 2: Set Up Your Environment
 ```bash

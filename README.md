@@ -58,7 +58,7 @@ python examples.py
 
 ## 📚 Learning Path
 
-See `LEARNING_PATH.md` for the complete learning journey.
+See [`LEARNING_PATH.md`](LEARNING_PATH.md) for the complete learning journey.
 
 ## 🎓 Prerequisites
 
@@ -106,14 +106,14 @@ By completing this repository, you'll be able to:
 
 ## 📚 Additional Resources
 
-- **Learning Path**: `LEARNING_PATH.md` - Complete learning guide
-- **How to Start**: `HOW_TO_START.md` - Step-by-step instructions
-- **Interview Q&A**: `INTERVIEW_QA.md` - 21+ interview questions with detailed answers covering all topics
-- **Start Here**: `START_HERE.md` - Quick welcome guide
+- **Learning Path**: [`LEARNING_PATH.md`](LEARNING_PATH.md) - Complete learning guide
+- **How to Start**: [`HOW_TO_START.md`](HOW_TO_START.md) - Step-by-step instructions
+- **Interview Q&A**: [`INTERVIEW_QA.md`](INTERVIEW_QA.md) - 21+ interview questions with detailed answers covering all topics
+- **Start Here**: [`START_HERE.md`](START_HERE.md) - Quick welcome guide
 
 ## 🎓 Interview Preparation
 
-The `INTERVIEW_QA.md` file includes:
+The [`INTERVIEW_QA.md`](INTERVIEW_QA.md) file includes:
 - **21+ comprehensive questions** covering all 12 topics
 - **Detailed answers** with code examples
 - **Industry use cases** and real-world scenarios
@@ -135,5 +135,5 @@ Topics covered in interview Q&A:
 
 ---
 
-**Ready to start?** Open `LEARNING_PATH.md` and begin your journey! 🚀
+**Ready to start?** Open [`LEARNING_PATH.md`](LEARNING_PATH.md) and begin your journey! 🚀
 

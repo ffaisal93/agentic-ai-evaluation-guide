@@ -1002,14 +1002,14 @@ Agents fail in agent-shaped ways that a standard runbook doesn't cover:
 - **Approval-gate bypass attempt:** because `interrupt()` is structural (§9.6), a bypass would have to be a code regression, not a prompt-injection success — but verify this in red-teaming (`06_safety_evaluation`) rather than assuming the architecture makes it impossible.
 - **Rollback is a bundle rollback.** Because you versioned (model, prompt, tools, graph) as a unit (§10.2), rolling back means routing new `thread_id`s to the previous bundle hash — don't try to roll back just the model while leaving a prompt written for the new one in place.
 
-For the deeper operational playbook — dashboards, alert thresholds, on-call rotations, postmortem templates — see `12_production_monitoring/PRODUCTION_MONITORING_DEEP_DIVE.md`; this section only covers what's specific to agents.
+For the deeper operational playbook — dashboards, alert thresholds, on-call rotations, postmortem templates — see [`12_production_monitoring/PRODUCTION_MONITORING_DEEP_DIVE.md`](12_production_monitoring/PRODUCTION_MONITORING_DEEP_DIVE.md); this section only covers what's specific to agents.
 
 > **Saying it out loud.** Agents fail in agent-shaped ways a standard runbook doesn't cover, and four cases are worth having ready. A runaway loop or cost spike: the step cap is your circuit breaker, and if it's firing constantly that *is* the incident — find what changed before you raise the cap. A tool that silently degraded, returning 200 with garbage instead of erroring: your error contract can't catch that, so add a lightweight output-shape check on high-risk tools and alert on it. An approval-gate bypass attempt, which should be structurally impossible if the interrupt lives inside the tool — but verify it in red-teaming rather than assuming the architecture makes it impossible. And rollback is a *bundle* rollback: because you versioned model, prompt, tools and graph as a unit, you route new threads to the previous bundle hash rather than rolling back the model and leaving a prompt written for the new one in place.
 
 ---
 ## 11. Interview mastery
 
-This section is build-focused — it complements `INTERVIEW_QA.md`'s evaluation-focused bank with the questions a senior interviewer asks when they want to know **can this person actually build the agent, not just grade one.** Same method as that bank: read the answer once for shape, then re-answer out loud from memory, and volunteer the trade-off before you're asked.
+This section is build-focused — it complements [`INTERVIEW_QA.md`](INTERVIEW_QA.md)'s evaluation-focused bank with the questions a senior interviewer asks when they want to know **can this person actually build the agent, not just grade one.** Same method as that bank: read the answer once for shape, then re-answer out loud from memory, and volunteer the trade-off before you're asked.
 
 ### 11.1 Build-focused Q&A
 

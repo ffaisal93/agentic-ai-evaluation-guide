@@ -51,7 +51,7 @@ The numbered chapters (`01_` through `12_`) cover evaluating agents. The
 [design patterns track](../agentic-design-pattern/README.md) covers architecting them, and several of
 its patterns are the *shapes* whose operational failures this track examines up close — Pattern 11
 (Goal Setting and Monitoring) and Pattern 12 (Exception Handling) especially.
-`AGENT_ENGINEERING_FOUNDATIONS.md` covers building one hands-on.
+[`AGENT_ENGINEERING_FOUNDATIONS.md`](../AGENT_ENGINEERING_FOUNDATIONS.md) covers building one hands-on.
 
 If you're preparing for interviews, this material is disproportionately valuable: naming these failure
 modes unprompted is one of the clearest signals that you've operated a real system rather than built a
