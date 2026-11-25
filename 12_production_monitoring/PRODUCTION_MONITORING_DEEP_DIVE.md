@@ -116,9 +116,9 @@ Always percentiles, never just the mean — LLM latency is heavy-tailed.
 - **Time-to-first-token (TTFT)** — perceived responsiveness for streaming UIs.
 - **Per-step latency** — because an agent run is a *loop*, total latency = (steps) × (per-call latency). A regression can come from more steps *or* slower calls; you need both broken out.
 
-\[
-\text{latency}_{\text{run}} \;=\; \sum_{i=1}^{N_{\text{steps}}} \big(\text{llm}_i + \text{tool}_i\big)
-\]
+\\[
+\text{latency}_{\text{run}} \\;=\\; \sum_{i=1}^{N_{\text{steps}}} \big(\text{llm}_i + \text{tool}_i\big)
+\\]
 
 Two agent-specific latency traps. First, **queueing/rate-limit latency** hides outside the spans you instrument: if the provider throttles you, the wall-clock gap between "request sent" and "first token" balloons while the `chat` span's own timer may not capture the wait. Instrument the *client-side* send-to-first-token gap explicitly. Second, **tail latency compounds multiplicatively across steps**: a 5-step agent where each step has a p95 of 2s does not have a run p95 of 2s — the run tail is dominated by the probability that *any* step lands in its own tail. This is why an agent that looks fine per-call can have a brutal end-to-end p99. Always chart end-to-end tail separately from per-step tail.
 
@@ -240,7 +240,7 @@ Judging is not free (an LLM judge is another model call; a human reviewer is exp
 - **Stratified / targeted sampling** — oversample high-risk segments (new user cohort, a specific tool, long runs) so rare failures show up.
 - **Signal-triggered** — always evaluate runs that erred, hit a guardrail, or got negative feedback. These are your highest-information samples.
 
-How large a sample? Enough that the *confidence interval on the pass rate* is tight enough to detect the regression you care about. For a proportion \(p\) the standard error is \(\sqrt{p(1-p)/n}\); to resolve a 5-point drop in pass rate you need the interval half-width well under 0.05, which around \(p\approx0.9\) means on the order of a few hundred judged traces per window — not tens of thousands. This is why sampling works: quality is a proportion, and proportions estimate cheaply. Spend the savings on judging the *tails* densely.
+How large a sample? Enough that the *confidence interval on the pass rate* is tight enough to detect the regression you care about. For a proportion \\(p\\) the standard error is \\(\sqrt{p(1-p)/n}\\); to resolve a 5-point drop in pass rate you need the interval half-width well under 0.05, which around \\(p\approx0.9\\) means on the order of a few hundred judged traces per window — not tens of thousands. This is why sampling works: quality is a proportion, and proportions estimate cheaply. Spend the savings on judging the *tails* densely.
 
 > **Saying it out loud.** People assume online eval means judging everything, and the sample-size math is why it doesn't. Quality is a proportion, and the standard error on a proportion is the square root of p times one minus p over n — so to resolve a five-point drop in pass rate you need the interval half-width comfortably under 0.05, which around a 90% pass rate works out to a few hundred judged traces per window, not tens of thousands. That's the whole reason sampling works, and it means you can spend the savings judging the tails densely instead of the middle. Three sampling modes worth naming together: uniform random for an unbiased estimate, stratified to oversample risky segments so rare failures actually show up, and signal-triggered so anything that errored, tripped a guardrail, or got a thumbs-down is always judged.
 
@@ -351,7 +351,7 @@ Same inputs, worse outputs. This is the dangerous one because it is silent — l
 **Statistical tooling that separates signal from noise.** "Judge score went down" is not an incident; "judge score went down *more than noise*" is. Two workhorses:
 
 - **Two-window test.** Compare the current window's mean judge score to a frozen baseline window with a two-sample test (t-test or, more robustly for bounded scores, a Mann–Whitney U). Alert on a significant drop *sustained across consecutive windows*, not a single dip.
-- **Control charts (EWMA / CUSUM).** An exponentially-weighted moving average smooths per-trace noise and flags when the smoothed score crosses a control limit set from the baseline's own variance (\(\mu - L\sigma\sqrt{\lambda/(2-\lambda)}\)). CUSUM accumulates small persistent drops and so detects *slow* decay — exactly the silent-degradation case — faster than a fixed threshold. The worked example below implements the EWMA chart.
+- **Control charts (EWMA / CUSUM).** An exponentially-weighted moving average smooths per-trace noise and flags when the smoothed score crosses a control limit set from the baseline's own variance (\\(\mu - L\sigma\sqrt{\lambda/(2-\lambda)}\\)). CUSUM accumulates small persistent drops and so detects *slow* decay — exactly the silent-degradation case — faster than a fixed threshold. The worked example below implements the EWMA chart.
 
 The reason to prefer these over a hard threshold is **base-rate stability**: a fixed "alert if judge < 0.75" fires constantly when normal variance dips below 0.75 and never fires if your baseline is 0.74. A baseline-relative, variance-aware test adapts to *your* system's noise floor.
 

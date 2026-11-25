@@ -161,17 +161,17 @@ Four ways to answer "which agent gets the blame," from cheapest to most rigorous
 
 **1. Trace-based localization (annotate the decisive step).** Have a human or LLM judge read the full transcript and mark the *first* step where the trajectory became unrecoverable — the "decisive error." This is exactly the methodology behind MAST: expert annotators labeled traces for failure modes and the step at which each occurred, reaching Cohen's kappa = 0.88 inter-annotator agreement ([Cemri et al., 2025](https://arxiv.org/abs/2503.13657)). Cheap-ish, interpretable, but subjective and hard to scale without an LLM judge. The key discipline is finding the *first* unrecoverable error, not the last visible symptom — those are usually different messages authored by different agents, and blaming the symptom is how teams "fix" the wrong agent.
 
-**2. Ablation / leave-one-out.** Re-run the task with agent \( i \) removed (or replaced by a no-op / a stronger model / a weaker model). The change in system performance estimates that agent's marginal contribution:
+**2. Ablation / leave-one-out.** Re-run the task with agent \\( i \\) removed (or replaced by a no-op / a stronger model / a weaker model). The change in system performance estimates that agent's marginal contribution:
 
-\[ \Delta_i = V(\text{system}) - V(\text{system} \setminus i) \]
+\\[ \Delta_i = V(\text{system}) - V(\text{system} \setminus i) \\]
 
-where \( V \) is your outcome score. Large positive \( \Delta_i \) means agent \( i \) is load-bearing; \( \Delta_i \approx 0 \) means it is dead weight (a candidate for deletion — cost savings!); and, importantly, a **negative** \( \Delta_i \) means the agent is *actively harmful* — the system scores *better* without it, which is more common than teams expect for redundant reviewers and over-eager planners. Requires re-running, which multiplies cost, and — because these systems are non-deterministic — you must average \( \Delta_i \) over several seeds or you are measuring noise.
+where \\( V \\) is your outcome score. Large positive \\( \Delta_i \\) means agent \\( i \\) is load-bearing; \\( \Delta_i \approx 0 \\) means it is dead weight (a candidate for deletion — cost savings!); and, importantly, a **negative** \\( \Delta_i \\) means the agent is *actively harmful* — the system scores *better* without it, which is more common than teams expect for redundant reviewers and over-eager planners. Requires re-running, which multiplies cost, and — because these systems are non-deterministic — you must average \\( \Delta_i \\) over several seeds or you are measuring noise.
 
 **3. Shapley-value attribution.** Leave-one-out ignores interactions. The Shapley value fairly distributes the total system value across agents by averaging each agent's marginal contribution over *all* orderings of agent inclusion:
 
-\[ \phi_i = \sum_{S \subseteq N \setminus \{i\}} \frac{|S|!\,(|N|-|S|-1)!}{|N|!} \big[ V(S \cup \{i\}) - V(S) \big] \]
+\\[ \phi_i = \sum_{S \subseteq N \setminus \\{i\\}} \frac{|S|!\\,(|N|-|S|-1)!}{|N|!} \big[ V(S \cup \\{i\\}) - V(S) \big] \\]
 
-Here \( N \) is the set of agents, \( S \) a coalition not containing \( i \), and \( V(S) \) the score achieved by only the agents in \( S \). Shapley values are the principled answer to "how much did each agent contribute" — they uniquely satisfy efficiency, symmetry, null-player, and additivity — but they cost \( O(2^{|N|}) \) coalition evaluations, so feasible for 3–4 agents, not for 30. For larger systems you approximate with **Monte-Carlo Shapley** (sample random agent orderings and average marginal contributions), trading exactness for a tractable number of re-runs.
+Here \\( N \\) is the set of agents, \\( S \\) a coalition not containing \\( i \\), and \\( V(S) \\) the score achieved by only the agents in \\( S \\). Shapley values are the principled answer to "how much did each agent contribute" — they uniquely satisfy efficiency, symmetry, null-player, and additivity — but they cost \\( O(2^{|N|}) \\) coalition evaluations, so feasible for 3–4 agents, not for 30. For larger systems you approximate with **Monte-Carlo Shapley** (sample random agent orderings and average marginal contributions), trading exactness for a tractable number of re-runs.
 
 **4. Milestone / process rewards.** Decompose the task into intermediate milestones and check which agent achieved which. MultiAgentBench uses exactly this: **milestone-based KPIs** that score whether key sub-goals were reached, separating collaboration quality from raw task score ([Zhu et al., "MultiAgentBench", 2025](https://arxiv.org/abs/2503.01935)). This gives per-agent, per-milestone credit without combinatorial re-runs, at the cost of needing hand-authored milestones. It is the only one of the four that scales to production volume, which is why it is the workhorse for routine per-agent scoring.
 
@@ -457,7 +457,7 @@ TOKENS SPENT    : 1800
 LEAVE-ONE-OUT   : {'history': 0.5, 'protocols': 0.25, 'tooling': 0.25}
 ```
 
-Read the output like an evaluator. The **end-state score is 1.0** — all four gold facts made it into the report. The **leave-one-out credits are the empirical \( \Delta_i \)**: removing the `history` worker drops the score by 0.5 (it owned two of four facts), each of the others by 0.25 — so `history` is the most load-bearing worker, and none is dead weight. Now inject a failure to watch the metric bite: give the `history` worker a wrong assumption (have it research Q2 instead of Q3, i.e. `BEATS["history"] = []`) and its leave-one-out credit collapses to 0.0 while the end-state score falls to 0.5 — the ablation *localizes the damage to the agent that caused it* without any human reading the transcript. That is credit assignment, executed, in forty lines.
+Read the output like an evaluator. The **end-state score is 1.0** — all four gold facts made it into the report. The **leave-one-out credits are the empirical \\( \Delta_i \\)**: removing the `history` worker drops the score by 0.5 (it owned two of four facts), each of the others by 0.25 — so `history` is the most load-bearing worker, and none is dead weight. Now inject a failure to watch the metric bite: give the `history` worker a wrong assumption (have it research Q2 instead of Q3, i.e. `BEATS["history"] = []`) and its leave-one-out credit collapses to 0.0 while the end-state score falls to 0.5 — the ablation *localizes the damage to the agent that caused it* without any human reading the transcript. That is credit assignment, executed, in forty lines.
 
 **What is deliberately missing, and why it matters.** This harness scores *outcome* and *contribution* but not *coordination* — it cannot see redundant work, role violations, or ignored messages, because those live in the transcript's structure, not in the fact set. That is exactly the job of the scorer in the next section, which consumes a transcript of the same shape and produces the coordination metrics. The two halves — this generator/ablator and that scorer — compose into a full evaluation harness.
 
@@ -619,7 +619,7 @@ COORDINATION   : {'coordination_score': 1.0, 'redundancy_rate': 0.0,
 
 Two things worth noticing. First, the **planner contributed 0 milestones** — leave-one-out or a cost review should ask whether it earns its tokens. (Note the two contribution methods answer *different* questions: this milestone method says the planner completed no milestone; the §B ablation would ask whether *removing* the planner hurts the outcome. A planner can score zero on the first and still be load-bearing on the second, because good delegation enables the workers without itself "completing" a milestone — which is exactly why you keep both methods and do not prune on either one alone.) Second, this transcript is clean; to see the metrics bite, imagine the reviewer message were `Message(4, "reviewer", "analyst", "def recheck(): ...")` — the role-violation term would fire, dragging the coordination score below 1.0 and flagging an FC1 "disobey role specification" failure. Or swap the reviewer's content to duplicate the analyst's and watch `redundancy_rate` rise. These one-line perturbations are how you write *unit tests for your evaluator* — a metric that never moves when you inject the failure it claims to detect is a broken metric.
 
-**Hardening notes for production.** The three coordination checks here are deliberately simple; in a real system you would (1) replace substring role-rules with an LLM judge that reads intent, because `"def "` is a brittle proxy for "wrote code"; (2) make "ignored message" smarter than "recipient never spoke again" — a message can be acknowledged by action rather than reply; and (3) weight the three penalties by how much each failure mode actually costs you (a role violation that ships bad code is worse than one redundant search), using the weighted form \( \text{Coord} = 1 - \sum_k w_k p_k \) from the metrics section.
+**Hardening notes for production.** The three coordination checks here are deliberately simple; in a real system you would (1) replace substring role-rules with an LLM judge that reads intent, because `"def "` is a brittle proxy for "wrote code"; (2) make "ignored message" smarter than "recipient never spoke again" — a message can be acknowledged by action rather than reply; and (3) weight the three penalties by how much each failure mode actually costs you (a role violation that ships bad code is worse than one redundant search), using the weighted form \\( \text{Coord} = 1 - \sum_k w_k p_k \\) from the metrics section.
 
 > **Saying it out loud.** This scorer reads a transcript and grades the *process* rather than the answer: task success with milestone coverage, per-agent contribution, and a coordination score built from penalty rates for redundancy, role violations, and ignored messages. It's rule-based here for reproducibility, but in production you'd swap the rules for a checklist judge, because no substring match can tell you whether an agent proceeded on an unstated assumption. The thing to notice is that the coordination penalties are weighted, and you should choose those weights by the *dollar cost* of each failure in your product — otherwise the coordination score is a vanity number rather than a decision input.
 
@@ -634,17 +634,17 @@ Precise definitions with micro-examples. Math uses MathJax delimiters (this book
 
 Fraction of tasks the *system* fully completed:
 
-\[ \text{TSR} = \frac{1}{|D|} \sum_{t \in D} \mathbb{1}[\text{system solved } t] \]
+\\[ \text{TSR} = \frac{1}{|D|} \sum_{t \in D} \mathbb{1}[\text{system solved } t] \\]
 
-*Micro-example.* Over \( |D| = 50 \) tasks the system fully solves 34, so \( \text{TSR} = 34/50 = 0.68 \). Because runs are non-deterministic, report TSR as a mean over \( k \) seeds with a confidence interval; a single-run TSR is a point estimate of a random variable, not a fact.
+*Micro-example.* Over \\( |D| = 50 \\) tasks the system fully solves 34, so \\( \text{TSR} = 34/50 = 0.68 \\). Because runs are non-deterministic, report TSR as a mean over \\( k \\) seeds with a confidence interval; a single-run TSR is a point estimate of a random variable, not a fact.
 
 ### Milestone Coverage
 
 Fraction of predefined sub-goals achieved, averaged over tasks — a partial-credit signal that survives when TSR is 0:
 
-\[ \text{MC} = \frac{1}{|D|}\sum_{t \in D} \frac{|\text{milestones hit}_t|}{|\text{milestones}_t|} \]
+\\[ \text{MC} = \frac{1}{|D|}\sum_{t \in D} \frac{|\text{milestones hit}_t|}{|\text{milestones}_t|} \\]
 
-*Micro-example.* A task with 4 milestones where 3 are hit contributes \( 3/4 = 0.75 \). A system can have low TSR but high MC — it gets *most* of the way and fails at the last step (often FC3 premature termination). Watching MC and TSR together localizes failures in *time*: high MC with low TSR means "fails at the end" (fix verification/termination); low MC means "fails early" (fix the orchestrator's plan).
+*Micro-example.* A task with 4 milestones where 3 are hit contributes \\( 3/4 = 0.75 \\). A system can have low TSR but high MC — it gets *most* of the way and fails at the last step (often FC3 premature termination). Watching MC and TSR together localizes failures in *time*: high MC with low TSR means "fails at the end" (fix verification/termination); low MC means "fails early" (fix the orchestrator's plan).
 
 ### Per-Agent Credit (Shapley)
 
@@ -652,9 +652,9 @@ A Shapley value asks: across every possible order in which you could add the age
 
 Defined earlier; the key property is **efficiency**: credits sum to the total system value,
 
-\[ \sum_{i \in N} \phi_i = V(N) \]
+\\[ \sum_{i \in N} \phi_i = V(N) \\]
 
-*Micro-example.* Two agents, \( V(\varnothing)=0,\ V(\{A\})=0.4,\ V(\{B\})=0.2,\ V(\{A,B\})=1.0 \). Then \( \phi_A = \tfrac12(0.4-0) + \tfrac12(1.0-0.2) = 0.6 \) and \( \phi_B = 0.4 \), summing to \( V(\{A,B\}) = 1.0 \). Note both exceed their solo scores — the *interaction* created value, which leave-one-out alone would misattribute. This is the concrete reason to reach for Shapley over ablation when agents are synergistic rather than independent.
+*Micro-example.* Two agents, \\( V(\varnothing)=0,\ V(\\{A\\})=0.4,\ V(\\{B\\})=0.2,\ V(\\{A,B\\})=1.0 \\). Then \\( \phi_A = \tfrac12(0.4-0) + \tfrac12(1.0-0.2) = 0.6 \\) and \\( \phi_B = 0.4 \\), summing to \\( V(\\{A,B\\}) = 1.0 \\). Note both exceed their solo scores — the *interaction* created value, which leave-one-out alone would misattribute. This is the concrete reason to reach for Shapley over ablation when agents are synergistic rather than independent.
 
 > **Saying it out loud.** Shapley is the principled answer to "how much did each agent contribute," and the reason to reach for it over simple ablation is interaction. Take two agents: A alone scores 0.4, B alone scores 0.2, together they score 1.0. Shapley gives A 0.6 and B 0.4, summing exactly to the team score. Notice both *exceed* their solo numbers — the interaction created value, and leave-one-out would have misattributed that entirely. The tradeoff is cost: it's exponential in the number of agents, so it's realistic at three or four and you need Monte-Carlo sampling above that. Use it when you need defensible attribution, not for routine scoring.
 
@@ -662,23 +662,23 @@ Defined earlier; the key property is **efficiency**: credits sum to the total sy
 
 Useful information moved per token spent. One simple operationalization: milestones achieved per thousand tokens of inter-agent messages,
 
-\[ \text{CE} = \frac{\text{milestones hit}}{(\text{message tokens})/1000} \]
+\\[ \text{CE} = \frac{\text{milestones hit}}{(\text{message tokens})/1000} \\]
 
-*Micro-example.* 4 milestones over 8,000 message tokens gives \( \text{CE} = 4/8 = 0.5 \) milestones per 1k tokens. Falling CE across runs is an early sign of chatter/redundancy — agents talking more to accomplish the same thing, the quantitative signature of FC2 misalignment creeping in.
+*Micro-example.* 4 milestones over 8,000 message tokens gives \\( \text{CE} = 4/8 = 0.5 \\) milestones per 1k tokens. Falling CE across runs is an early sign of chatter/redundancy — agents talking more to accomplish the same thing, the quantitative signature of FC2 misalignment creeping in.
 
 ### Coordination Score
 
-The composite used in the code, generalized to a weighted penalty average with weights \( w_k \) summing to 1:
+The composite used in the code, generalized to a weighted penalty average with weights \\( w_k \\) summing to 1:
 
-\[ \text{Coord} = 1 - \sum_{k} w_k \, p_k, \qquad p_k \in [0,1] \]
+\\[ \text{Coord} = 1 - \sum_{k} w_k \\, p_k, \qquad p_k \in [0,1] \\]
 
-where each \( p_k \) is a penalty rate (redundancy, role violations, ignored messages). *Micro-example.* Equal weights with \( p = (0.1, 0.0, 0.2) \) give \( \text{Coord} = 1 - \tfrac13(0.3) = 0.9 \). Choose the weights \( w_k \) by the *dollar cost* of each failure in your product, not by intuition — that is what turns a vanity number into a decision input.
+where each \\( p_k \\) is a penalty rate (redundancy, role violations, ignored messages). *Micro-example.* Equal weights with \\( p = (0.1, 0.0, 0.2) \\) give \\( \text{Coord} = 1 - \tfrac13(0.3) = 0.9 \\). Choose the weights \\( w_k \\) by the *dollar cost* of each failure in your product, not by intuition — that is what turns a vanity number into a decision input.
 
 ### Goal-Drift Score
 
-A dynamics metric with no single-agent analogue: how far the conversation wanders from the original objective. With \( g \) the goal embedding and \( m_t \) the embedding of the message at step \( t \),
+A dynamics metric with no single-agent analogue: how far the conversation wanders from the original objective. With \\( g \\) the goal embedding and \\( m_t \\) the embedding of the message at step \\( t \\),
 
-\[ \text{Drift} = \frac{1}{T}\sum_{t=1}^{T}\big(1 - \cos(g, m_t)\big) \]
+\\[ \text{Drift} = \frac{1}{T}\sum_{t=1}^{T}\big(1 - \cos(g, m_t)\big) \\]
 
 *Micro-example.* If cosine similarity to the goal stays near 0.9 early then decays to 0.4 over a long trace, rising Drift flags FC2 "task derailment" *while it is happening*, letting a supervisor intervene before termination.
 
@@ -688,9 +688,9 @@ A dynamics metric with no single-agent analogue: how far the conversation wander
 
 The one that decides whether multi-agent was worth it — quality per unit cost, compared to a baseline:
 
-\[ \text{CAU} = \frac{V_{\text{multi}} - V_{\text{single}}}{C_{\text{multi}} - C_{\text{single}}} \]
+\\[ \text{CAU} = \frac{V_{\text{multi}} - V_{\text{single}}}{C_{\text{multi}} - C_{\text{single}}} \\]
 
-*Micro-example.* Multi-agent scores 0.90 vs single-agent 0.75 (\( \Delta V = 0.15 \)) but costs 15x the tokens (say \( \Delta C = 14 \) baseline-units). \( \text{CAU} = 0.15/14 \approx 0.011 \) quality points per baseline-unit of extra cost. Whether that clears your bar depends entirely on how much a quality point is worth in your product. The discipline: never report \( \Delta V \) (the quality win) without \( \Delta C \) (the cost) in the same sentence — a 90% quality improvement at 15x cost is a *business decision*, not an automatic yes, and CAU is the number that forces that conversation.
+*Micro-example.* Multi-agent scores 0.90 vs single-agent 0.75 (\\( \Delta V = 0.15 \\)) but costs 15x the tokens (say \\( \Delta C = 14 \\) baseline-units). \\( \text{CAU} = 0.15/14 \approx 0.011 \\) quality points per baseline-unit of extra cost. Whether that clears your bar depends entirely on how much a quality point is worth in your product. The discipline: never report \\( \Delta V \\) (the quality win) without \\( \Delta C \\) (the cost) in the same sentence — a 90% quality improvement at 15x cost is a *business decision*, not an automatic yes, and CAU is the number that forces that conversation.
 
 > **Saying it out loud.** This is the metric that decides whether multi-agent was worth building: quality gained divided by cost added, against a single-agent baseline. Concretely — multi-agent scores 0.90 against single-agent's 0.75, so you gained 0.15, but it cost fourteen extra baseline-units of tokens. That's about 0.011 quality points per unit of extra spend, and whether that clears your bar depends entirely on what a quality point is worth in your product. The discipline is simple and people violate it constantly: never say the quality win without saying the cost in the same sentence. A 90% improvement at 15x cost is a business decision, not an automatic yes.
 
@@ -857,7 +857,7 @@ Look for a low-confidence or wrong assertion early in the trace that later messa
 End-state checks only the final state, tolerating multiple valid paths — cheap, path-agnostic, good for headline pass/fail (Anthropic uses it for research). Trajectory evaluation scores the sequence of actions/messages — expensive but necessary for catching process failures and doing credit assignment. Use end-state on every run for the top-line metric, and spend trajectory scoring only on the failures end-state flags.
 
 **Q7. Does adding more agents reliably improve performance?**
-No — diminishing and often negative returns. More agents mean more messages and more chances for misalignment and cascades. MultiAgentBench found coordination *topology* (graph beat chain/tree/star on research) mattered more than agent count, and elaborate planning added only a few percent. Structure the agents well before adding more, and prove each additional agent's marginal contribution with ablation — a negative \( \Delta_i \) means delete it.
+No — diminishing and often negative returns. More agents mean more messages and more chances for misalignment and cascades. MultiAgentBench found coordination *topology* (graph beat chain/tree/star on research) mattered more than agent count, and elaborate planning added only a few percent. Structure the agents well before adding more, and prove each additional agent's marginal contribution with ablation — a negative \\( \Delta_i \\) means delete it.
 
 **Q8. What are the traps in evaluating multi-agent systems themselves?**
 Grading only the final answer; no single-agent baseline; ignoring token cost; using a same-family model as judge (self-preference); treating a single non-deterministic run as signal; and attributing blame by intuition instead of a method. Each of these makes a broken or overpriced system look good.
@@ -875,7 +875,7 @@ MAST is 14 empirically-derived failure modes in three buckets — specification/
 MCP standardizes how an agent talks to *tools*; A2A standardizes how an agent talks to *other agents* (cross-vendor, via Agent Cards; donated to the Linux Foundation in June 2025). For evaluation it matters because A2A gives you a standardized *inter-agent call log* even across frameworks and organizations — a portable transcript surface — whereas without it you're reconstructing coordination from heterogeneous logs.
 
 **Q13. How do you handle non-determinism when comparing two multi-agent designs?**
-Run each design over \( k \) seeds, report mean and variance of every metric, and only believe an A/B difference that exceeds the run-to-run spread. For reliability specifically, use a pass^k style metric (does it succeed on *all* k trials, not just one) — a system that's right 1-in-3 times is not "66% good," it's unreliable.
+Run each design over \\( k \\) seeds, report mean and variance of every metric, and only believe an A/B difference that exceeds the run-to-run spread. For reliability specifically, use a pass^k style metric (does it succeed on *all* k trials, not just one) — a system that's right 1-in-3 times is not "66% good," it's unreliable.
 
 **Q14. A multi-agent run gave the right answer but you're unhappy. Why might that be?**
 Right answer, broken process: it may have reached the answer by luck (a wrong assumption that happened to cancel out), by wasteful duplication (two agents did the same search — cost failure), or without any verification (so it won't reproduce). End-state passed; trajectory and cost scoring would show the process is fragile, and it will regress.
@@ -887,7 +887,7 @@ Give verification its own node with the *authority to reject and re-dispatch*, p
 Detect it by tracking disagreement and confidence across rounds: falling disagreement with rising confidence, especially early unanimity, is the signature. Prevent it by assigning genuine adversarial roles, hiding others' answers until each agent commits independently, and using an independent judge rather than majority vote. Multiagent debate helps factuality only when the critique is real.
 
 **Q17. Your multi-agent system costs 15x a single agent for a 10% quality gain. Ship it?**
-Not automatically — that's a business decision, captured by cost-adjusted utility \( \text{CAU} = \Delta V / \Delta C \). I'd quantify what a quality point is worth in the product, check whether a cheaper design (better single-agent prompt, fewer agents, better delegation) captures most of the 10%, and only ship multi-agent if the value per marginal token clears our bar. Often the honest answer is "improve the single agent first."
+Not automatically — that's a business decision, captured by cost-adjusted utility \\( \text{CAU} = \Delta V / \Delta C \\). I'd quantify what a quality point is worth in the product, check whether a cheaper design (better single-agent prompt, fewer agents, better delegation) captures most of the 10%, and only ship multi-agent if the value per marginal token clears our bar. Often the honest answer is "improve the single agent first."
 
 **Q18. What observability do you need before you can evaluate a multi-agent system at all?**
 A structured, append-only transcript: per-action rows with agent id, role, action, inputs, outputs, tokens, and timestamps — from a tracer like LangSmith, the Agents SDK tracer, or Langfuse. Without it you can't score coordination, do credit assignment, or reproduce a failure. If it wasn't logged, it didn't happen. Instrumentation is a prerequisite, not a nice-to-have.
@@ -953,7 +953,7 @@ Use this to read a candidate system (or to audit your own) fast.
 | Same-family model judges its own system | Independent judge, human spot-checks |
 | A single run cited as a result | Means and variance over multiple seeds; pass^k for reliability |
 | No verifier, or a verifier that checks the surface | Verifier with reject authority, evaluated for discrimination |
-| Adds agents to fix quality problems | Structures/topology first; prunes agents with negative \( \Delta_i \) |
+| Adds agents to fix quality problems | Structures/topology first; prunes agents with negative \\( \Delta_i \\) |
 | Multiple agents writing the same artifact | Single writer owns each mutable artifact |
 | Early, confident consensus treated as success | Consensus dynamics monitored for groupthink |
 | No transcript / can't reproduce a failure | Full structured tracing; failures replayable |
@@ -1081,7 +1081,7 @@ A concrete, copy-pastable protocol for evaluating a multi-agent system so result
 5. **Score outcome (end-state).** LLM judge (independent family) against a rubric, plus milestone coverage. This is the cheap filter that runs on every case.
 6. **Score process (trajectory) on failures.** Run the MAST checklist judge on the cases end-state flagged, plus a random sample of passes (to catch lucky-right processes). Produce the failure-mode distribution.
 7. **Score coordination and cost.** Redundancy, ignored-input, role-violation rates; tokens and dollars per task; communication efficiency; goal-drift on long traces.
-8. **Assign credit.** Milestone KPIs per agent for routine credit; leave-one-out ablation to find dead-weight or actively-harmful agents (negative \( \Delta_i \)); trace localization on the most important failures to name the decisive step.
+8. **Assign credit.** Milestone KPIs per agent for routine credit; leave-one-out ablation to find dead-weight or actively-harmful agents (negative \\( \Delta_i \\)); trace localization on the most important failures to name the decisive step.
 9. **Compute the decision number.** Cost-adjusted utility vs the baseline. State plainly whether the overhead pays and what a quality point is worth in the product.
 10. **Write the directive, not just the score.** The output of an eval run is not "68% pass" — it is "ship/hold, here is the dominant failure mode, and here is the one structural change (verifier / provenance contract / better delegation prompt) that addresses it." Re-run after the change and confirm the mode's rate dropped.
 

@@ -159,9 +159,9 @@ The community converged on a small set of cost patterns that are now considered 
 
 The central tension of automated eval is a triangle you cannot fully satisfy on every run:
 
-\[
+\\[
 \text{cheap} \quad \wedge \quad \text{fast} \quad \wedge \quad \text{statistically significant}
-\]
+\\]
 
 Pick any two. A 30-example suite that runs in 40 seconds for twelve cents is cheap and fast but has so much variance it cannot detect a real regression. A 2,000-example LLM-judge sweep is significant but costs dollars and minutes. You resolve the triangle not by finding a magic run but by running **different suites at different triggers** — spending your statistical-significance budget where you can afford the latency.
 
@@ -224,7 +224,7 @@ Handle it with four (really five) layers, in order:
 
 ### 2. Sample multiple times, gate on the aggregate
 
-Run each example \(k\) times (typically \(k = 3\) to \(5\)) and aggregate. For a per-example pass/fail, use **majority vote** or **pass@k / pass^k** depending on whether you care about "can it ever" or "does it reliably." The suite-level metric becomes the mean of a many-Bernoulli process, whose noise you can *quantify* — which unlocks layer 3.
+Run each example \\(k\\) times (typically \\(k = 3\\) to \\(5\\)) and aggregate. For a per-example pass/fail, use **majority vote** or **pass@k / pass^k** depending on whether you care about "can it ever" or "does it reliably." The suite-level metric becomes the mean of a many-Bernoulli process, whose noise you can *quantify* — which unlocks layer 3.
 
 Choose the aggregation to match the product question, because they encode opposite risk attitudes:
 - **pass@k** ("succeeds at least once in k tries") is optimistic — right for "can a human retry?" surfaces like code generation with a test the user can re-run.
@@ -236,15 +236,15 @@ Reporting the wrong one flatters or maligns the agent unfairly, and a sharp inte
 
 > **In plain terms.** Instead of asking "did we score above 85%?", ask "given how few examples we ran, could the true rate actually be below 85%?" The formula below turns an observed pass rate into a range the true rate plausibly lives in, and you compare the bottom of that range to your bar. A small sample gives a wide range, so an unlucky run doesn't flip the gate — it honestly reports that you don't have enough examples to conclude anything.
 
-Do not compare a raw mean to a threshold. Compare a **confidence bound** to the threshold. If your suite of \(n\) examples has \(s\) successes, the point estimate is \(\hat{p} = s/n\), but the honest question is "given noise, could the *true* success rate be below my bar?" Use the lower bound of a binomial confidence interval. The **Wilson score interval** is the right default (it behaves near 0 and 1 where the naive normal interval breaks):
+Do not compare a raw mean to a threshold. Compare a **confidence bound** to the threshold. If your suite of \\(n\\) examples has \\(s\\) successes, the point estimate is \\(\hat{p} = s/n\\), but the honest question is "given noise, could the *true* success rate be below my bar?" Use the lower bound of a binomial confidence interval. The **Wilson score interval** is the right default (it behaves near 0 and 1 where the naive normal interval breaks):
 
-\[
+\\[
 \hat{p}_{\pm} = \frac{\hat{p} + \frac{z^2}{2n} \pm z\sqrt{\frac{\hat{p}(1-\hat{p})}{n} + \frac{z^2}{4n^2}}}{1 + \frac{z^2}{n}}
-\]
+\\]
 
-with \(z = 1.96\) for 95% confidence. **Gate on the lower bound** \(\hat{p}_{-} \ge \text{threshold}\): you only fail the build when you are statistically confident the true rate is below the bar. This directly kills "small sample, unlucky run" flakiness — and it tells you when your dataset is simply *too small* to conclude anything (the interval is wide).
+with \\(z = 1.96\\) for 95% confidence. **Gate on the lower bound** \\(\hat{p}_{-} \ge \text{threshold}\\): you only fail the build when you are statistically confident the true rate is below the bar. This directly kills "small sample, unlucky run" flakiness — and it tells you when your dataset is simply *too small* to conclude anything (the interval is wide).
 
-Worth building intuition for the numbers, because interviewers love a concrete feel: at \(\hat{p} = 0.90\), the Wilson lower bound is roughly **0.74 at n=30**, **0.82 at n=100**, **0.87 at n=500**, and **0.88 at n=1000**. Read that as: to *prove* you cleared a 0.85 bar with 95% confidence, you need on the order of hundreds of trials, not thirty. This is the mathematical reason the PR tier (small n) cannot gate on tight quality deltas and the nightly tier (large n) can — it is not a matter of taste, it is the width of the interval.
+Worth building intuition for the numbers, because interviewers love a concrete feel: at \\(\hat{p} = 0.90\\), the Wilson lower bound is roughly **0.74 at n=30**, **0.82 at n=100**, **0.87 at n=500**, and **0.88 at n=1000**. Read that as: to *prove* you cleared a 0.85 bar with 95% confidence, you need on the order of hundreds of trials, not thirty. This is the mathematical reason the PR tier (small n) cannot gate on tight quality deltas and the nightly tier (large n) can — it is not a matter of taste, it is the width of the interval.
 
 > **Saying it out loud.** The punchline is that you never compare a raw mean to a threshold; you compare a confidence bound to the threshold. The observed pass rate is just a point estimate with sampling noise in it, so you compute the Wilson lower bound and fail the build only when that bound is below the bar — meaning you're statistically confident the true rate is genuinely under it, not that you had a bad night. Wilson rather than the naive normal interval because it behaves properly near zero and one, which is exactly where good agents live. The numbers give you the intuition: at an observed 90%, the lower bound is about 0.74 at thirty examples, 0.82 at a hundred, and 0.87 at five hundred. So proving you cleared an 0.85 bar with 95% confidence takes hundreds of trials, not thirty — that's the mathematical reason the PR tier can't gate tight quality deltas and the nightly tier can.
 
@@ -254,9 +254,9 @@ Worth building intuition for the numbers, because interviewers love a concrete f
 
 When comparing a candidate to a baseline, a naive "mean went down → fail" fires constantly on judge noise. The rigorous gate is a conjunction of three conditions:
 
-\[
-\text{FAIL} \iff (\text{mean dropped}) \;\wedge\; (\underbrace{p < 0.05}_{\text{Welch's t-test}}) \;\wedge\; (\underbrace{\Delta > \delta_{\min}}_{\text{effect floor}})
-\]
+\\[
+\text{FAIL} \iff (\text{mean dropped}) \\;\wedge\\; (\underbrace{p < 0.05}_{\text{Welch's t-test}}) \\;\wedge\\; (\underbrace{\Delta > \delta_{\min}}_{\text{effect floor}})
+\\]
 
 That is: the mean must drop, the drop must be statistically significant (Welch's t-test on the per-example score arrays — not just the means), **and** the drop must exceed a minimum effect size you actually care about. Requiring all three prevents the two failure modes at once: significant-but-trivial drops (a 0.3% dip with a huge sample) and large-but-noisy drops (a 5% dip on 12 examples).
 
@@ -782,7 +782,7 @@ Eval suites cost real money (every judged example is 1–3 model calls) and real
 | **Fail-fast on catastrophe** | If JSON-validity or a deterministic floor fails, stop before running expensive judges | Avoids paying for a doomed run |
 | **Batch / async concurrency** | Fire judge calls concurrently within a rate-limit budget | Cuts wall-clock, not cost |
 
-Two guardrails worth wiring in: a **per-run cost ceiling** (abort and alert if a run exceeds \(N\) dollars — cheap insurance against an infinite-loop agent burning tokens) and a **cached-vs-live ratio** in the report so you notice when caching silently stopped working and costs quietly 10x'd.
+Two guardrails worth wiring in: a **per-run cost ceiling** (abort and alert if a run exceeds \\(N\\) dollars — cheap insurance against an infinite-loop agent burning tokens) and a **cached-vs-live ratio** in the report so you notice when caching silently stopped working and costs quietly 10x'd.
 
 > **Saying it out loud.** Cost and runtime both scale with the dataset, and if you ignore them one of two things happens: you blow the budget, or the gate gets slow enough that people turn it off. The levers in payoff order are deterministic-first grading with a cascade, response caching keyed on prompt plus input plus model version, tiering so the dollars sit in nightly instead of on every commit, then path scoping, sharding and stratified sampling. Two guardrails to wire on day one: a per-run dollar ceiling that aborts and alerts — cheap insurance against an agent stuck in a tool-call loop burning tokens — and a cached-versus-live ratio in the report so you notice when caching silently stopped working and the bill quietly 10x'd. The bug everyone hits exactly once: if the cache key omits the exact model version, a provider rollout serves you stale cached outputs and the regression is invisible because you never actually called the new model. And runtime is really a patience budget — a twelve-minute PR gate gets skipped within a month, so keep that tier under about three minutes.
 
@@ -792,17 +792,17 @@ Two guardrails worth wiring in: a **per-run cost ceiling** (abort and alert if a
 
 Interviewers like to see you reason quantitatively about this. A simple model:
 
-\[
+\\[
 \text{cost per run} \approx n_{\text{examples}} \times k_{\text{samples}} \times \big(c_{\text{agent}} + f_{\text{judge}} \times c_{\text{judge}}\big)
-\]
+\\]
 
-where \(f_{\text{judge}}\) is the fraction of rows that escalate to the frontier judge after the cascade. Plug in numbers: a nightly of \(n = 1000\), \(k = 3\), agent cost \(c_{\text{agent}}\) = 2 cents/call, judge cost \(c_{\text{judge}}\) = 3 cents/call, and *no* cascade (\(f = 1\)) costs \(1000 \times 3 \times (0.02 + 0.03)\) = 150 dollars/night, or ~4,500 dollars/month. Add a cascade that escalates only 15% of rows (\(f = 0.15\)) and it drops to \(1000 \times 3 \times (0.02 + 0.15 \times 0.03)\) ≈ 74 dollars/night — roughly half — and layering response caching on the unchanged majority of nightly rows takes the *marginal* cost of a night with no dataset change close to zero. The lesson the arithmetic teaches: the cascade fraction \(f\) and the cache hit rate are the two dials that actually move the bill; sampling \(k\) down hurts your statistics faster than it helps your budget.
+where \\(f_{\text{judge}}\\) is the fraction of rows that escalate to the frontier judge after the cascade. Plug in numbers: a nightly of \\(n = 1000\\), \\(k = 3\\), agent cost \\(c_{\text{agent}}\\) = 2 cents/call, judge cost \\(c_{\text{judge}}\\) = 3 cents/call, and *no* cascade (\\(f = 1\\)) costs \\(1000 \times 3 \times (0.02 + 0.03)\\) = 150 dollars/night, or ~4,500 dollars/month. Add a cascade that escalates only 15% of rows (\\(f = 0.15\\)) and it drops to \\(1000 \times 3 \times (0.02 + 0.15 \times 0.03)\\) ≈ 74 dollars/night — roughly half — and layering response caching on the unchanged majority of nightly rows takes the *marginal* cost of a night with no dataset change close to zero. The lesson the arithmetic teaches: the cascade fraction \\(f\\) and the cache hit rate are the two dials that actually move the bill; sampling \\(k\\) down hurts your statistics faster than it helps your budget.
 
 > **Saying it out loud.** If they ask you to size it, do the arithmetic out loud, because that's the part that sounds like experience. Thousand-example nightly, three samples each, two cents per agent call and three cents per judge call with no cascade: a thousand times three times five cents is 150 dollars a night, about 4,500 a month. Put in a cascade that escalates only 15% of rows to the frontier judge and it drops to roughly 74 dollars a night, and caching the unchanged majority takes the marginal cost of a night with no dataset change close to zero. The lesson buried in the arithmetic is which dials matter: the cascade fraction and the cache hit rate move the bill, while cutting your sample count hurts your statistics faster than it helps your budget.
 
 ### The runtime side
 
-Cost is dollars; runtime is patience, and patience is what determines whether the gate survives. A PR gate that takes 12 minutes will get `[skip ci]`'d within a month. Keep the PR tier under ~3 minutes by (a) shrinking \(n\) to a stratified sample, (b) sharding across a CI matrix so slices run in parallel, (c) caching aggressively, and (d) issuing judge calls concurrently up to your rate limit. The nightly tier can be slow because it runs while everyone sleeps — but even there, cap it with a `timeout-minutes` so a hung provider call cannot leave a job running (and billing) for six hours.
+Cost is dollars; runtime is patience, and patience is what determines whether the gate survives. A PR gate that takes 12 minutes will get `[skip ci]`'d within a month. Keep the PR tier under ~3 minutes by (a) shrinking \\(n\\) to a stratified sample, (b) sharding across a CI matrix so slices run in parallel, (c) caching aggressively, and (d) issuing judge calls concurrently up to your rate limit. The nightly tier can be slow because it runs while everyone sleeps — but even there, cap it with a `timeout-minutes` so a hung provider call cannot leave a job running (and billing) for six hours.
 
 ---
 

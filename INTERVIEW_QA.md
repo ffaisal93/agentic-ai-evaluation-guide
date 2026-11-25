@@ -10,7 +10,7 @@ build and defend a real evaluation program.
 
 > **Math rendering note:** This book renders with **MathJax** (KaTeX disabled). Write inline math as
 > `\( ... \)` and display math as `\[ ... \]`. Never use single-dollar `$...$` — literal dollar signs
-> (e.g. costs like \(\$0.003\) per call) render as plain text.
+> (e.g. costs like \\(\\$0.003\\) per call) render as plain text.
 
 ---
 
@@ -134,7 +134,7 @@ what makes it an agent.
 | Failure surface | Bad answer | Bad answer **× N steps**, compounding + side effects |
 
 **Example.** "What's the weather in Paris?" is a plain call. "Book me the cheapest refundable flight to
-Paris next week under \(\$600\)" is an agent task: it must search, filter, compare, possibly call a
+Paris next week under \\(\\$600\\)" is an agent task: it must search, filter, compare, possibly call a
 booking API, and confirm — several dependent steps with real side effects.
 
 **Trade-off / why it matters for eval.** The agent's power (autonomy, tool access, statefulness) is
@@ -258,7 +258,7 @@ budgets, and guardrails. A strong candidate resists "agentify everything."
 ### 1.6 Why are agents fundamentally harder to evaluate than single-turn LLMs?
 
 **Answer.** Five compounding reasons:
-1. **Multi-step compounding error.** A 90%-reliable step run 10 times gives \(0.9^{10} \approx 0.35\)
+1. **Multi-step compounding error.** A 90%-reliable step run 10 times gives \\(0.9^{10} \approx 0.35\\)
    end-to-end. Small per-step errors explode over horizons.
 2. **Non-determinism.** Temperature, tool latency/ordering, and model updates make the same input yield
    different trajectories → you must measure **distributions** (pass@k, pass^k), not points.
@@ -423,10 +423,10 @@ high-risk cases). Humans also produce the labeled set you use to *validate the j
 ### 2.3 How do you evaluate non-deterministic agents rigorously?
 
 **Answer.** Treat each task's success as a random variable and estimate it:
-- **Multiple seeds per task** (e.g., \(k=5\)–\(10\)), report mean success with a **confidence interval**
+- **Multiple seeds per task** (e.g., \\(k=5\\)–\\(10\\)), report mean success with a **confidence interval**
   (Wilson interval for proportions), not a single number.
-- **pass@k** — probability at least one of \(k\) attempts succeeds (measures *capability*; optimistic).
-- **pass^k** — probability *all* \(k\) attempts succeed (measures *reliability*; what production cares
+- **pass@k** — probability at least one of \\(k\\) attempts succeeds (measures *capability*; optimistic).
+- **pass^k** — probability *all* \\(k\\) attempts succeed (measures *reliability*; what production cares
   about). tau-bench popularized pass^k for exactly this reason.
 - **Semantic / criteria-based grading** instead of exact match: state-based checks, rubric LLM-judge,
   or embedding similarity for free-text.
@@ -480,7 +480,7 @@ relative to humans, good for fuzzy criteria. But it has well-documented biases:
 
 **Mitigations:** clear rubrics with explicit criteria and few-shot anchors; ask for structured
 output + rationale; use pairwise comparisons and randomize/average over positions; ensemble multiple
-judges; calibrate against a human-labeled gold set and report agreement (Cohen's/Fleiss' \(\kappa\),
+judges; calibrate against a human-labeled gold set and report agreement (Cohen's/Fleiss' \\(\kappa\\),
 or correlation); and use a *different* model family as judge than as candidate where possible. Never
 ship an LLM-judge you haven't validated against humans.
 
@@ -491,7 +491,7 @@ ship an LLM-judge you haven't validated against humans.
 ### 2.7 How do you validate that your evaluator/judge is trustworthy?
 
 **Answer.** Build a **human-labeled gold set**, then measure the judge against it: agreement
-(\(\kappa\)), precision/recall on the "fail" class (you usually care most about catching failures), and
+(\\(\kappa\\)), precision/recall on the "fail" class (you usually care most about catching failures), and
 score correlation. Run **bias probes** (swap positions, pad length, swap model identities) to quantify
 position/verbosity/self-preference bias. Track judge stability across runs (same input → same score?).
 Re-validate whenever you change the judge model, prompt, or rubric — a judge is itself a model that can
@@ -551,7 +551,7 @@ hacking and blind spots creep in; a good eval lead makes the trade-offs visible 
 1. **Effectiveness (did it work?):** task success rate, goal completion, partial-credit / subgoal
    completion, exact/state-based correctness.
 2. **Reliability (does it work *every* time?):** pass@k, pass^k, variance across seeds, consistency.
-3. **Efficiency (what did it cost?):** steps to completion, tool calls, tokens, \(\$\)/task, p50/p95
+3. **Efficiency (what did it cost?):** steps to completion, tool calls, tokens, \\(\\$\\)/task, p50/p95
    latency, time-to-first-token.
 4. **Process quality (how did it get there?):** tool-selection accuracy, tool-arg validity, redundant-
    call rate, recovery rate after errors, plan quality.
@@ -559,7 +559,7 @@ hacking and blind spots creep in; a good eval lead makes the trade-offs visible 
    user satisfaction / thumbs-up rate, escalation rate.
 
 **Principle:** never report effectiveness without efficiency and safety alongside — an agent that
-succeeds 95% of the time but costs \(\$2\) and 40s per task, or leaks data 1% of the time, is not
+succeeds 95% of the time but costs \\(\\$2\\) and 40s per task, or leaks data 1% of the time, is not
 "better" than a cheaper safer one. Interviewers listen for this multi-axis instinct.
 
 > **Saying it out loud.** I keep five buckets in my head so I never forget one: did it work, does it work every time, what did it cost, how did it get there, and was it safe. Effectiveness, reliability, efficiency, process quality, safety. The reason for the buckets is that people default to reporting only the first one, and success rate alone is genuinely misleading. My rule is I never say a success number without saying a cost number and a safety number in the same breath — an agent that succeeds 95% of the time but takes 40 seconds and leaks data once in a hundred runs is not better than a cheaper, duller one.
@@ -568,15 +568,15 @@ succeeds 95% of the time but costs \(\$2\) and 40s per task, or leaks data 1% of
 
 ### 3.2 Explain pass@k vs. pass^k and when each is the right metric.
 
-**Answer.** With \(k\) independent attempts at a task:
-- **pass@k** = probability that *at least one* of \(k\) succeeds. It's optimistic and measures
-  *capability / ceiling*. Great for code-gen where you can verify and keep the best of \(k\).
-- **pass^k** = probability that *all \(k\)* succeed. It's pessimistic and measures **reliability /
+**Answer.** With \\(k\\) independent attempts at a task:
+- **pass@k** = probability that *at least one* of \\(k\\) succeeds. It's optimistic and measures
+  *capability / ceiling*. Great for code-gen where you can verify and keep the best of \\(k\\).
+- **pass^k** = probability that *all \\(k\\)* succeed. It's pessimistic and measures **reliability /
   consistency** — the property that matters when the agent acts autonomously in production and you
   can't cherry-pick.
 
-For a per-attempt success probability \(p\): pass@k \(=1-(1-p)^k\) rises toward 1 with \(k\); pass^k
-\(=p^k\) falls toward 0. A model with \(p=0.8\) has pass@5 \(\approx 0.9997\) but pass^5 \(\approx 0.33\).
+For a per-attempt success probability \\(p\\): pass@k \\(=1-(1-p)^k\\) rises toward 1 with \\(k\\); pass^k
+\\(=p^k\\) falls toward 0. A model with \\(p=0.8\\) has pass@5 \\(\approx 0.9997\\) but pass^5 \\(\approx 0.33\\).
 tau-bench uses pass^k precisely because customer-service agents must be *dependably* right, not
 occasionally right. Say which one you're optimizing and why.
 
@@ -586,7 +586,7 @@ occasionally right. Say which one you're optimizing and why.
 
 ### 3.3 How do you measure the cost and latency of an agent, and why does it belong in eval?
 
-**Answer.** Cost = \(\sum\) (input+output tokens × price) across all model calls + tool/infra costs,
+**Answer.** Cost = \\(\sum\\) (input+output tokens × price) across all model calls + tool/infra costs,
 reported per task and per successful task (cost-per-success is the honest number — retries inflate it).
 Latency = wall-clock per task, reported as p50/p95/p99 (tails matter for UX), plus time-to-first-token
 and per-step latency. It belongs in eval because agents have *unbounded* loops: a quality win that
@@ -1454,7 +1454,7 @@ seniority in an interview.
 worse at consistent absolute scoring — scores drift and clump. **Pairwise** (A vs. B, which is better):
 LLMs are meaningfully more reliable at comparisons than absolute scores, ideal for model/prompt A-B
 selection and for building preference-based leaderboards (e.g., Elo/Bradley-Terry aggregation of
-pairwise votes), but is \(O(n^2)\) and doesn't give an absolute bar. **Rubric-based** (decompose into
+pairwise votes), but is \\(O(n^2)\\) and doesn't give an absolute bar. **Rubric-based** (decompose into
 sub-criteria, each scored): best for diagnosing *why* something failed and for multi-dimensional agent
 behavior (correctness + safety + efficiency separately) — more work to build but far more actionable.
 In practice: rubric for regression-suite depth, pairwise for model/prompt selection, pointwise only for

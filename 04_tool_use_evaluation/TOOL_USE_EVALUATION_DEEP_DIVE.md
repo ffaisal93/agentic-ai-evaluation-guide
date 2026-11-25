@@ -99,23 +99,23 @@ Practical resolutions, in order of preference:
 
 ## 4. Metrics
 
-**In plain language.** Seven metrics follow, each with a formula and a small worked number. The notation is just bookkeeping: \( P \) is the list of calls the agent actually made, \( G \) is the reference list of calls it should have made, and each call is a name plus a dictionary of arguments. Everything below is a different way of comparing those two lists.
+**In plain language.** Seven metrics follow, each with a formula and a small worked number. The notation is just bookkeeping: \\( P \\) is the list of calls the agent actually made, \\( G \\) is the reference list of calls it should have made, and each call is a name plus a dictionary of arguments. Everything below is a different way of comparing those two lists.
 
-Notation: an episode produces a list of *predicted* calls \( P = [p_1, \dots, p_m] \) and a reference \( G = [g_1, \dots, g_n] \). Each call is a pair \( (\text{name}, \text{args}) \).
+Notation: an episode produces a list of *predicted* calls \\( P = [p_1, \dots, p_m] \\) and a reference \\( G = [g_1, \dots, g_n] \\). Each call is a pair \\( (\text{name}, \text{args}) \\).
 
 ### 4.1 Tool-selection accuracy
 
 Fraction of episodes (or steps) where the predicted tool name matches the reference, treating "no call" as a valid label:
 
-\[
-\text{SelAcc} = \frac{1}{N}\sum_{i=1}^{N} \mathbb{1}\!\left[\text{name}(p_i) = \text{name}(g_i)\right]
-\]
+\\[
+\text{SelAcc} = \frac{1}{N}\sum_{i=1}^{N} \mathbb{1}\\!\left[\text{name}(p_i) = \text{name}(g_i)\right]
+\\]
 
 For irrelevance detection, report it as a **confusion matrix** instead of a single number — you care about both false calls (called when it should not) and missed calls. Define:
 
-\[
-\text{IrrelevanceAcc} = \frac{\#\{\text{correctly emitted no tool}\}}{\#\{\text{tasks where no tool applies}\}}
-\]
+\\[
+\text{IrrelevanceAcc} = \frac{\\#\\{\text{correctly emitted no tool}\\}}{\\#\\{\text{tasks where no tool applies}\\}}
+\\]
 
 *Micro-example.* Over 4 tasks the reference tools are `[sql, none, search, none]` and the agent emits `[sql, search, search, none]`. Selection accuracy = 3/4 = 0.75. On the two irrelevance tasks (positions 2,4) the agent got 1 right → IrrelevanceAcc = 0.5 (it over-called on task 2).
 
@@ -123,13 +123,13 @@ For irrelevance detection, report it as a **confusion matrix** instead of a sing
 
 ### 4.2 Argument accuracy
 
-Given the tool name is correct, the fraction of arguments that match the reference value set. For a single call with reference args \( g \):
+Given the tool name is correct, the fraction of arguments that match the reference value set. For a single call with reference args \\( g \\):
 
-\[
-\text{ArgAcc}(p, g) = \frac{1}{|K_g|}\sum_{k \in K_g} \mathbb{1}\!\left[p[k] \in \text{allowed}_g(k)\right]
-\]
+\\[
+\text{ArgAcc}(p, g) = \frac{1}{|K_g|}\sum_{k \in K_g} \mathbb{1}\\!\left[p[k] \in \text{allowed}_g(k)\right]
+\\]
 
-where \( K_g \) is the set of reference parameter keys. Report both **per-argument** accuracy (partial credit) and **exact-call accuracy** (all arguments correct — the stricter, more honest number for high-stakes tools).
+where \\( K_g \\) is the set of reference parameter keys. Report both **per-argument** accuracy (partial credit) and **exact-call accuracy** (all arguments correct — the stricter, more honest number for high-stakes tools).
 
 *Micro-example.* Reference `book(date=2026-08-04, seats={1,2})`; prediction `book(date=2026-08-04, seats=3)`. Per-arg = 1/2 = 0.5; exact-call = 0.
 
@@ -139,9 +139,9 @@ where \( K_g \) is the set of reference parameter keys. Report both **per-argume
 
 Fraction of emitted calls that execute without error (schema-valid, no exception, non-error status):
 
-\[
-\text{ExecSuccess} = \frac{\#\{\text{calls returning non-error}\}}{\#\{\text{calls emitted}\}}
-\]
+\\[
+\text{ExecSuccess} = \frac{\\#\\{\text{calls returning non-error}\\}}{\\#\\{\text{calls emitted}\\}}
+\\]
 
 Crucial caveat: **high ExecSuccess with low ArgAcc means the agent is confidently calling the wrong thing successfully.** Always read the two together.
 
@@ -151,9 +151,9 @@ Crucial caveat: **high ExecSuccess with low ArgAcc means the agent is confidentl
 
 Did the agent complete the full dependency chain and reach the goal? Binary per episode, averaged:
 
-\[
-\text{ChainCompletion} = \frac{1}{N}\sum_{i=1}^{N} \mathbb{1}\!\left[\text{all required steps of } G_i \text{ satisfied in valid order}\right]
-\]
+\\[
+\text{ChainCompletion} = \frac{1}{N}\sum_{i=1}^{N} \mathbb{1}\\!\left[\text{all required steps of } G_i \text{ satisfied in valid order}\right]
+\\]
 
 A softer version is **step recall** — fraction of reference steps hit — which gives partial credit and helps localize *where* chains break.
 
@@ -163,9 +163,9 @@ A softer version is **step recall** — fraction of reference steps hit — whic
 
 Of the episodes that hit at least one tool error, the fraction where the agent subsequently reached task success:
 
-\[
-\text{RecoveryRate} = \frac{\#\{\text{episodes with an error that still succeeded}\}}{\#\{\text{episodes that encountered} \geq 1 \text{ tool error}\}}
-\]
+\\[
+\text{RecoveryRate} = \frac{\\#\\{\text{episodes with an error that still succeeded}\\}}{\\#\\{\text{episodes that encountered} \geq 1 \text{ tool error}\\}}
+\\]
 
 Complement with **maladaptive-retry rate**: fraction of errors followed by an *identical* retry (same name + args) — a sign the agent is not learning from the error message.
 
@@ -173,24 +173,24 @@ Complement with **maladaptive-retry rate**: fraction of errors followed by an *i
 
 ### 4.6 Redundant-call rate (efficiency)
 
-\[
-\text{RedundantRate} = \frac{m - u}{m}, \quad m = \#\text{calls emitted}, \; u = \#\text{calls that were necessary}
-\]
+\\[
+\text{RedundantRate} = \frac{m - u}{m}, \quad m = \\#\text{calls emitted}, \\; u = \\#\text{calls that were necessary}
+\\]
 
-where "necessary" calls are those whose removal would change the outcome (approximated by: not a duplicate of an earlier call with identical args and unchanged state, and on the path to the goal). A related headline number is **call efficiency** \( = n_{\text{golden}} / m \) — reference call count over actual — capped at 1.
+where "necessary" calls are those whose removal would change the outcome (approximated by: not a duplicate of an earlier call with identical args and unchanged state, and on the path to the goal). A related headline number is **call efficiency** \\( = n_{\text{golden}} / m \\) — reference call count over actual — capped at 1.
 
-*Micro-example.* Agent emits 5 calls; two are identical repeats of an earlier `get_balance()` with no state change. \( u = 3 \), RedundantRate \( = (5-3)/5 = 0.4 \).
+*Micro-example.* Agent emits 5 calls; two are identical repeats of an earlier `get_balance()` with no state change. \\( u = 3 \\), RedundantRate \\( = (5-3)/5 = 0.4 \\).
 
 > **Saying it out loud.** Redundant-call rate is the fraction of emitted calls that weren't necessary, where necessary roughly means removing it would change the outcome — so a duplicate `get_balance()` with no state change in between is pure waste. Worked: five calls emitted, two are identical repeats, so three were necessary and the redundant rate is 0.4. The reason it earns a place next to accuracy is economics — an agent that succeeds in 12 calls at $0.40 a task may simply be unusable regardless of its success rate. Track calls per task and dollars per task right beside the accuracy number, or you'll ship something correct and unaffordable.
 
 ### 4.7 Reliability: pass@k vs pass^k
 
-A single run hides variance. τ-bench introduced **pass^k**, the probability that **all** \( k \) i.i.d. trials of a task succeed — a reliability (consistency) measure — versus the familiar **pass@k**, the probability that **at least one** of \( k \) succeeds. With \( c \) successes out of \( n \) trials for a task:
+A single run hides variance. τ-bench introduced **pass^k**, the probability that **all** \\( k \\) i.i.d. trials of a task succeed — a reliability (consistency) measure — versus the familiar **pass@k**, the probability that **at least one** of \\( k \\) succeeds. With \\( c \\) successes out of \\( n \\) trials for a task:
 
-\[
-\text{pass@}k = \mathbb{E}\!\left[\,1 - \frac{\binom{n-c}{k}}{\binom{n}{k}}\right], \qquad
-\text{pass}^{k} = \mathbb{E}\!\left[\frac{\binom{c}{k}}{\binom{n}{k}}\right]
-\]
+\\[
+\text{pass@}k = \mathbb{E}\\!\left[\\,1 - \frac{\binom{n-c}{k}}{\binom{n}{k}}\right], \qquad
+\text{pass}^{k} = \mathbb{E}\\!\left[\frac{\binom{c}{k}}{\binom{n}{k}}\right]
+\\]
 
 pass@k *rewards* lucky single successes; pass^k *punishes* inconsistency. For production tool agents, pass^k is the honest metric: τ-bench found strong models whose pass@1 looked healthy but whose pass^8 collapsed below 25% in the retail domain — i.e., they rarely do the same task correctly eight times running.
 

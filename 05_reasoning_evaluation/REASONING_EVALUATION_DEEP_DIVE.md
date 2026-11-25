@@ -119,7 +119,7 @@ Three things are load-bearing for evaluation here:
 
 Rules of thumb for 2026: **never report a headline reasoning number off GSM8K/MATH alone** —
 pair it with a perturbed set (GSM-Symbolic style) and report variance; treat AIME as
-high-variance because \(n\) is tiny; prefer FrontierMath / ARC-AGI-2 / GPQA-Diamond / HLE for
+high-variance because \\(n\\) is tiny; prefer FrontierMath / ARC-AGI-2 / GPQA-Diamond / HLE for
 frontier claims and *state the date* because these saturate fast; and always report the
 compute budget the number was measured at.
 
@@ -323,7 +323,7 @@ become mushy. Prefer the model's own delimiters when they exist (numbered steps,
 between thoughts, explicit tool-call boundaries).
 
 ### PRM scoring
-Run each step through a process reward model that emits \( P(\text{step is correct}) \). Use
+Run each step through a process reward model that emits \\( P(\text{step is correct}) \\). Use
 it two ways: **aggregate** the per-step scores into a solution-level score for best-of-N
 selection, and **localize** the minimum-scoring step to find where reasoning first went wrong.
 
@@ -338,10 +338,10 @@ Don't just label steps right/wrong — classify *how* they were wrong. A useful 
 
 | Error type | Description | Example |
 |------------|-------------|---------|
-| Calculation | Local arithmetic/logic slip | \(7 \times 8 = 54\) |
+| Calculation | Local arithmetic/logic slip | \\(7 \times 8 = 54\\) |
 | Missing step | Skips a required deduction | Jumps to conclusion without justifying it |
 | Wrong operation | Right numbers, wrong action | Subtracts when it should divide |
-| Hallucinated fact | Invents a premise | "The formula for area is \(2\pi r\)" |
+| Hallucinated fact | Invents a premise | "The formula for area is \\(2\pi r\\)" |
 | Planning error | Valid steps, wrong order/goal | Executes step 3 before its precondition holds |
 | Unfaithful | Stated reason isn't the real driver | Rationalizes a biased choice post-hoc |
 
@@ -766,64 +766,64 @@ efficiency, which need only outputs.
 
 Each metric here is one line of notation followed by a tiny worked example. If the formulas look heavy, the ideas underneath are simple: fraction of answers right, fraction of steps right, most common answer across samples, and how many tokens it cost.
 
-**Final-answer accuracy.** The baseline. For \(N\) problems with indicator \(\mathbb{1}\):
-\[
-\text{Acc} = \frac{1}{N}\sum_{i=1}^{N} \mathbb{1}\!\left[\hat{a}_i = a_i^{*}\right]
-\]
-Micro-example: 3 correct out of 4 problems gives \( \text{Acc} = 0.75 \).
+**Final-answer accuracy.** The baseline. For \\(N\\) problems with indicator \\(\mathbb{1}\\):
+\\[
+\text{Acc} = \frac{1}{N}\sum_{i=1}^{N} \mathbb{1}\\!\left[\hat{a}_i = a_i^{*}\right]
+\\]
+Micro-example: 3 correct out of 4 problems gives \\( \text{Acc} = 0.75 \\).
 
 **Step accuracy.** Over non-neutral steps in a trace:
-\[
-\text{StepAcc} = \frac{\#\{\text{steps labeled CORRECT}\}}{\#\{\text{non-neutral steps}\}}
-\]
+\\[
+\text{StepAcc} = \frac{\\#\\{\text{steps labeled CORRECT}\\}}{\\#\\{\text{non-neutral steps}\\}}
+\\]
 Micro-example: a trace with grades `[CORRECT, INCORRECT, NEUTRAL, CORRECT]` has 3 non-neutral
-steps, 2 correct, so \( \text{StepAcc} = 2/3 \approx 0.67 \). Note the answer could still be
+steps, 2 correct, so \\( \text{StepAcc} = 2/3 \approx 0.67 \\). Note the answer could still be
 correct — this is the metric that exposes the quadrant.
 
-**Self-consistency / majority vote.** With sampled answers \(a_1,\dots,a_k\):
-\[
-\hat{a} = \arg\max_{v}\ \sum_{j=1}^{k} \mathbb{1}\!\left[a_j = v\right]
-\]
-Micro-example: votes `{3: 6, 21: 3, 7: 1}` over \(k=10\) selects \(\hat a = 3\) with
-consistency \(6/10 = 0.60\).
+**Self-consistency / majority vote.** With sampled answers \\(a_1,\dots,a_k\\):
+\\[
+\hat{a} = \arg\max_{v}\ \sum_{j=1}^{k} \mathbb{1}\\!\left[a_j = v\right]
+\\]
+Micro-example: votes `{3: 6, 21: 3, 7: 1}` over \\(k=10\\) selects \\(\hat a = 3\\) with
+consistency \\(6/10 = 0.60\\).
 
 **Best-of-N with a reward model.** Instead of counting votes, pick the highest-scored path.
-For a PRM that scores steps \(s_1,\dots,s_m\), a common solution-level aggregate is the
+For a PRM that scores steps \\(s_1,\dots,s_m\\), a common solution-level aggregate is the
 **minimum** step score (a chain is only as strong as its weakest link):
-\[
+\\[
 \text{score}(\text{trace}) = \min_{t=1}^{m} \text{PRM}(s_t),
 \qquad
 \hat{a} = \text{answer of } \arg\max_{n} \ \text{score}(\text{trace}_n)
-\]
+\\]
 Lightman et al. found min-aggregation and product-aggregation both work well; the key is that
 one bad step should tank the whole trace's score.
 
 **Faithfulness rate.** Over cases where a known biasing cue is present, the fraction where the
 CoT *acknowledges* the cue it acted on:
-\[
-\text{Faithfulness} = \frac{\#\{\text{traces that verbalize the true cause}\}}{\#\{\text{traces influenced by the cue}\}}
-\]
+\\[
+\text{Faithfulness} = \frac{\\#\\{\text{traces that verbalize the true cause}\\}}{\\#\\{\text{traces influenced by the cue}\\}}
+\\]
 Micro-example: if a hint changed the model's answer on 100 problems but the CoT mentioned the
-hint on only 25, faithfulness is \(0.25\). Anthropic's 2025 study found reasoning models
+hint on only 25, faithfulness is \\(0.25\\). Anthropic's 2025 study found reasoning models
 verbalized such hints well under half the time — Claude 3.7 Sonnet around 25% and DeepSeek R1
 around 39% on their setup — meaning most of the true causal story never appears in the CoT.
 Note the denominator: you condition on cases the cue **influenced**, which is exactly what the
 `faithfulness_probe`'s `bit_rate` gate computes for you.
 
 **Efficiency (reasoning length).** Tokens or steps to solution:
-\[
+\\[
 \bar{L} = \frac{1}{N}\sum_{i=1}^{N} \text{tokens}(\text{trace}_i)
-\]
+\\]
 Report alongside accuracy — a model that is 1% more accurate at 5x the reasoning tokens is
 usually not the better choice for production. With test-time-compute pricing you can convert
-this straight to **dollars per solved problem**, \(\text{cost/solve} = (\text{price/token}
-\cdot \bar L) / \text{Acc}\), which is the number a platform team will actually optimize.
+this straight to **dollars per solved problem**, \\(\text{cost/solve} = (\text{price/token}
+\cdot \bar L) / \text{Acc}\\), which is the number a platform team will actually optimize.
 
 **Compute–accuracy curve.** Because effort is now a knob, the honest summary of a reasoning
-model is not a point but a curve: accuracy as a function of the reasoning budget \(B\),
-\[
-\text{Acc}(B) = \frac{1}{N}\sum_{i=1}^{N}\mathbb{1}\!\left[\hat a_i(B) = a_i^{*}\right].
-\]
+model is not a point but a curve: accuracy as a function of the reasoning budget \\(B\\),
+\\[
+\text{Acc}(B) = \frac{1}{N}\sum_{i=1}^{N}\mathbb{1}\\!\left[\hat a_i(B) = a_i^{*}\right].
+\\]
 Report at least two points (e.g. low and high effort). A model that only wins at max budget is
 a different production proposition from one that wins cheaply.
 
@@ -1224,7 +1224,7 @@ than a good outcome verifier, so validate on PRMBench-style checks and a human g
 When errors are *systematic* rather than scattered — if the model has a consistent
 misconception, the majority vote confidently converges on the wrong answer, and the high
 consistency is falsely reassuring. It also assumes a discrete, extractable answer (weak for
-open-ended generation) and multiplies cost by \(k\). Use it as one signal, not the whole eval,
+open-ended generation) and multiplies cost by \\(k\\). Use it as one signal, not the whole eval,
 and pair a low `bit_rate`-tested faithfulness check so a consistent *shortcut* doesn't pass.
 
 **Q11. Best-of-N with a reward model vs self-consistency — when do you pick which?**

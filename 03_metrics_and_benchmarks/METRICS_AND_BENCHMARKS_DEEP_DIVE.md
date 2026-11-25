@@ -19,45 +19,45 @@ Classic ML evaluation assumes a one-shot mapping: input → prediction → compa
 
 The consequence: **you need a vector of metrics, reported with variance, under a stated budget and harness.** A headline number is a summary of that vector, never a substitute for it.
 
-There is a deeper reason single numbers mislead for agents specifically. In classification, the label space is small and the error is *local* — a misclassified image affects one prediction. In an agentic setting the error is *compounding*: a wrong action at step 3 changes the observation at step 4, which changes the whole remainder of the trajectory. This is why per-step accuracy can look excellent while end-to-end success is poor. If each of 10 steps is independently correct with probability 0.95, the trajectory succeeds with probability \( 0.95^{10} \approx 0.60 \). Long-horizon tasks amplify small per-step defects into large end-to-end failures, and *that* multiplicative structure is invisible in any single scalar. Measuring agents is really about measuring a *distribution over trajectories*, and distributions need more than a mean.
+There is a deeper reason single numbers mislead for agents specifically. In classification, the label space is small and the error is *local* — a misclassified image affects one prediction. In an agentic setting the error is *compounding*: a wrong action at step 3 changes the observation at step 4, which changes the whole remainder of the trajectory. This is why per-step accuracy can look excellent while end-to-end success is poor. If each of 10 steps is independently correct with probability 0.95, the trajectory succeeds with probability \\( 0.95^{10} \approx 0.60 \\). Long-horizon tasks amplify small per-step defects into large end-to-end failures, and *that* multiplicative structure is invisible in any single scalar. Measuring agents is really about measuring a *distribution over trajectories*, and distributions need more than a mean.
 
 > **Rule of thumb.** If a benchmark result does not come with (a) the number of trials per task, (b) the token/dollar budget, and (c) the scaffold/harness version, you cannot compare it to anything. Treat a bare percentage the way you would treat a stock price with no currency, no date, and no ticker.
 
-> **Saying it out loud.** One accuracy number lies because an agent is a policy over trajectories, not a single prediction, so the scalar quietly eats cost, reliability, latency, and safety. Two agents both at 80% are not the same product if one costs $0.04 a task and the other costs $2.10. And errors in an agent compound rather than staying local — a wrong action at step 3 changes every observation after it, so if each of ten steps is 95% right, end-to-end is \( 0.95^{10} \approx 0.60 \). That multiplicative structure is invisible in any single number. The line to end on: if a result doesn't come with the number of trials per task, the token or dollar budget, and the scaffold version, treat it like a stock price with no currency, no date, and no ticker.
+> **Saying it out loud.** One accuracy number lies because an agent is a policy over trajectories, not a single prediction, so the scalar quietly eats cost, reliability, latency, and safety. Two agents both at 80% are not the same product if one costs $0.04 a task and the other costs $2.10. And errors in an agent compound rather than staying local — a wrong action at step 3 changes every observation after it, so if each of ten steps is 95% right, end-to-end is \\( 0.95^{10} \approx 0.60 \\). That multiplicative structure is invisible in any single number. The line to end on: if a result doesn't come with the number of trials per task, the token or dollar budget, and the scaffold version, treat it like a stock price with no currency, no date, and no ticker.
 
 ---
 
 ## 2. The metrics that matter
 
-**In plain language.** This section is a catalogue: each metric gets a definition, a formula, and a small worked number. The notation is light — \( N \) tasks indexed by \( i \), each run one or more times, each run producing a pass or fail. If you skim the formulas, the sentences around them still carry the argument.
+**In plain language.** This section is a catalogue: each metric gets a definition, a formula, and a small worked number. The notation is light — \\( N \\) tasks indexed by \\( i \\), each run one or more times, each run producing a pass or fail. If you skim the formulas, the sentences around them still carry the argument.
 
-Below, each metric gets a precise definition, a formula, and a worked micro-example. Notation: a benchmark has \( N \) tasks, indexed \( i \). A single execution of task \( i \) is a *trial* producing outcome \( o_i \in \{0,1\} \) (or a graded score).
+Below, each metric gets a precise definition, a formula, and a worked micro-example. Notation: a benchmark has \\( N \\) tasks, indexed \\( i \\). A single execution of task \\( i \\) is a *trial* producing outcome \\( o_i \in \\{0,1\\} \\) (or a graded score).
 
 ### 2.1 Task success rate
 
 The fraction of tasks the agent completes correctly under the benchmark's scoring rule.
 
-\[
+\\[
 \text{SuccessRate} = \frac{1}{N}\sum_{i=1}^{N} \mathbb{1}[\text{task } i \text{ passed}]
-\]
+\\]
 
 Success is defined *by the environment*, not by the agent's self-report. In state-based benchmarks (τ-bench, WebArena) "passed" means the final world state matches the goal state — the database row was updated, the item is in the cart — regardless of what the agent *said* it did. This distinction is not pedantic: LLM agents are fluent, and a fluent wrong answer ("I've successfully processed your refund!") is the single most dangerous failure mode in production. State-based scoring is immune to it; self-report and transcript-judging are not.
 
-**Micro-example.** 50 tasks, 34 pass. \( \text{SuccessRate} = 34/50 = 0.68 = 68\% \). Simple — and the most abused number in the field, because it hides everything in §2.3–§2.12.
+**Micro-example.** 50 tasks, 34 pass. \\( \text{SuccessRate} = 34/50 = 0.68 = 68\\% \\). Simple — and the most abused number in the field, because it hides everything in §2.3–§2.12.
 
 > **Saying it out loud.** Success rate is the headline number and the most abused one in the field. The part worth saying out loud is who defines success: the environment, not the agent's self-report. In state-based benchmarks like τ-bench or WebArena, passed means the world actually changed the way it was supposed to — the database row updated, the item is in the cart — regardless of what the agent claimed. That distinction isn't pedantic, because the single most dangerous production failure is a fluent lie: 'I've successfully processed your refund!' when nothing happened. State-based scoring is immune to that; transcript judging and self-report are not.
 
 ### 2.2 Partial credit / rubric scores
 
-When tasks decompose into sub-goals, score continuously. Give task \( i \) a set of checkpoints with weights \( w_{ij} \) (summing to 1) and indicators \( c_{ij} \):
+When tasks decompose into sub-goals, score continuously. Give task \\( i \\) a set of checkpoints with weights \\( w_{ij} \\) (summing to 1) and indicators \\( c_{ij} \\):
 
-\[
-\text{score}_i = \sum_{j} w_{ij}\, c_{ij}, \qquad \text{RubricScore} = \frac{1}{N}\sum_{i=1}^{N}\text{score}_i
-\]
+\\[
+\text{score}_i = \sum_{j} w_{ij}\\, c_{ij}, \qquad \text{RubricScore} = \frac{1}{N}\sum_{i=1}^{N}\text{score}_i
+\\]
 
-Checkpoints can be *hard-coded* (regex/state checks) or *LLM-judged* against a rubric. LLM-as-judge is scalable but adds its own noise and bias — always validate the judge against human labels and report judge–human agreement (e.g., Cohen's \( \kappa \)).
+Checkpoints can be *hard-coded* (regex/state checks) or *LLM-judged* against a rubric. LLM-as-judge is scalable but adds its own noise and bias — always validate the judge against human labels and report judge–human agreement (e.g., Cohen's \\( \kappa \\)).
 
-**Micro-example.** A "book a refundable flight and email the itinerary" task has three checkpoints: found correct flight (\( w=0.5 \)), used refundable fare (\( w=0.3 \)), sent confirmation email (\( w=0.2 \)). The agent gets the flight and fare but never emails: \( \text{score}_i = 0.5 + 0.3 + 0 = 0.8 \). Binary success would have scored this the same as a total failure if the email were mandatory — partial credit tells you exactly what broke.
+**Micro-example.** A "book a refundable flight and email the itinerary" task has three checkpoints: found correct flight (\\( w=0.5 \\)), used refundable fare (\\( w=0.3 \\)), sent confirmation email (\\( w=0.2 \\)). The agent gets the flight and fare but never emails: \\( \text{score}_i = 0.5 + 0.3 + 0 = 0.8 \\). Binary success would have scored this the same as a total failure if the email were mandatory — partial credit tells you exactly what broke.
 
 **A subtlety on partial credit: it can hide *ordering* failures.** A weighted sum treats checkpoints as independent, but many tasks require a *sequence* (authenticate → fetch → mutate → confirm). An agent that mutates before authenticating may hit the "mutation" checkpoint on a state it should never have reached. If order matters, encode it — gate later checkpoints on earlier ones, or score the longest correct prefix. Report both the rubric mean *and* the strict end-to-end success; the gap between them is your "almost worked" population, which is where debugging pays off.
 
@@ -67,12 +67,12 @@ Checkpoints can be *hard-coded* (regex/state checks) or *LLM-judged* against a r
 
 Two agents with equal success can differ 10x in resource use. Track both.
 
-\[
+\\[
 \overline{\text{Steps}} = \frac{1}{N}\sum_i s_i, \qquad
 \overline{\text{Tokens}} = \frac{1}{N}\sum_i \big(t^{\text{in}}_i + t^{\text{out}}_i\big)
-\]
+\\]
 
-where \( s_i \) is the number of agent turns/tool calls in task \( i \). Prefer reporting efficiency **conditioned on success** (average over solved tasks), because a fast failure is not a virtue. A useful composite is *success-weighted* efficiency or a scatter of success vs. cost (§5).
+where \\( s_i \\) is the number of agent turns/tool calls in task \\( i \\). Prefer reporting efficiency **conditioned on success** (average over solved tasks), because a fast failure is not a virtue. A useful composite is *success-weighted* efficiency or a scatter of success vs. cost (§5).
 
 **Micro-example.** Agent A solves a task in 4 steps and 9,000 tokens; Agent B solves the same task in 11 steps and 47,000 tokens. Same success, but B is ~5x more expensive to run and far more likely to wander into an error state on harder tasks.
 
@@ -84,15 +84,15 @@ where \( s_i \) is the number of agent turns/tool calls in task \( i \). Prefer 
 
 Wall-clock time to complete a task. Report the distribution, not just the mean — tail latency is what users feel.
 
-\[
-p_{95}\text{-latency} = \inf\{\, \ell : \Pr[L \le \ell] \ge 0.95 \,\}
-\]
+\\[
+p_{95}\text{-latency} = \inf\\{\\, \ell : \Pr[L \le \ell] \ge 0.95 \\,\\}
+\\]
 
 Distinguish **per-step latency** (model + tool round-trip) from **end-to-end task latency** (which multiplies by step count). An agent that is fast per step but takes 30 steps can be slower end-to-end than a "slow" agent that takes 4. Also separate model latency from tool/environment latency so you know which to optimize.
 
-**Micro-example.** Mean task latency 22 s but \( p_{95} = 90 \) s — one task in twenty makes the user wait a minute and a half. The mean hid it.
+**Micro-example.** Mean task latency 22 s but \\( p_{95} = 90 \\) s — one task in twenty makes the user wait a minute and a half. The mean hid it.
 
-**Report the whole tail, and report it under load.** \( p_{50} \), \( p_{95} \), and \( p_{99} \) tell different stories; a sync UX cares about \( p_{95} \), a batch pipeline cares about the mean and throughput, and an on-call engineer cares about \( p_{99.9} \). Latency measured on an idle harness also lies: production adds queueing, rate limits, and retries. If you can, publish a latency-vs-concurrency curve, because the number that matters is the tail at your actual request rate, not on a quiet laptop.
+**Report the whole tail, and report it under load.** \\( p_{50} \\), \\( p_{95} \\), and \\( p_{99} \\) tell different stories; a sync UX cares about \\( p_{95} \\), a batch pipeline cares about the mean and throughput, and an on-call engineer cares about \\( p_{99.9} \\). Latency measured on an idle harness also lies: production adds queueing, rate limits, and retries. If you can, publish a latency-vs-concurrency curve, because the number that matters is the tail at your actual request rate, not on a quiet laptop.
 
 > **Saying it out loud.** Report the distribution, not the mean, because the tail is what users actually feel. A mean task latency of 22 seconds with a p95 of 90 seconds means one task in twenty makes somebody wait a minute and a half, and the mean hid it completely. Separate per-step latency from end-to-end, because an agent that's fast per step but takes 30 steps loses to a slow one that takes 4 — and separate model latency from tool latency so you know which one to go optimize. The other honesty point: latency measured on an idle harness lies, since production adds queueing, rate limits, and retries. The number that matters is the tail at your actual request rate, so publish a latency-versus-concurrency curve if you can.
 
@@ -100,17 +100,17 @@ Distinguish **per-step latency** (model + tool round-trip) from **end-to-end tas
 
 Convert token usage (and tool/API fees) to dollars using current per-token prices.
 
-\[
-\text{Cost}_i = \frac{t^{\text{in}}_i}{10^6}\,p_{\text{in}} + \frac{t^{\text{out}}_i}{10^6}\,p_{\text{out}} + \text{fees}_i,
+\\[
+\text{Cost}_i = \frac{t^{\text{in}}_i}{10^6}\\,p_{\text{in}} + \frac{t^{\text{out}}_i}{10^6}\\,p_{\text{out}} + \text{fees}_i,
 \qquad
 \overline{\text{Cost}} = \frac{1}{N}\sum_i \text{Cost}_i
-\]
+\\]
 
-with \( p_{\text{in}}, p_{\text{out}} \) the input/output price per million tokens. The decision-relevant quantity is often **cost per *solved* task**: \( \overline{\text{Cost}}_{\text{solved}} = \big(\sum_i \text{Cost}_i\big) / \big(\sum_i \mathbb{1}[\text{passed}_i]\big) \), which fairly penalizes an agent that burns budget on failures.
+with \\( p_{\text{in}}, p_{\text{out}} \\) the input/output price per million tokens. The decision-relevant quantity is often **cost per *solved* task**: \\( \overline{\text{Cost}}_{\text{solved}} = \big(\sum_i \text{Cost}_i\big) / \big(\sum_i \mathbb{1}[\text{passed}_i]\big) \\), which fairly penalizes an agent that burns budget on failures.
 
-**Micro-example.** Prices \( p_{\text{in}}=\$3/\text{M} \), \( p_{\text{out}}=\$15/\text{M} \). A task uses 40,000 input and 6,000 output tokens: \( \text{Cost}_i = 0.040\times3 + 0.006\times15 = \$0.12 + \$0.09 = \$0.21 \). If the agent solves only 68% of tasks at this average cost, cost per *solved* task is \( 0.21 / 0.68 \approx \$0.31 \).
+**Micro-example.** Prices \\( p_{\text{in}}=\\$3/\text{M} \\), \\( p_{\text{out}}=\\$15/\text{M} \\). A task uses 40,000 input and 6,000 output tokens: \\( \text{Cost}_i = 0.040\times3 + 0.006\times15 = \\$0.12 + \\$0.09 = \\$0.21 \\). If the agent solves only 68% of tasks at this average cost, cost per *solved* task is \\( 0.21 / 0.68 \approx \\$0.31 \\).
 
-**Cost is a moving target, so store tokens, not just dollars.** Prices change; a chart of "dollars per task" from six months ago is uninterpretable unless you kept the raw token counts and the price table you used. Log \( t^{\text{in}} \), \( t^{\text{out}} \), cached-input tokens, and tool/API fees separately, and compute dollars at report time from a versioned price map. This also lets you answer the real deployment question — "what does this cost *at my* negotiated rate?" — without re-running anything. The industry has converged on cost-controlled leaderboards for exactly this reason (see HAL and Gaia2's cost-normalized scoring in §6).
+**Cost is a moving target, so store tokens, not just dollars.** Prices change; a chart of "dollars per task" from six months ago is uninterpretable unless you kept the raw token counts and the price table you used. Log \\( t^{\text{in}} \\), \\( t^{\text{out}} \\), cached-input tokens, and tool/API fees separately, and compute dollars at report time from a versioned price map. This also lets you answer the real deployment question — "what does this cost *at my* negotiated rate?" — without re-running anything. The industry has converged on cost-controlled leaderboards for exactly this reason (see HAL and Gaia2's cost-normalized scoring in §6).
 
 > **Saying it out loud.** The decision-relevant number is cost per *solved* task, not cost per task, because that's what fairly penalizes an agent that burns budget on failures. Concretely: at $3 per million input and $15 per million output, a task using 40,000 input and 6,000 output tokens costs about $0.21 — and if the agent only solves 68% of tasks, the real number is $0.21 over 0.68, roughly $0.31 per solved task. The operational rule is store tokens, not dollars: prices change, so a dollars-per-task chart from six months ago is uninterpretable unless you kept the raw token counts and the price table. Log input, output, cached-input tokens and tool fees separately and compute dollars at report time from a versioned price map. That's also how you answer the only question that matters at deployment — what does this cost at *my* negotiated rate — without re-running anything.
 
@@ -124,9 +124,9 @@ For tool-using agents, decompose whether the agent called the *right tool* with 
 
 A strict per-call score requires all of the above; BFCL's Abstract-Syntax-Tree (AST) check parses the predicted call and compares structurally to a set of acceptable answers.
 
-\[
-\text{ToolCallAcc} = \frac{\#\{\text{calls with correct name AND all args match}\}}{\#\text{calls}}
-\]
+\\[
+\text{ToolCallAcc} = \frac{\\#\\{\text{calls with correct name AND all args match}\\}}{\\#\text{calls}}
+\\]
 
 **Micro-example.** Gold: `book_flight(date="2026-08-10", refundable=true)`. Agent emits `book_flight(date="2026-08-10", refundable=false)`. Tool name correct, one argument value wrong → this call scores **0** under strict AST matching. Loosening to "name-only" would have scored it 1 and hidden a policy violation.
 
@@ -140,48 +140,48 @@ A strict per-call score requires all of the above; BFCL's Abstract-Syntax-Tree (
 
 Repetition metrics quantify *reliability*, and there are two opposite conventions — do not confuse them.
 
-**pass@k** (Chen et al., HumanEval) — probability that **at least one** of \( k \) independent samples succeeds. It rewards "try many, keep the best" and is meaningful only when you have an oracle/verifier to pick the winner. The unbiased estimator from \( n \ge k \) trials with \( c \) successes:
+**pass@k** (Chen et al., HumanEval) — probability that **at least one** of \\( k \\) independent samples succeeds. It rewards "try many, keep the best" and is meaningful only when you have an oracle/verifier to pick the winner. The unbiased estimator from \\( n \ge k \\) trials with \\( c \\) successes:
 
-\[
-\text{pass@}k = \mathbb{E}_{\text{tasks}}\!\left[\,1 - \frac{\binom{n-c}{k}}{\binom{n}{k}}\,\right]
-\]
+\\[
+\text{pass@}k = \mathbb{E}_{\text{tasks}}\\!\left[\\,1 - \frac{\binom{n-c}{k}}{\binom{n}{k}}\\,\right]
+\\]
 
-**pass^k** (τ-bench, "pass hat k") — probability that **all** \( k \) independent trials succeed. It measures *consistency* and is the metric that matters when a user cannot retry (a real refund happens once). Estimator:
+**pass^k** (τ-bench, "pass hat k") — probability that **all** \\( k \\) independent trials succeed. It measures *consistency* and is the metric that matters when a user cannot retry (a real refund happens once). Estimator:
 
-\[
-\text{pass}^k = \mathbb{E}_{\text{tasks}}\!\left[\,\frac{\binom{c}{k}}{\binom{n}{k}}\,\right]
-\]
+\\[
+\text{pass}^k = \mathbb{E}_{\text{tasks}}\\!\left[\\,\frac{\binom{c}{k}}{\binom{n}{k}}\\,\right]
+\\]
 
-**Micro-example.** One task run \( n=8 \) times with \( c=4 \) successes.
-- pass@1 \( = 4/8 = 0.5 \). pass@4 \( = 1 - \binom{4}{4}/\binom{8}{4} = 1 - 1/70 \approx 0.986 \) — looks great.
-- pass^4 \( = \binom{4}{4}/\binom{8}{4} = 1/70 \approx 0.014 \) — looks terrible.
+**Micro-example.** One task run \\( n=8 \\) times with \\( c=4 \\) successes.
+- pass@1 \\( = 4/8 = 0.5 \\). pass@4 \\( = 1 - \binom{4}{4}/\binom{8}{4} = 1 - 1/70 \approx 0.986 \\) — looks great.
+- pass^4 \\( = \binom{4}{4}/\binom{8}{4} = 1/70 \approx 0.014 \\) — looks terrible.
 
-Same agent, same data, opposite story. pass@k flatters an agent by hiding variance behind retries; pass^k exposes the "consistency tax." τ-bench reports pass^k precisely because customer-service actions are irreversible, and frontier models' pass^k drops sharply as \( k \) grows.
+Same agent, same data, opposite story. pass@k flatters an agent by hiding variance behind retries; pass^k exposes the "consistency tax." τ-bench reports pass^k precisely because customer-service actions are irreversible, and frontier models' pass^k drops sharply as \\( k \\) grows.
 
-**Why the unbiased estimator, and not "did any of my k runs pass?"** If you run exactly \( k \) samples and report the empirical "any passed," you get a *biased* estimate of pass@k whenever you actually ran more or fewer samples, and the variance is high. The combinatorial estimator uses *all* \( n \) trials to estimate the pass@k you would see from a fresh draw of \( k \), which is both unbiased and lower-variance. The practical rule: sample \( n \) generously (say 5–10× your reporting \( k \)), then compute pass@k and pass^k for every \( k \le n \) from the same trials. The code in §9 does exactly this.
+**Why the unbiased estimator, and not "did any of my k runs pass?"** If you run exactly \\( k \\) samples and report the empirical "any passed," you get a *biased* estimate of pass@k whenever you actually ran more or fewer samples, and the variance is high. The combinatorial estimator uses *all* \\( n \\) trials to estimate the pass@k you would see from a fresh draw of \\( k \\), which is both unbiased and lower-variance. The practical rule: sample \\( n \\) generously (say 5–10× your reporting \\( k \\)), then compute pass@k and pass^k for every \\( k \le n \\) from the same trials. The code in §9 does exactly this.
 
-**pass^k has a closed-form geometric approximation** that is useful for intuition. If a task's true per-trial success probability is \( p \), then under independence \( \text{pass}^k \to p^k \) as the number of observed trials grows. So a task at \( p = 0.9 \) has \( \text{pass}^5 \approx 0.59 \): "90% reliable" degrades to a coin flip once you demand five-in-a-row. This is the mathematical heart of why "usually works" is not "works," and why irreversible-action products live and die on the tail of \( p \), not its mean.
+**pass^k has a closed-form geometric approximation** that is useful for intuition. If a task's true per-trial success probability is \\( p \\), then under independence \\( \text{pass}^k \to p^k \\) as the number of observed trials grows. So a task at \\( p = 0.9 \\) has \\( \text{pass}^5 \approx 0.59 \\): "90% reliable" degrades to a coin flip once you demand five-in-a-row. This is the mathematical heart of why "usually works" is not "works," and why irreversible-action products live and die on the tail of \\( p \\), not its mean.
 
-> **Saying it out loud.** So the thing about pass^k versus pass@k is that they're opposite conventions and people conflate them constantly. pass@k is 'at least one of k tries worked' and only means anything if you have a verifier that can pick the winner; pass^k is 'all k tries worked' and it's the number that matters when the action is irreversible, because a real refund happens once. Same data, opposite story: a task run 8 times with 4 successes gives pass@4 of about 0.986 and pass^4 of about 0.014. That's the whole point — pass@k flatters an agent by hiding variance behind retries, and pass^k exposes the consistency tax. The intuition to end on is the geometric one: under independence pass^k tends to \( p^k \), so a task that's 90% reliable is at about 59% once you demand five in a row. 'Usually works' is not 'works'.
+> **Saying it out loud.** So the thing about pass^k versus pass@k is that they're opposite conventions and people conflate them constantly. pass@k is 'at least one of k tries worked' and only means anything if you have a verifier that can pick the winner; pass^k is 'all k tries worked' and it's the number that matters when the action is irreversible, because a real refund happens once. Same data, opposite story: a task run 8 times with 4 successes gives pass@4 of about 0.986 and pass^4 of about 0.014. That's the whole point — pass@k flatters an agent by hiding variance behind retries, and pass^k exposes the consistency tax. The intuition to end on is the geometric one: under independence pass^k tends to \\( p^k \\), so a task that's 90% reliable is at about 59% once you demand five in a row. 'Usually works' is not 'works'.
 
 ### 2.8 Robustness / variance
 
-Report the *spread*, not just the mean. Over \( R \) full benchmark runs (different seeds) with success rates \( a_1,\dots,a_R \):
+Report the *spread*, not just the mean. Over \\( R \\) full benchmark runs (different seeds) with success rates \\( a_1,\dots,a_R \\):
 
-\[
+\\[
 \bar a = \frac{1}{R}\sum_r a_r, \qquad
 \hat\sigma = \sqrt{\frac{1}{R-1}\sum_r (a_r-\bar a)^2}
-\]
+\\]
 
-and a Wald 95% confidence interval on a single run's success rate (fraction \( \hat p \) over \( N \) tasks):
+and a Wald 95% confidence interval on a single run's success rate (fraction \\( \hat p \\) over \\( N \\) tasks):
 
-\[
+\\[
 \hat p \pm 1.96\sqrt{\frac{\hat p(1-\hat p)}{N}}
-\]
+\\]
 
-For small \( N \) prefer the **Wilson** interval (better coverage). Also probe robustness to *perturbations*: paraphrased instructions, reordered tools, injected distractor tools, noisier user simulators. A model whose accuracy craters when you rename a tool was overfit to surface form.
+For small \\( N \\) prefer the **Wilson** interval (better coverage). Also probe robustness to *perturbations*: paraphrased instructions, reordered tools, injected distractor tools, noisier user simulators. A model whose accuracy craters when you rename a tool was overfit to surface form.
 
-**Micro-example.** \( N=100 \), \( \hat p=0.70 \): CI \( = 0.70 \pm 1.96\sqrt{0.70\cdot0.30/100} = 0.70 \pm 0.090 \), i.e., **[0.61, 0.79]**. Two agents at 70% and 74% on 100 tasks are statistically indistinguishable — reporting them to one decimal implies a precision the data does not support.
+**Micro-example.** \\( N=100 \\), \\( \hat p=0.70 \\): CI \\( = 0.70 \pm 1.96\sqrt{0.70\cdot0.30/100} = 0.70 \pm 0.090 \\), i.e., **[0.61, 0.79]**. Two agents at 70% and 74% on 100 tasks are statistically indistinguishable — reporting them to one decimal implies a precision the data does not support.
 
 **Two sources of variance, and they compound.** There is *sampling* variance (you evaluated on a finite set of tasks — captured by the CI above) and *execution* variance (the agent is stochastic, so re-running the *same* tasks gives different results). A single run conflates them. To separate: run the fixed task set several times and decompose total variance into between-task and between-run components (a one-way ANOVA view). If between-run variance dominates, your agent is unreliable; if between-task variance dominates, your task set is heterogeneous and you should slice it (§2.11). Reporting only one number hides which problem you have.
 
@@ -191,9 +191,9 @@ For small \( N \) prefer the **Wilson** interval (better coverage). Also probe r
 
 Latency is per-task; **throughput** is tasks-per-unit-time under a fixed resource envelope, and it is the metric that governs batch and fleet economics.
 
-\[
-\text{Throughput} = \frac{\#\text{completed tasks}}{\text{wall-clock window}} \quad\text{at a stated concurrency and rate limit}
-\]
+\\[
+\text{Throughput} = \frac{\\#\text{completed tasks}}{\text{wall-clock window}} \quad\text{at a stated concurrency and rate limit}
+\\]
 
 A model with lower per-task latency can have *worse* throughput if it burns more tokens (hitting a tokens-per-minute rate limit sooner) or holds tool locks longer. For fleets you care about throughput per dollar and throughput per rate-limit unit, not raw speed. Always state the concurrency, the provider rate limits, and whether retries counted against the window.
 
@@ -236,15 +236,15 @@ Most "Agent B beats Agent A" claims are noise dressed as signal. This section gi
 
 ### 3.1 Confidence intervals on a single rate
 
-For a success rate \( \hat p \) over \( N \) tasks, the **Wald** interval \( \hat p \pm z\sqrt{\hat p(1-\hat p)/N} \) is the textbook default and is *wrong near the boundaries*: at \( \hat p = 0.95, N = 40 \) it can extend above 1.0 and undercover badly. Prefer the **Wilson score** interval, which stays in \( [0,1] \) and has good coverage even for small \( N \) and extreme \( \hat p \):
+For a success rate \\( \hat p \\) over \\( N \\) tasks, the **Wald** interval \\( \hat p \pm z\sqrt{\hat p(1-\hat p)/N} \\) is the textbook default and is *wrong near the boundaries*: at \\( \hat p = 0.95, N = 40 \\) it can extend above 1.0 and undercover badly. Prefer the **Wilson score** interval, which stays in \\( [0,1] \\) and has good coverage even for small \\( N \\) and extreme \\( \hat p \\):
 
-\[
+\\[
 \text{Wilson} = \frac{\hat p + \frac{z^2}{2N} \pm z\sqrt{\frac{\hat p(1-\hat p)}{N} + \frac{z^2}{4N^2}}}{1 + \frac{z^2}{N}}
-\]
+\\]
 
-For very small \( N \) or counts at 0 or \( N \), the **Clopper–Pearson** (exact, beta-distribution) interval is the conservative choice. The rule: never report a rate to more decimal places than its CI half-width justifies. A "72.4%" with a ±9-point CI should be written "72% (95% CI 63–80%)."
+For very small \\( N \\) or counts at 0 or \\( N \\), the **Clopper–Pearson** (exact, beta-distribution) interval is the conservative choice. The rule: never report a rate to more decimal places than its CI half-width justifies. A "72.4%" with a ±9-point CI should be written "72% (95% CI 63–80%)."
 
-**A caution specific to agents: trials-within-task are not independent samples of the population.** If you run each of \( N \) tasks \( n \) times and pool all \( Nn \) outcomes into one Wilson CI, you understate the interval, because the \( n \) trials of a task are correlated (a hard task is hard on every trial). The honest unit of analysis is the *task*, not the trial. Compute a per-task rate, then bootstrap over tasks (§3.3), or use a cluster-robust interval. Pooling trials is the single most common way agent evals overstate their precision.
+**A caution specific to agents: trials-within-task are not independent samples of the population.** If you run each of \\( N \\) tasks \\( n \\) times and pool all \\( Nn \\) outcomes into one Wilson CI, you understate the interval, because the \\( n \\) trials of a task are correlated (a hard task is hard on every trial). The honest unit of analysis is the *task*, not the trial. Compute a per-task rate, then bootstrap over tasks (§3.3), or use a cluster-robust interval. Pooling trials is the single most common way agent evals overstate their precision.
 
 > **Saying it out loud.** The textbook Wald interval is the default and it's wrong exactly where agent evals live — near the boundaries. At 95% success on 40 tasks it can extend above 1.0 and badly undercover, so use the Wilson score interval, which stays inside zero and one and behaves at small n; Clopper-Pearson if your counts are at 0 or n. The formatting rule: never report a rate to more decimals than its interval justifies — '72.4%' with a nine-point interval should be written '72%, 95% CI 63 to 80'. And the agent-specific trap: if you run each of N tasks n times and pool all N-times-n outcomes into one interval, you understate it, because trials within a task are correlated — a hard task is hard on every trial. The honest unit of analysis is the task, not the trial, and pooling trials is the single most common way agent evals overstate their precision.
 
@@ -257,23 +257,23 @@ When both agents run the *same* tasks, outcomes are **paired**, and a paired tes
 | **A pass** | a      | b      |
 | **A fail** | c      | d      |
 
-The agreements \( a \) and \( d \) carry no information about *which* agent is better; all the signal is in the **discordant pairs** \( b \) (A right, B wrong) and \( c \) (A wrong, B right). **McNemar's test** asks whether \( b \) and \( c \) differ more than chance:
+The agreements \\( a \\) and \\( d \\) carry no information about *which* agent is better; all the signal is in the **discordant pairs** \\( b \\) (A right, B wrong) and \\( c \\) (A wrong, B right). **McNemar's test** asks whether \\( b \\) and \\( c \\) differ more than chance:
 
-\[
+\\[
 \chi^2 = \frac{(|b - c| - 1)^2}{b + c} \quad(\text{df}=1,\ \text{with continuity correction})
-\]
+\\]
 
-For small \( b+c \), use the **exact** version: under \( H_0 \), \( b \sim \text{Binomial}(b+c, 0.5) \), so the two-sided p-value is \( 2\sum_{i=0}^{\min(b,c)} \binom{b+c}{i} 0.5^{b+c} \) (capped at 1). The effect size to report alongside is the *net flip rate* \( (b - c)/N \) — how many tasks per hundred the change actually moved.
+For small \\( b+c \\), use the **exact** version: under \\( H_0 \\), \\( b \sim \text{Binomial}(b+c, 0.5) \\), so the two-sided p-value is \\( 2\sum_{i=0}^{\min(b,c)} \binom{b+c}{i} 0.5^{b+c} \\) (capped at 1). The effect size to report alongside is the *net flip rate* \\( (b - c)/N \\) — how many tasks per hundred the change actually moved.
 
-**Worked example.** \( N = 200 \). A and B agree on 170 tasks. Of the 30 discordant: B fixed 22 that A failed (\( c = 22 \)), A got 8 that B failed (\( b = 8 \)). \( \chi^2 = (|8-22|-1)^2/(8+22) = 13^2/30 = 5.63 \), p ≈ 0.018 — significant. Net improvement is \( (22-8)/200 = 7\% \). Note that the *aggregate* rates might both be, say, 75% and 82%; McNemar tells you the 7-point gap is real *because it came from 22 fixes against only 8 regressions*, which a two-proportion test on the marginals would estimate with much less power.
+**Worked example.** \\( N = 200 \\). A and B agree on 170 tasks. Of the 30 discordant: B fixed 22 that A failed (\\( c = 22 \\)), A got 8 that B failed (\\( b = 8 \\)). \\( \chi^2 = (|8-22|-1)^2/(8+22) = 13^2/30 = 5.63 \\), p ≈ 0.018 — significant. Net improvement is \\( (22-8)/200 = 7\\% \\). Note that the *aggregate* rates might both be, say, 75% and 82%; McNemar tells you the 7-point gap is real *because it came from 22 fixes against only 8 regressions*, which a two-proportion test on the marginals would estimate with much less power.
 
 > **Saying it out loud.** When both agents ran the same tasks, the outcomes are paired, and a paired test is far more powerful than comparing two independent rates. Build the 2x2 table and notice that the agreements carry no information at all — all the signal is in the discordant pairs, the tasks where exactly one agent won. Worked: 200 tasks, agreement on 170, B fixed 22 that A failed and A got 8 that B failed; chi-square works out to about 5.6, p around 0.018, and the effect size to quote is the net flip rate, 14 tasks out of 200, so 7 points. The reason this matters is power — cases vary wildly in difficulty, pairing cancels that shared difficulty out, and a two-proportion test on the marginals would estimate the same 7-point gap with far less confidence.
 
 ### 3.3 Bootstrap confidence intervals (the general-purpose hammer)
 
-When the statistic is not a simple proportion — a Pareto-frontier gap, a cost-per-solved-task ratio, a macro-average over slices, pass^k — there is often no clean closed form. The **bootstrap** handles all of them: resample the \( N \) tasks *with replacement* many times (say 10,000), recompute the statistic on each resample, and take the 2.5th and 97.5th percentiles as a 95% CI.
+When the statistic is not a simple proportion — a Pareto-frontier gap, a cost-per-solved-task ratio, a macro-average over slices, pass^k — there is often no clean closed form. The **bootstrap** handles all of them: resample the \\( N \\) tasks *with replacement* many times (say 10,000), recompute the statistic on each resample, and take the 2.5th and 97.5th percentiles as a 95% CI.
 
-For comparing two agents on the same tasks, use the **paired bootstrap**: resample tasks, and for each resampled task use *both* agents' outcomes, computing the difference \( \Delta = \text{metric}_B - \text{metric}_A \) on the resample. The fraction of bootstrap replicates with \( \Delta \le 0 \) is a bootstrap p-value for "B is no better than A." Pairing removes the between-task variance that would otherwise swamp the comparison. The harness in §9 implements paired bootstrap for exactly this.
+For comparing two agents on the same tasks, use the **paired bootstrap**: resample tasks, and for each resampled task use *both* agents' outcomes, computing the difference \\( \Delta = \text{metric}_B - \text{metric}_A \\) on the resample. The fraction of bootstrap replicates with \\( \Delta \le 0 \\) is a bootstrap p-value for "B is no better than A." Pairing removes the between-task variance that would otherwise swamp the comparison. The harness in §9 implements paired bootstrap for exactly this.
 
 Bootstrap is also how you put a CI on **pass^k**: because pass^k is a nonlinear function of per-task successes, resample tasks, recompute the pass^k estimator per resample, and read the percentiles. Do not try to attach a Wald interval to pass^k — it is not a mean of independent Bernoullis.
 
@@ -281,7 +281,7 @@ Bootstrap is also how you put a CI on **pass^k**: because pass^k is a nonlinear 
 
 ### 3.4 Power, sample size, and the "how many tasks?" question
 
-Before running, ask what effect you could even *detect*. To resolve a true difference of \( \delta \) in success rate with 80% power at \( \alpha = 0.05 \), the rough paired requirement scales like \( n_{\text{discordant}} \gtrsim (z_{\alpha/2} + z_\beta)^2 / (\text{effect on discordants}) \); the practical consequence is stark: **a 165-task benchmark cannot reliably distinguish agents that differ by 2–3 points.** τ-bench airline (50 tasks) has a Wilson half-width around ±13 points at 50% — so single-domain τ-bench deltas under ~10 points are noise. This is not a knock on the benchmark; it is a reason to (a) aggregate across domains, (b) run more trials, and (c) report CIs so readers don't over-read small gaps. When someone shows you a 1-point leaderboard lead on a 200-task set, the correct first question is "what's the CI?"
+Before running, ask what effect you could even *detect*. To resolve a true difference of \\( \delta \\) in success rate with 80% power at \\( \alpha = 0.05 \\), the rough paired requirement scales like \\( n_{\text{discordant}} \gtrsim (z_{\alpha/2} + z_\beta)^2 / (\text{effect on discordants}) \\); the practical consequence is stark: **a 165-task benchmark cannot reliably distinguish agents that differ by 2–3 points.** τ-bench airline (50 tasks) has a Wilson half-width around ±13 points at 50% — so single-domain τ-bench deltas under ~10 points are noise. This is not a knock on the benchmark; it is a reason to (a) aggregate across domains, (b) run more trials, and (c) report CIs so readers don't over-read small gaps. When someone shows you a 1-point leaderboard lead on a 200-task set, the correct first question is "what's the CI?"
 
 > **Saying it out loud.** Before you run anything, ask what effect your benchmark could even detect. The blunt version: a 165-task benchmark cannot reliably distinguish agents that differ by two or three points. τ-bench's airline split has 50 tasks, which puts the Wilson half-width around plus or minus 13 points at a 50% rate — so any single-domain τ-bench delta under about 10 points is noise. That's not a knock on the benchmark, it's a reason to aggregate across domains, run more trials per task, and always publish intervals so readers don't over-read a small gap. And it gives you the right reflex: when someone shows you a one-point leaderboard lead on a 200-task set, the first question is 'what's the confidence interval?'
 
@@ -362,7 +362,7 @@ Comparing two agents is comparing two *systems*, and the confound is usually not
 
 1. **Hold the scaffold constant, or vary one thing at a time.** To compare models, run them in the *identical* harness (same tools, same max-steps, same prompts, same judge). To compare scaffolds, fix the model. Never change both and attribute the delta. This is the single most violated rule in public agent comparisons.
 2. **Equalize the budget.** Report results at matched **token/dollar/step budgets**, or better, plot the **cost–success frontier**: success rate on the y-axis, cost per task (log scale) on the x-axis. A model that is 3 points higher at 8x the cost is not obviously better; the Pareto frontier makes the trade-off explicit.
-3. **Fix trials and report variance.** Choose \( n \) trials per task, report mean ± 95% CI (Wilson for small \( N \)), and for reliability report pass^k, not just pass@1. Two systems whose CIs overlap are *tied* until you gather more data.
+3. **Fix trials and report variance.** Choose \\( n \\) trials per task, report mean ± 95% CI (Wilson for small \\( N \\)), and for reliability report pass^k, not just pass@1. Two systems whose CIs overlap are *tied* until you gather more data.
 4. **Test significance.** For paired per-task outcomes use **McNemar's test** (§3.2); for non-rate statistics use a **bootstrap** over tasks (§3.3). State the p-value or the bootstrap CI on the *difference*, not two marginal CIs.
 5. **Match the data and disclose leakage risk.** Same task split, same version, same cutoff-relative freshness. If one model's training cutoff postdates the benchmark's publication, flag the contamination asymmetry.
 6. **Report the full vector.** Success, cost per solved task, p95 latency, safety, and variance — at minimum. A win on one axis and a loss on another is a *trade-off to disclose*, not a number to bury.
@@ -472,7 +472,7 @@ Primary sources for live status: [SWE-bench](https://www.swebench.com/), [SWE-be
 
 τ-bench is the reference benchmark for **tool-agent-user** interaction. It places the agent in a customer-service role — **retail (115 tasks)** and **airline (50 tasks)** — where it must talk to an LLM-simulated user, call domain tools that read and write a database, and obey a written domain policy. A task is scored 1 only if the **final database state** matches what the policy required (and any required information was communicated), and 0 otherwise. Because it grades world-state rather than dialogue, an agent cannot bluff its way to a pass.
 
-Its signature contribution is the **pass^k** metric (§2.7): the same task is run \( k \) times and credited only if the agent succeeds on *all* \( k \). This surfaces the reliability gap that pass@1 hides — frontier models routinely lose a large fraction of their pass^1 score by pass^4/pass^8, because a stochastic policy that "usually" refunds the right amount is unacceptable when the action is irreversible.
+Its signature contribution is the **pass^k** metric (§2.7): the same task is run \\( k \\) times and credited only if the agent succeeds on *all* \\( k \\). This surfaces the reliability gap that pass@1 hides — frontier models routinely lose a large fraction of their pass^1 score by pass^4/pass^8, because a stochastic policy that "usually" refunds the right amount is unacceptable when the action is irreversible.
 
 **τ²-bench** (arXiv [2506.07982](https://arxiv.org/abs/2506.07982), June 2025) extends this to a **dual-control** setting: the *user simulator* also has tools and can take actions in the world (e.g., a telecom customer toggling settings on their own device), turning the task into a genuine collaboration/negotiation rather than the agent acting alone. It adds a **telecom** domain and stresses coordination — the agent must sometimes *guide the user* to perform an action it cannot do itself, which is exactly the failure mode of real support agents. Limitations to keep in mind: the user simulator is itself an LLM and injects its own variance and occasional out-of-character behavior; the task counts are small (wide CIs — see §3.4, where a 50-task domain can't resolve sub-10-point gaps); and some "policy" outcomes are genuinely ambiguous, so a fraction of failures are really rubric disputes. Sources: [τ-bench paper](https://arxiv.org/abs/2406.12045), [τ²-bench repo](https://github.com/sierra-research/tau2-bench), [τ²-bench-Telecom leaderboard](https://artificialanalysis.ai/evaluations/tau2-bench).
 
@@ -1107,7 +1107,7 @@ Total cost: ...   Cost/solved: ...
 p95 latency: 41.7s
 ```
 
-Read it as a vector: pass@1 is a respectable 0.75, but **pass^4 is only 0.25** — one of the three tasks (t2) is a coin flip and would fail a "must work every time" requirement. The any-pass Wilson CI ([0.44, 1.00]) is enormous because \( N=3 \); this is a toy set and the CI honestly says so. Efficiency and p95 latency round out the picture the headline number omitted. The full module in §9 wraps these same estimators with per-slice breakdowns and the two-agent significance tests you need for a real comparison.
+Read it as a vector: pass@1 is a respectable 0.75, but **pass^4 is only 0.25** — one of the three tasks (t2) is a coin flip and would fail a "must work every time" requirement. The any-pass Wilson CI ([0.44, 1.00]) is enormous because \\( N=3 \\); this is a toy set and the CI honestly says so. Efficiency and p95 latency round out the picture the headline number omitted. The full module in §9 wraps these same estimators with per-slice breakdowns and the two-agent significance tests you need for a real comparison.
 
 ---
 
@@ -1135,8 +1135,8 @@ The theory earns its keep only when it survives contact with a real release. The
 
 A mature agent team treats every candidate (a new model, prompt, or scaffold) as a change that must pass a gate before it reaches users:
 
-1. **Fast canary in CI (minutes).** On every PR that touches the agent, run 30–60 high-signal tasks at \( n=3 \) trials. Block the merge if success drops significantly (paired McNemar vs. the `main` baseline) *or* any safety task regresses. This catches the "someone edited the tool description and broke JSON formatting" class of bug in minutes.
-2. **Nightly full suite (hours).** Run the full internal benchmark (hundreds of tasks) at \( n=5 \), plus τ-bench-style pass^k on the irreversible-action subset. Persist every `Summary` keyed by the version tuple from §11. Diff against a 7-day baseline.
+1. **Fast canary in CI (minutes).** On every PR that touches the agent, run 30–60 high-signal tasks at \\( n=3 \\) trials. Block the merge if success drops significantly (paired McNemar vs. the `main` baseline) *or* any safety task regresses. This catches the "someone edited the tool description and broke JSON formatting" class of bug in minutes.
+2. **Nightly full suite (hours).** Run the full internal benchmark (hundreds of tasks) at \\( n=5 \\), plus τ-bench-style pass^k on the irreversible-action subset. Persist every `Summary` keyed by the version tuple from §11. Diff against a 7-day baseline.
 3. **Frontier tracking (weekly).** Run the harder, contamination-resistant public benchmarks (SWE-bench Pro, Gaia2, τ²-bench) at matched budget, and plot the cost–capability frontier against the previous release and the competitor set.
 4. **Release gate (human).** Ship only if: success CI is at or above baseline, harmful-action rate is not up, cost-per-solved is within budget, and p95 latency is within SLA. A win on capability that regresses cost or safety is explicitly escalated, not auto-shipped.
 5. **Shadow / canary in production.** Route a small traffic slice to the candidate, compare live outcome proxies (task-completion, escalation, thumbs-down rate) with the paired tests from §3, and roll forward only if the live delta agrees with the offline eval. Offline–online disagreement is itself a signal that your eval set is unrepresentative.

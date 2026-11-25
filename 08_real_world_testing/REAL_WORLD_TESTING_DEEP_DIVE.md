@@ -336,29 +336,29 @@ The formulas below answer one practical question: how many users do you need bef
 
 **Power and Minimum Detectable Effect (MDE).** Before running, ask: *what is the
 smallest true improvement worth detecting, and can this test see it?* For a
-two-proportion test comparing rates \( p \) (control) and \( p + \delta \)
-(treatment) at significance \( \alpha \) and power \( 1-\beta \), the per-arm
+two-proportion test comparing rates \\( p \\) (control) and \\( p + \delta \\)
+(treatment) at significance \\( \alpha \\) and power \\( 1-\beta \\), the per-arm
 sample size is approximately:
 
-\[
-n \approx \frac{\left(z_{1-\alpha/2} + z_{1-\beta}\right)^2 \, \big(p(1-p) + (p+\delta)(1-p-\delta)\big)}{\delta^2}
-\]
+\\[
+n \approx \frac{\left(z_{1-\alpha/2} + z_{1-\beta}\right)^2 \\, \big(p(1-p) + (p+\delta)(1-p-\delta)\big)}{\delta^2}
+\\]
 
-With \( \alpha = 0.05 \) (\( z \approx 1.96 \)), power \( 0.8 \)
-(\( z \approx 0.84 \)), and roughly \( p(1-p) \approx (p+\delta)(1-p-\delta) \),
+With \\( \alpha = 0.05 \\) (\\( z \approx 1.96 \\)), power \\( 0.8 \\)
+(\\( z \approx 0.84 \\)), and roughly \\( p(1-p) \approx (p+\delta)(1-p-\delta) \\),
 this collapses to the useful rule of thumb:
 
-\[
-n \approx \frac{16 \, p(1-p)}{\delta^2}
-\]
+\\[
+n \approx \frac{16 \\, p(1-p)}{\delta^2}
+\\]
 
-Example: baseline resolution \( p = 0.60 \), you want to detect an absolute
-\( \delta = 0.02 \) (2 points). Then
-\( n \approx 16 \times 0.24 / 0.0004 = 9{,}600 \) users **per arm**. Halving the
+Example: baseline resolution \\( p = 0.60 \\), you want to detect an absolute
+\\( \delta = 0.02 \\) (2 points). Then
+\\( n \approx 16 \times 0.24 / 0.0004 = 9{,}600 \\) users **per arm**. Halving the
 MDE to 1 point quadruples the requirement to ~38,400 per arm. **MDE is the
 single most under-appreciated number in agent experiments** — teams routinely
 run a two-week test that never had the power to see the effect they cared about,
-then over-interpret the noise. The \( \delta^2 \) in the denominator is the
+then over-interpret the noise. The \\( \delta^2 \\) in the denominator is the
 whole story: sample size scales with the *inverse square* of the effect you want
 to detect, so wanting to see small effects is punishingly expensive. This is
 exactly why variance reduction (CUPED, below) is not a nicety — halving variance
@@ -375,20 +375,20 @@ the second is a confident "no meaningful effect") even though both are "not
 significant."
 
 **Variance reduction (CUPED).** You can often halve the sample size (or double
-the speed) without touching \( \alpha \) or power by using pre-experiment data.
+the speed) without touching \\( \alpha \\) or power by using pre-experiment data.
 CUPED (Controlled-experiment Using Pre-Experiment Data) subtracts a covariate
-\( X \) (typically the same metric measured *before* the experiment) that is
-correlated with the outcome \( Y \):
+\\( X \\) (typically the same metric measured *before* the experiment) that is
+correlated with the outcome \\( Y \\):
 
-\[
-Y_{\text{cuped}} = Y - \theta\,(X - \bar{X}), \qquad \theta = \frac{\mathrm{Cov}(Y, X)}{\mathrm{Var}(X)}
-\]
+\\[
+Y_{\text{cuped}} = Y - \theta\\,(X - \bar{X}), \qquad \theta = \frac{\mathrm{Cov}(Y, X)}{\mathrm{Var}(X)}
+\\]
 
-Because \( X \) is pre-treatment it cannot be affected by the variant, so
+Because \\( X \\) is pre-treatment it cannot be affected by the variant, so
 subtracting it removes variance without biasing the estimate. Microsoft's
 experimentation platform reports variance reductions that meaningfully shorten
-tests; the reduction is roughly \( \rho^2 \), the squared correlation between
-\( X \) and \( Y \). A concrete worked CUPED example — including the estimator and
+tests; the reduction is roughly \\( \rho^2 \\), the squared correlation between
+\\( X \\) and \\( Y \\). A concrete worked CUPED example — including the estimator and
 the variance it saves — appears in the "Build it in practice" section below.
 
 > **Saying it out loud.** The single most under-appreciated number in agent experiments is the minimum detectable effect. Rule of thumb: you need roughly sixteen times p-times-one-minus-p, divided by delta squared, per arm. So at a 60% baseline resolution rate, detecting a two-point absolute improvement takes about 9,600 users per arm — and halving that to one point quadruples it to about 38,400. That delta-squared in the denominator is the whole story, and it's why teams run a two-week test that never had the power to see the effect they cared about, then read tea leaves in the noise. It's also why CUPED variance reduction isn't a nicety: halving variance is mathematically equivalent to doubling your traffic for free. And always report the lift with a confidence interval, never a bare p-value — "plus 0.1 percent, CI minus two to plus two" and "plus 0.1 percent, CI minus 0.05 to plus 0.25" are completely different decisions even though both are "not significant."
@@ -548,7 +548,7 @@ but offline *rank-correlated with* online, so offline can be trusted as a filter
 offline score delta and its online (A/B) metric delta. Over many launches you
 build a scatter of (offline Δ, online Δ). Then:
 
-- Compute **rank correlation** (Spearman \( \rho \) / Kendall \( \tau \)) between
+- Compute **rank correlation** (Spearman \\( \rho \\) / Kendall \\( \tau \\)) between
   offline and online deltas. High rank correlation means offline is a trustworthy
   *gate* even if absolute numbers differ. The RecSys literature on "identifying
   offline metrics that predict online impact" formalizes exactly this: pick the
@@ -706,7 +706,7 @@ relative lift = +2.82%
 z = 2.451  p = 0.01427  significant=True
 ```
 
-Read it correctly: SRM did not fire (\( p = 0.19 \gg 0.0005 \)), so the split is
+Read it correctly: SRM did not fire (\\( p = 0.19 \gg 0.0005 \\)), so the split is
 trustworthy. The candidate lifts success by **1.69 points (95% CI +0.34 to
 +3.04)**, and the CI excludes 0, so the effect is detectable at this sample size.
 But note the lower bound is only +0.34 — if a 0.3-point gain would not justify the
@@ -740,7 +740,7 @@ the code, not a plausible-looking guess.
 First, prove the danger. We simulate 4,000 experiments in which **the treatment is
 identical to control** (the null is true, so any "win" is a false positive). Each
 experiment is peeked at 10 times (think: a daily dashboard over a two-week test),
-and we stop-and-declare-victory the first time the naive \( |z| > 1.96 \):
+and we stop-and-declare-victory the first time the naive \\( |z| > 1.96 \\):
 
 ```python
 import random, math
@@ -829,8 +829,8 @@ calibrated boundary for 5% family-wise FPR over 10 looks = z*=2.560
 with z*=2.560:  naive FPR=0.193   sequential FPR=0.045
 ```
 
-The lesson in three numbers: peeking with the naive \( z=1.96 \) boundary gives a
-**19.3%** false-positive rate; raising the bar to the calibrated \( z^\*=2.56 \)
+The lesson in three numbers: peeking with the naive \\( z=1.96 \\) boundary gives a
+**19.3%** false-positive rate; raising the bar to the calibrated \\( z^\\*=2.56 \\)
 pulls it back to the **4.5%** you thought you had. That higher bar is exactly the
 price of the right to look early — sequential methods (mSPRT, GAVI, group-
 sequential) all trade a little power for the freedom to monitor continuously.
@@ -845,10 +845,10 @@ CUPED means: subtract off the part of each user's outcome you could already pred
 
 CUPED subtracts a pre-experiment covariate correlated with the outcome. Below we
 simulate users with a stable latent "propensity" so that each user's *pre-period*
-metric \( X \) correlates with their *experiment-period* outcome \( Y \) — exactly
+metric \\( X \\) correlates with their *experiment-period* outcome \\( Y \\) — exactly
 the situation for retained agent users (a heavy user last month is a heavy user
-this month). We compute \( \theta = \mathrm{Cov}(Y,X)/\mathrm{Var}(X) \), form
-\( Y_{\text{cuped}} = Y - \theta(X - \bar X) \), and compare standard errors:
+this month). We compute \\( \theta = \mathrm{Cov}(Y,X)/\mathrm{Var}(X) \\), form
+\\( Y_{\text{cuped}} = Y - \theta(X - \bar X) \\), and compare standard errors:
 
 ```python
 def cuped_demo(n=8000, seed=3, true_effect=0.05):
@@ -901,9 +901,9 @@ variance reduction = 54.0%  (theory ~ rho^2 = 54.0%)
 ```
 
 The estimate barely moves (both recover the true +0.05 effect — CUPED is
-*unbiased* because \( X \) is pre-treatment and cannot be affected by the
+*unbiased* because \\( X \\) is pre-treatment and cannot be affected by the
 variant), but the standard error drops from 0.0185 to 0.0126 — a **54% variance
-reduction, matching the theoretical \( \rho^2 = 0.54 \)** for \( \rho = 0.735 \).
+reduction, matching the theoretical \\( \rho^2 = 0.54 \\)** for \\( \rho = 0.735 \\).
 A 54% variance cut is equivalent to **more than doubling your sample size for
 free**: the same precision in roughly half the calendar time. That is why every
 serious platform ships CUPED — GrowthBook's docs
@@ -924,7 +924,7 @@ red:
 2. **Guardrails (non-inferiority).** Latency p95, cost/task, safety-violation
    rate, escalation, refund/concession. Red → do not ship regardless of the goal.
 3. **Peeking discipline.** If the dashboard was watched continuously, use the
-   sequential boundary, not \( z=1.96 \). Fixed-horizon p-values on a peeked test
+   sequential boundary, not \\( z=1.96 \\). Fixed-horizon p-values on a peeked test
    are not evidence.
 4. **Goal metric with CUPED-reduced CI.** Report absolute lift + CI, compare the
    *whole interval* against your MDE, not just against zero.
@@ -986,7 +986,7 @@ noise becomes a "win."
   large N, something is broken — a router bug, differential bot filtering, a
   logging join that drops one arm. SRM means the randomization assumption failed,
   so **the treatment effect is uninterpretable**. Detect with a chi-square test
-  (flag at \( p < 0.0005 \)); when it fires, fix the pipeline before reading any
+  (flag at \\( p < 0.0005 \\)); when it fires, fix the pipeline before reading any
   lift. Notorious cause: a treatment so engaging it trips bot detection and gets
   its users filtered out (Microsoft's MSN carousel case). Agent-specific causes:
   the candidate is slower, so more of its sessions time out and drop before the
@@ -1028,7 +1028,7 @@ noise becomes a "win."
   disagree in direction.
 
 - **Multiple comparisons.** Slicing an experiment into 30 metrics × 10 segments and
-  celebrating the one cell with \( p<0.05 \) is guaranteed to find noise. Correct
+  celebrating the one cell with \\( p<0.05 \\) is guaranteed to find noise. Correct
   for multiplicity (Benjamini–Hochberg) or pre-register the few slices that matter.
 
 > **Saying it out loud.** If I had to rank them: peeking, because it silently takes your false-positive rate from five percent to about twenty. Sample-ratio mismatch, because it means your beautiful p-value is measuring your logging pipeline instead of your agent. Goodhart, because any metric you optimize hard enough stops being a measure — push on satisfaction and the agent gets sycophantic, push on containment and it refuses to escalate. Underpowered tests, where a flat result gets read as "no difference" when it was never able to see one. And the two agent-specific ones: shadow side effects, where an unsandboxed action agent issues real refunds during a supposedly zero-impact test; and Simpson's paradox, where the treatment wins in every segment and loses overall because the arms have different segment mixes — which is usually itself a symptom of a sample-ratio problem.
@@ -1101,7 +1101,7 @@ metric alone will happily buy satisfaction with your margin.**
 and saw a beautiful **+3.2% task-success lift, p = 0.002.** Champagne on ice.
 
 *The catch.* A reviewer ran the SRM check: the split had arrived as **51.4 /
-48.6** on ~180k sessions — chi-square \( p \approx 10^{-6} \), a screaming SRM.
+48.6** on ~180k sessions — chi-square \\( p \approx 10^{-6} \\), a screaming SRM.
 
 *Root cause.* The new agent was slower (more planning tokens). Sessions in the
 treatment arm were more likely to hit a **client-side timeout** that dropped the
@@ -1228,7 +1228,7 @@ than chance (e.g. an intended 50/50 arriving as 51.5/48.5 at large N). It means
 randomization is broken — a router bug, differential filtering, a bad logging
 join. Since the whole causal claim rests on the two arms being comparable, SRM
 makes the treatment effect uninterpretable. I detect it with a chi-square
-goodness-of-fit test, flagging at \( p < 0.0005 \), and I fix the pipeline before
+goodness-of-fit test, flagging at \\( p < 0.0005 \\), and I fix the pipeline before
 trusting any lift. For agents specifically, a slower treatment arm that drops more
 timed-out sessions is a classic SRM generator — and it biases *which* sessions get
 counted.
@@ -1247,7 +1247,7 @@ so even "control" is not guaranteed stationary.
 **Q4. Explain the peeking problem and how you would handle continuous
 monitoring.**
 Fixed-horizon tests are valid only if you set N in advance and read once. If you
-check daily and stop when \( p < 0.05 \), you get many chances to cross the
+check daily and stop when \\( p < 0.05 \\), you get many chances to cross the
 threshold by luck, inflating the false-positive rate from ~5% to ~20%+ (→100% if
 you peek forever) — I've simulated it at ~19%. Options: pre-register N and read
 once; or, if I genuinely need to monitor live, use a **sequential test** with
@@ -1290,11 +1290,11 @@ predict online movement.
 **Q8. CUPED — what is it and when does it help?**
 CUPED is a variance-reduction technique that subtracts a *pre-experiment*
 covariate (usually the same metric measured before the test) from the outcome:
-\( Y_{\text{cuped}} = Y - \theta(X - \bar X) \) with
-\( \theta = \mathrm{Cov}(Y,X)/\mathrm{Var}(X) \). Because \( X \) is
+\\( Y_{\text{cuped}} = Y - \theta(X - \bar X) \\) with
+\\( \theta = \mathrm{Cov}(Y,X)/\mathrm{Var}(X) \\). Because \\( X \\) is
 pre-treatment it cannot be affected by the variant, so the estimate stays
-unbiased while variance drops by roughly \( \rho^2 \) — in my simulation a
-\( \rho=0.735 \) covariate cut variance 54%, halving the required runtime. It
+unbiased while variance drops by roughly \\( \rho^2 \\) — in my simulation a
+\\( \rho=0.735 \\) covariate cut variance 54%, halving the required runtime. It
 shines when users have stable, autocorrelated behavior (a heavy user last week is
 a heavy user this week) — exactly the case for retained agent users.
 
@@ -1310,7 +1310,7 @@ users (marketplace, negotiation), I go coarser still — cluster by market/geo.
 
 **Q10. You have a two-week test but only enough traffic for a 3-point MDE; the
 effect you care about is 1 point. What do you do?**
-Recognize the test is underpowered *before* running it — \( n \propto 1/\delta^2 \),
+Recognize the test is underpowered *before* running it — \\( n \propto 1/\delta^2 \\),
 so a 1-point MDE needs ~9× the traffic of a 3-point one. Options, roughly in
 order: apply **CUPED** (a good covariate can halve variance ≈ double effective N);
 extend the duration if the effect is stable; pick a **more sensitive OEC** or a
@@ -1373,13 +1373,13 @@ shadow will fire them for real unless every non-idempotent tool is sandboxed,
 stubbed, or blocked. A "safe" shadow deploy that isn't sandboxed is a live
 incident waiting to happen.
 
-**Q16. Walk me through why sample size scales as \( 1/\delta^2 \), and one
+**Q16. Walk me through why sample size scales as \\( 1/\delta^2 \\), and one
 consequence.**
-For a proportion, per-arm \( n \approx 16\,p(1-p)/\delta^2 \) at 80% power / 5%
-significance. The signal you're trying to detect is the effect \( \delta \); the
-noise is the standard error, which shrinks like \( 1/\sqrt{n} \). To keep a fixed
-signal-to-noise ratio as \( \delta \) shrinks, \( \sqrt{n} \) must grow like
-\( 1/\delta \), so \( n \) grows like \( 1/\delta^2 \). Consequence: halving the
+For a proportion, per-arm \\( n \approx 16\\,p(1-p)/\delta^2 \\) at 80% power / 5%
+significance. The signal you're trying to detect is the effect \\( \delta \\); the
+noise is the standard error, which shrinks like \\( 1/\sqrt{n} \\). To keep a fixed
+signal-to-noise ratio as \\( \delta \\) shrinks, \\( \sqrt{n} \\) must grow like
+\\( 1/\delta \\), so \\( n \\) grows like \\( 1/\delta^2 \\). Consequence: halving the
 effect you want to see **quadruples** the traffic and time — which is exactly why
 variance reduction (CUPED) and sensitive OECs are not luxuries; a 50% variance cut
 is worth as much as doubling your users.
@@ -1502,7 +1502,7 @@ Interviewers are listening for these.
 |---|---|
 | "The offline eval improved, so we shipped it." | "Offline is a gate; the A/B and guardrails decided the ship." |
 | Reports a bare p-value. | Reports lift **with a CI**, read against the MDE. |
-| Watches the dashboard and ships on first \( p<0.05 \). | Pre-registers N or uses a sequential boundary. |
+| Watches the dashboard and ships on first \\( p<0.05 \\). | Pre-registers N or uses a sequential boundary. |
 | Never mentions SRM. | Checks SRM first and treats a breach as invalidating. |
 | One success metric, no guardrails. | Every goal metric paired with a harm guardrail. |
 | Randomizes per request for a chat agent. | Randomizes per user; cluster if units interact. |

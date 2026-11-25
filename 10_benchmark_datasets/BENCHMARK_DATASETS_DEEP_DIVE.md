@@ -217,7 +217,7 @@ Standard benchmarks rarely match your agent's actual job. When you build your ow
 
 **Step 5 — Review.** Every task gets independent review by ≥2 people who did *not* author it, checking: (a) is the problem statement fully specified? (b) is the gold answer correct? (c) does the verifier accept all correct solutions and reject all wrong ones? Adopt SWE-bench's conservative ensembling: if any reviewer flags a severe problem, pull the task. Use a written rubric with named categories and a severity scale so reviews are comparable and you can compute agreement on them.
 
-**Step 6 — Measure quality.** Compute inter-annotator agreement (§7), coverage against your intent taxonomy, and a contamination scan (§8) before you trust a single score. Set explicit gates: e.g., ship only if label-correctness \( \kappa \ge 0.7 \), every taxonomy cell has ≥N tasks, and no task exceeds your n-gram contamination threshold against the corpora you can access.
+**Step 6 — Measure quality.** Compute inter-annotator agreement (§7), coverage against your intent taxonomy, and a contamination scan (§8) before you trust a single score. Set explicit gates: e.g., ship only if label-correctness \\( \kappa \ge 0.7 \\), every taxonomy cell has ≥N tasks, and no task exceeds your n-gram contamination threshold against the corpora you can access.
 
 **Step 7 — Version, document, license (§11).** Freeze it, datasheet it, emit Croissant metadata, content-hash every task, and split off a held-out canary set before anyone runs an agent on it.
 
@@ -290,7 +290,7 @@ def release_hash(tasks: list[Task]) -> str:
 
 ### 6.2 Inter-annotator agreement and low-agreement flagging
 
-Cohen's \( \kappa \) for two raters, Fleiss' \( \kappa \) for a panel, plus a helper that returns the *specific* tasks reviewers split on — those are the ones to fix or cut before you trust any score computed on the set.
+Cohen's \\( \kappa \\) for two raters, Fleiss' \\( \kappa \\) for a panel, plus a helper that returns the *specific* tasks reviewers split on — those are the ones to fix or cut before you trust any score computed on the set.
 
 ```python
 # ---------- Cohen's kappa (2 annotators) ----------
@@ -507,7 +507,7 @@ if __name__ == "__main__":
     print("Release hash:", release_hash(tasks))
 ```
 
-What the toolkit gives you, mapped to the earlier theory: `gate_on_agreement` operationalizes §7 (do not publish below \( \kappa = 0.7 \)); the three contamination functions operationalize §8; `synth_pipeline` operationalizes the §9 safe-synthetic rules (different generator, verifier gate, dedup, human filter, reported fraction); and `content_hash`/`release_hash` operationalize §11 versioning. Wire these into CI and a benchmark cannot regress silently: a PR that lowers agreement, raises contamination, or mutates a task hash fails the build.
+What the toolkit gives you, mapped to the earlier theory: `gate_on_agreement` operationalizes §7 (do not publish below \\( \kappa = 0.7 \\)); the three contamination functions operationalize §8; `synth_pipeline` operationalizes the §9 safe-synthetic rules (different generator, verifier gate, dedup, human filter, reported fraction); and `content_hash`/`release_hash` operationalize §11 versioning. Wire these into CI and a benchmark cannot regress silently: a PR that lowers agreement, raises contamination, or mutates a task hash fails the build.
 
 > **Saying it out loud.** If you want to make dataset QA real rather than aspirational, it's three runnable jobs wired into CI. One, compute inter-annotator agreement and return the specific tasks reviewers split on, because the per-item disagreement is more actionable than the aggregate. Two, screen for contamination three ways — a canary probe, an n-gram overlap scan, and a recency slice that needs no corpus at all. Three, run synthetic generation through an independent verifier gate, dedup, and a human-filter queue so nothing is auto-admitted. Then gate the build on all of it: a PR that lowers agreement, raises contamination, or mutates a task's content hash fails, which is what stops a benchmark from silently regressing. The caveat to state honestly is that the n-gram scanner is a screen, not a proof — it catches near-verbatim copies at your chosen n and will never catch paraphrase leakage.
 
@@ -523,21 +523,21 @@ If two competent humans disagree about whether a task's answer is correct, the *
 
 > **In plain terms.** Kappa asks: how much better than lucky guessing did our two reviewers agree? You take the fraction of items they actually agreed on, subtract the fraction they'd agree on purely by chance given how often each one says "pass," and rescale so 1 is perfect and 0 is chance-level. The worked example below shows why the raw number can flatter you.
 
-Cohen's \( \kappa \) compares observed agreement to chance agreement:
+Cohen's \\( \kappa \\) compares observed agreement to chance agreement:
 
-\[
+\\[
 \kappa = \frac{p_o - p_e}{1 - p_e}
-\]
+\\]
 
-where \( p_o \) is the observed proportion of items the two raters agree on, and \( p_e \) is the agreement expected by chance, computed from each rater's marginal label frequencies:
+where \\( p_o \\) is the observed proportion of items the two raters agree on, and \\( p_e \\) is the agreement expected by chance, computed from each rater's marginal label frequencies:
 
-\[
+\\[
 p_e = \sum_{c} \left( \frac{n_{1c}}{N} \cdot \frac{n_{2c}}{N} \right)
-\]
+\\]
 
-Here \( c \) indexes categories, \( n_{1c} \) is how many items rater 1 put in category \( c \), and \( N \) is the number of items. \( \kappa = 1 \) is perfect agreement, \( \kappa = 0 \) is chance-level, and negative means worse than chance.
+Here \\( c \\) indexes categories, \\( n_{1c} \\) is how many items rater 1 put in category \\( c \\), and \\( N \\) is the number of items. \\( \kappa = 1 \\) is perfect agreement, \\( \kappa = 0 \\) is chance-level, and negative means worse than chance.
 
-**Worked calculation.** Two reviewers label \( N = 100 \) agent outputs as **pass** or **fail**. The confusion matrix:
+**Worked calculation.** Two reviewers label \\( N = 100 \\) agent outputs as **pass** or **fail**. The confusion matrix:
 
 |  | R2: pass | R2: fail | R1 total |
 |---|---|---|---|
@@ -546,29 +546,29 @@ Here \( c \) indexes categories, \( n_{1c} \) is how many items rater 1 put in c
 | **R2 total** | 60 | 40 | 100 |
 
 Observed agreement (the diagonal):
-\[
+\\[
 p_o = \frac{45 + 30}{100} = 0.75
-\]
+\\]
 
 Chance agreement from the marginals (R1 pass = 0.55, R2 pass = 0.60; R1 fail = 0.45, R2 fail = 0.40):
-\[
+\\[
 p_e = (0.55 \times 0.60) + (0.45 \times 0.40) = 0.33 + 0.18 = 0.51
-\]
+\\]
 
 Therefore:
-\[
+\\[
 \kappa = \frac{0.75 - 0.51}{1 - 0.51} = \frac{0.24}{0.49} \approx 0.49
-\]
+\\]
 
 So despite 75% raw agreement, chance-corrected agreement is only **~0.49 — "moderate."** That is a warning sign: a nontrivial share of your tasks are ambiguous enough that trained reviewers split on them, and any score you compute on this set inherits that noise.
 
-**The kappa paradox — a trap interviewers set.** Kappa can be *low even when agreement is high* if the labels are very imbalanced (say 95% "pass"). Because \( p_e \) is then huge, there is little room above chance and \( \kappa \) collapses toward 0 even at 95% raw agreement. The fix is to *not* read kappa in a vacuum: report raw agreement, the marginal distribution, and kappa together, and on skewed sets consider prevalence-adjusted measures (PABAK) or Gwet's AC1. The senior-level takeaway: kappa measures agreement *beyond chance given your label distribution*; a low kappa on a skewed set may mean "the labels are easy and imbalanced," not "the annotators are bad." Diagnose before you act.
+**The kappa paradox — a trap interviewers set.** Kappa can be *low even when agreement is high* if the labels are very imbalanced (say 95% "pass"). Because \\( p_e \\) is then huge, there is little room above chance and \\( \kappa \\) collapses toward 0 even at 95% raw agreement. The fix is to *not* read kappa in a vacuum: report raw agreement, the marginal distribution, and kappa together, and on skewed sets consider prevalence-adjusted measures (PABAK) or Gwet's AC1. The senior-level takeaway: kappa measures agreement *beyond chance given your label distribution*; a low kappa on a skewed set may mean "the labels are easy and imbalanced," not "the annotators are bad." Diagnose before you act.
 
 > **Saying it out loud.** The worked example is the thing to memorize, because it shows the trap. Two reviewers label 100 outputs and agree on 75 of them, which sounds fine — but each reviewer says "pass" a bit over half the time, so chance agreement alone is 51%, and kappa comes out to about 0.49. That's "moderate," which means a real fraction of your tasks are ambiguous enough that trained reviewers split on them, and every score you compute on that set inherits the noise. Then there's the kappa paradox, which interviewers like to set as a trap: if labels are 95% one class, chance agreement is huge, so kappa collapses toward zero even at 95% raw agreement. So never read kappa in a vacuum — report raw agreement, the marginal distribution and kappa together, and on skewed sets reach for PABAK or Gwet's AC1. Low kappa on a skewed set can mean "the labels are easy and imbalanced," not "the annotators are bad."
 
 ### 7.2 Interpreting kappa (Landis & Koch scale)
 
-| \( \kappa \) | Interpretation |
+| \\( \kappa \\) | Interpretation |
 |---|---|
 | < 0.00 | Worse than chance |
 | 0.00–0.20 | Slight |
@@ -577,42 +577,42 @@ So despite 75% raw agreement, chance-corrected agreement is only **~0.49 — "mo
 | 0.61–0.80 | Substantial |
 | 0.81–1.00 | Almost perfect |
 
-For a benchmark you will publish scores from, target **\( \kappa \ge 0.7 \)** on label correctness. Below that, revise task wording and rubrics before proceeding — low agreement is a data-quality bug, not a personality difference. The Landis & Koch bands are *conventions*, not laws; some fields demand \( \kappa \ge 0.8 \) for clinical-grade labels. State the threshold you chose and why.
+For a benchmark you will publish scores from, target **\\( \kappa \ge 0.7 \\)** on label correctness. Below that, revise task wording and rubrics before proceeding — low agreement is a data-quality bug, not a personality difference. The Landis & Koch bands are *conventions*, not laws; some fields demand \\( \kappa \ge 0.8 \\) for clinical-grade labels. State the threshold you chose and why.
 
 ### 7.3 Fleiss' kappa (three or more annotators)
 
 > **In plain terms.** Fleiss is Cohen's kappa generalized to a panel: instead of a two-by-two grid, you count how many raters put each item in each category, measure how much they clumped together within items, and compare that to how much clumping you'd get by chance. The per-item piece is the useful part — it tells you exactly which tasks the panel split on.
 
-When each item is rated by \( n \) raters (possibly a different panel per item) across \( k \) categories, use Fleiss' \( \kappa \). Build \( N \times k \) matrix \( M \) where \( M_{ij} \) = number of raters assigning item \( i \) to category \( j \) (each row sums to \( n \)).
+When each item is rated by \\( n \\) raters (possibly a different panel per item) across \\( k \\) categories, use Fleiss' \\( \kappa \\). Build \\( N \times k \\) matrix \\( M \\) where \\( M_{ij} \\) = number of raters assigning item \\( i \\) to category \\( j \\) (each row sums to \\( n \\)).
 
 Per-item agreement:
-\[
+\\[
 P_i = \frac{1}{n(n-1)} \left( \sum_{j=1}^{k} M_{ij}^2 - n \right)
-\]
+\\]
 
 Mean observed agreement and per-category expected probability:
-\[
+\\[
 \bar{P} = \frac{1}{N} \sum_{i=1}^{N} P_i, \qquad p_j = \frac{1}{N n} \sum_{i=1}^{N} M_{ij}, \qquad P_e = \sum_{j=1}^{k} p_j^2
-\]
+\\]
 
-\[
+\\[
 \kappa = \frac{\bar{P} - P_e}{1 - P_e}
-\]
+\\]
 
-The same [0,1] interpretation applies. Beyond the aggregate score, the per-item \( P_i \) tells you *which* tasks are contentious — those are the ones to fix or cut. That per-item signal is exactly what `flag_low_agreement` in §6.2 returns, and routing low-\( P_i \) tasks back to a third reviewer (or out of the set) is the single highest-leverage quality action you can take.
+The same [0,1] interpretation applies. Beyond the aggregate score, the per-item \\( P_i \\) tells you *which* tasks are contentious — those are the ones to fix or cut. That per-item signal is exactly what `flag_low_agreement` in §6.2 returns, and routing low-\\( P_i \\) tasks back to a third reviewer (or out of the set) is the single highest-leverage quality action you can take.
 
 ### 7.4 Which agreement statistic, when
 
 | Situation | Use | Why |
 |---|---|---|
-| 2 raters, categorical labels | Cohen's \( \kappa \) | Standard pairwise, chance-corrected |
-| ≥3 raters, categorical, possibly varying panel | Fleiss' \( \kappa \) | Handles many raters and per-item panels |
-| Ordinal labels (0–3 severity) | Weighted \( \kappa \) / Krippendorff's \( \alpha \) | Credits "close" disagreements, penalizes "far" ones |
-| Any level, missing data, mixed scales | Krippendorff's \( \alpha \) | Most general; handles gaps and any measurement level |
+| 2 raters, categorical labels | Cohen's \\( \kappa \\) | Standard pairwise, chance-corrected |
+| ≥3 raters, categorical, possibly varying panel | Fleiss' \\( \kappa \\) | Handles many raters and per-item panels |
+| Ordinal labels (0–3 severity) | Weighted \\( \kappa \\) / Krippendorff's \\( \alpha \\) | Credits "close" disagreements, penalizes "far" ones |
+| Any level, missing data, mixed scales | Krippendorff's \\( \alpha \\) | Most general; handles gaps and any measurement level |
 | Highly skewed labels | PABAK / Gwet's AC1 | Robust to the kappa-paradox prevalence problem |
 | Continuous scores (e.g., 1–10 quality) | ICC / Pearson | Correlation of continuous ratings, not categories |
 
-A subtle but important choice: when your labels are the **0–3 severity scale** SWE-bench Verified used, plain Fleiss' kappa treats a 0-vs-3 disagreement the same as 2-vs-3. Use **weighted kappa** or **Krippendorff's \( \alpha \)** so "far apart" disagreements cost more — otherwise you understate how badly reviewers disagree on the tasks that matter most.
+A subtle but important choice: when your labels are the **0–3 severity scale** SWE-bench Verified used, plain Fleiss' kappa treats a 0-vs-3 disagreement the same as 2-vs-3. Use **weighted kappa** or **Krippendorff's \\( \alpha \\)** so "far apart" disagreements cost more — otherwise you understate how badly reviewers disagree on the tasks that matter most.
 
 ---
 
@@ -793,7 +793,7 @@ if __name__ == "__main__":
 
 Notes on correctness and use:
 - `cohens_kappa` reproduces the §7.1 worked value on the 100-item matrix (feed it the expanded label lists) and returns ~0.49.
-- `fleiss_kappa` returns both the aggregate and the per-item \( P_i \); route items below your threshold back to a third reviewer or cut them.
+- `fleiss_kappa` returns both the aggregate and the per-item \\( P_i \\); route items below your threshold back to a third reviewer or cut them.
 - The n-gram scanner is a **screen, not a proof** — it catches direct/near-direct copies at the chosen `n`. Lower `n` catches more (and more false positives); it will *not* catch paraphrase leakage, for which you need the perplexity/probing methods in §8.2. In production, hash n-grams and use a Bloom filter or MinHash/LSH so you can scan a test set against a terabyte-scale corpus without holding it in RAM.
 
 ---
@@ -838,7 +838,7 @@ Across strong eval teams the golden-dataset lifecycle looks the same, and it loo
 
 1. **Seed from production, not imagination.** Sample real, anonymized transcripts stratified by intent so the rare-but-critical cases (fraud, refunds at policy edges) appear at usable frequency. Real logs also happen to be post-cutoff and private — free contamination resistance.
 2. **Author the verifier with the task.** For every golden item, write the executable check *and* run the reference solution through it (must pass) plus a known-wrong solution (must fail). A golden set without a tested verifier is decoration.
-3. **Double- or triple-review with a rubric**, ensemble conservatively, and record the IAA. Below \( \kappa = 0.7 \), the set goes back for rewording, not out the door.
+3. **Double- or triple-review with a rubric**, ensemble conservatively, and record the IAA. Below \\( \kappa = 0.7 \\), the set goes back for rewording, not out the door.
 4. **Calibrate difficulty with baselines** so the set discriminates between the systems you actually compare.
 5. **Freeze, hash, datasheet, and split off a private slice** before a single agent touches it.
 6. **Treat it as living:** a standing errata process, a refresh cadence, and retirement (not deletion) of saturated or broken tasks.
@@ -892,7 +892,7 @@ Every one traces to a *data* property — verifier fidelity, contamination, labe
 
 | Pitfall | Symptom | Fix |
 |---|---|---|
-| **Ambiguous tasks** | Low inter-annotator \( \kappa \); reviewers argue | Rewrite for a single unambiguous answer; cut irreparable ones |
+| **Ambiguous tasks** | Low inter-annotator \\( \kappa \\); reviewers argue | Rewrite for a single unambiguous answer; cut irreparable ones |
 | **Wrong golden answers** | Strong agents "fail" tasks humans solve trivially | Independent gold-answer review; executable verifiers |
 | **Over-strict verifiers** | Correct solutions rejected (SWE-bench's original flaw) | Add `PASS_TO_PASS` guards; test the verifier against known-good and known-bad solutions |
 | **Over-weak verifiers** | Wrong solutions accepted; passing patches aren't real fixes | Strengthen tests; spot-check that passes are genuine (arXiv 2503.15223) |
@@ -903,7 +903,7 @@ Every one traces to a *data* property — verifier fidelity, contamination, labe
 | **Aggregate-only reporting** | One number hides total failure on a whole category | Report per-slice and per-difficulty; publish variance |
 | **Silent mutation** | Old and new scores incomparable | Semantic versioning + content hashes + changelog |
 | **Too small** | Score swings wildly between runs | Power-check size; report confidence intervals |
-| **Kappa paradox misread** | Low \( \kappa \) on obviously-clean skewed labels | Report raw agreement + marginals; use PABAK/AC1 when skewed |
+| **Kappa paradox misread** | Low \\( \kappa \\) on obviously-clean skewed labels | Report raw agreement + marginals; use PABAK/AC1 when skewed |
 | **Unpinned harness** | Two "same" benchmark numbers differ 2x | Pin (dataset revision, harness, model, trials) tuple |
 
 > **Saying it out loud.** Naming the failure modes cold is what makes you sound like you've built one of these. The ones I'd lead with: ambiguous tasks showing up as low kappa; wrong golden answers, where strong agents "fail" things humans solve trivially; verifiers that are too strict or too weak, which is the same bug in two directions; flat difficulty, where every system scores about the same so the set has no discriminative power; contamination, whose tell is a cliff between pre- and post-cutoff tasks; and test-set overfitting, whose tell is a dev score climbing while production stays flat. Two subtler ones worth having ready: aggregate-only reporting hides total failure on a whole category, and silent in-place mutation makes old and new scores incomparable with nobody noticing. And the sizing one — if your benchmark is small enough that scores swing between runs, you don't have a benchmark, you have an anecdote; the confidence half-width on a proportion is roughly 1.96 times the square root of p times one minus p over N, which means distinguishing 70% from 75% takes low hundreds of tasks per slice.
@@ -928,7 +928,7 @@ Every one traces to a *data* property — verifier fidelity, contamination, labe
 | Croissant (MLCommons) | Metadata standard | Machine-readable dataset description (JSON-LD) | [docs.mlcommons.org/croissant](https://docs.mlcommons.org/croissant/) |
 | scikit-learn | Library | `cohen_kappa_score`, metrics | [sklearn](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.cohen_kappa_score.html) |
 | statsmodels | Library | `fleiss_kappa`, IAA stats | [statsmodels](https://www.statsmodels.org/stable/generated/statsmodels.stats.inter_rater.fleiss_kappa.html) |
-| Krippendorff (PyPI) | Library | Krippendorff's \( \alpha \) for any measurement level | [pypi.org/project/krippendorff](https://pypi.org/project/krippendorff/) |
+| Krippendorff (PyPI) | Library | Krippendorff's \\( \alpha \\) for any measurement level | [pypi.org/project/krippendorff](https://pypi.org/project/krippendorff/) |
 | datasketch | Library | MinHash / LSH for scalable overlap scans | [datasketch](https://github.com/ekzhu/datasketch) |
 
 ---
@@ -943,7 +943,7 @@ This section is the drill sheet. First the rapid-fire Q&A, then a 60-second set-
 Because ~68% of original tasks were filtered out for underspecified problem statements or unit tests that reject valid patches; 93 developers triple-annotated 1,699 samples down to 500 clean ones. GPT-4o went from ~16% to ~33% on the *same model* — the benchmark got more accurate, not the model better. Lesson: label/verifier quality can dominate the score more than model capability.
 
 **Q2. You have 78% raw agreement between two reviewers. Is the benchmark trustworthy?**
-Not from that number alone. Raw agreement ignores chance; on a skewed label distribution you can hit 78% while knowing nothing. Compute Cohen's \( \kappa \). If \( \kappa \) is ~0.4 (moderate), a meaningful fraction of tasks are ambiguous and you should revise wording/rubrics before publishing scores. And watch the kappa paradox: if labels are 95% one class, even a *low* kappa may be fine — report raw agreement, marginals, and kappa together.
+Not from that number alone. Raw agreement ignores chance; on a skewed label distribution you can hit 78% while knowing nothing. Compute Cohen's \\( \kappa \\). If \\( \kappa \\) is ~0.4 (moderate), a meaningful fraction of tasks are ambiguous and you should revise wording/rubrics before publishing scores. And watch the kappa paradox: if labels are 95% one class, even a *low* kappa may be fine — report raw agreement, marginals, and kappa together.
 
 **Q3. How would you detect that a public benchmark has contaminated the model you're testing?**
 Multiple signals: (1) recency split — compare tasks created before vs. after the training cutoff; a score cliff is a red flag; (2) n-gram overlap between tasks and any available training corpus; (3) black-box probes — guided completion of a masked task, or preferring the original over perturbed variants; (4) perplexity/Min-K%(++) memorization tests; (5) the GSM1k trick — correlate the model's probability of *generating* a benchmark item with its score gap on a fresh clone. No single method is proof; triangulate.
@@ -976,7 +976,7 @@ Executable checks (state diffs, tests, exact match) don't drift, don't have mood
 A datasheet is human-readable prose (motivation, provenance, consent, intended use) that helps a person decide whether to trust and how to use the data. Croissant is machine-readable JSON-LD metadata (files, fields, splits, types) that lets tools and agents load and validate it uniformly. They are complementary — humans read the datasheet, machines read Croissant — and a mature release ships both plus semantic versions and content hashes.
 
 **Q13. How big should a benchmark be?**
-Big enough that the confidence interval on your headline metric is smaller than the differences you need to detect, *and* big enough that every slice you report (each difficulty tier, each intent) has enough tasks to be non-anecdotal. Power-analyze it: for a proportion, the CI half-width is roughly \( 1.96\sqrt{p(1-p)/N} \), so distinguishing 70% from 75% reliably needs low hundreds of tasks *per slice*, not in total. Quality and coverage beat raw size — 50 well-guarded fresh tasks can be worth more than 5,000 contaminated ones.
+Big enough that the confidence interval on your headline metric is smaller than the differences you need to detect, *and* big enough that every slice you report (each difficulty tier, each intent) has enough tasks to be non-anecdotal. Power-analyze it: for a proportion, the CI half-width is roughly \\( 1.96\sqrt{p(1-p)/N} \\), so distinguishing 70% from 75% reliably needs low hundreds of tasks *per slice*, not in total. Quality and coverage beat raw size — 50 well-guarded fresh tasks can be worth more than 5,000 contaminated ones.
 
 **Q14. A benchmark is saturating — top models all score >95%. What do you conclude and do?**
 Two hypotheses: the models genuinely mastered the capability, or the benchmark leaked/is too easy. Disambiguate with a fresh private clone of the same distribution (the GSM1k move) and a recency slice. If the fresh clone shows a cliff, it was contamination; if not, the benchmark has lost discriminative power and you should retire the saturated tasks and add harder, post-cutoff ones. Either way, a saturated static benchmark is done as a ranking tool.
@@ -1081,7 +1081,7 @@ The adversarial column (user lies, demands out-of-policy refunds, tries prompt i
 | No datasheet; unknown provenance | Datasheet + Croissant + provenance per task |
 | Single aggregate number, one run, no CI | Per-slice, per-difficulty, pass^k, confidence intervals |
 | Verifier never tested against wrong solutions | Verifier tested both ways (gold passes, bad fails) |
-| No IAA reported, or raw-agreement only | Chance-corrected \( \kappa \ge 0.7 \) reported with marginals |
+| No IAA reported, or raw-agreement only | Chance-corrected \\( \kappa \ge 0.7 \\) reported with marginals |
 | Public, popular, years old, no refresh | Private held-out slice, canary, timestamped, living |
 | "SWE-bench: 60%" with no harness stated | Pinned (dataset revision, harness, model, trials) tuple |
 | Gold answers authored by an LLM, unchecked | Executable/human-verified gold; synthetic a reported minority |

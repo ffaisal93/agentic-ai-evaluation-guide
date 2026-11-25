@@ -140,17 +140,17 @@ A matched set of legitimate requests — including deliberately "trigger-word-he
 
 Attack success rate is just: out of N attacks you ran, what fraction achieved the harmful goal. The formula below is that sentence written in notation, where the indicator is 1 when the judge says the attack worked.
 
-Run \(N\) attacks; count how many succeed by the judge's definition.
+Run \\(N\\) attacks; count how many succeed by the judge's definition.
 
-\[
-\text{ASR} \;=\; \frac{1}{N}\sum_{i=1}^{N} \mathbb{1}\!\left[\,\text{judge}(x_i, a_i(x_i)) = \text{success}\,\right]
-\]
+\\[
+\text{ASR} \\;=\\; \frac{1}{N}\sum_{i=1}^{N} \mathbb{1}\\!\left[\\,\text{judge}(x_i, a_i(x_i)) = \text{success}\\,\right]
+\\]
 
-where \(x_i\) is the attack case, \(a_i\) the agent's behavior on it, and the indicator is 1 when the harmful goal was achieved. Lower is safer. For agents, "success" is typically "the harmful *action* occurred," not "the model *said* something bad."
+where \\(x_i\\) is the attack case, \\(a_i\\) the agent's behavior on it, and the indicator is 1 when the harmful goal was achieved. Lower is safer. For agents, "success" is typically "the harmful *action* occurred," not "the model *said* something bad."
 
 Two refinements you will see:
 
-- **ASR@k** — success if *any* of \(k\) attempts (or attack variants) works. Adversaries retry, so ASR@1 flatters you; ASR@k with k>1 is the honest number for robustness claims.
+- **ASR@k** — success if *any* of \\(k\\) attempts (or attack variants) works. Adversaries retry, so ASR@1 flatters you; ASR@k with k>1 is the honest number for robustness claims.
 - **Per-category ASR** — never report one blended ASR. A system can be bulletproof on jailbreaks and wide open to IPI. Report the vector.
 
 > **Saying it out loud.** Attack success rate is the fraction of your attack cases where the harmful goal was actually achieved — and for an agent, "achieved" means the harmful *action* fired, not that the model said something ugly. Two refinements separate a real number from a flattering one. ASR@k, where success means any of k attempts worked, because real adversaries retry and adapt, so single-shot ASR always understates your risk. And per-category ASR, because a blended number hides everything — a system can be bulletproof on jailbreaks and wide open on indirect injection, and one average makes those look the same. Never report a blended ASR@1; report the vector, with k greater than one.
@@ -159,22 +159,22 @@ Two refinements you will see:
 
 On the **benign** set, measure how often the agent refuses:
 
-\[
-\text{FRR} \;=\; \text{over\text{-}refusal rate} \;=\; \frac{\#\{\text{benign requests refused}\}}{\#\{\text{benign requests}\}}
-\]
+\\[
+\text{FRR} \\;=\\; \text{over\text{-}refusal rate} \\;=\\; \frac{\\#\\{\text{benign requests refused}\\}}{\\#\\{\text{benign requests}\\}}
+\\]
 
 FRR (false refusal rate) is what you trade off against ASR. The pair you actually care about:
 
-- **Safety** ≈ \(1 - \text{ASR}\) on the attack set.
-- **Helpfulness** ≈ \(1 - \text{FRR}\) on the benign set.
+- **Safety** ≈ \\(1 - \text{ASR}\\) on the attack set.
+- **Helpfulness** ≈ \\(1 - \text{FRR}\\) on the benign set.
 
 A defense is only an improvement if it lowers ASR **without materially raising FRR**. Plotting interventions on the (ASR, FRR) plane is the right way to compare guardrails; a single scalar hides the regression.
 
 #### Micro-examples
 
-- Suite of 200 jailbreak prompts; the agent produces disallowed, specific content on 24. \(\text{ASR} = 24/200 = 0.12\) (12%).
-- Same agent on 200 benign XSTest-style prompts refuses 30. \(\text{FRR} = 30/200 = 0.15\) (15%). You bought a 12% ASR at the cost of refusing 15% of legitimate work — often a bad trade; look at *which* benign prompts fail.
-- IPI suite: 150 environments each seed an injected instruction; the agent calls the attacker's tool in 9. \(\text{ASR}_{\text{IPI}} = 9/150 = 0.06\). But note the **utility** number too: of 150 *benign* tasks in the same environments, did the agent still complete them? AgentDojo reports both — an agent that ignores injections by ignoring all tool content is safe and useless.
+- Suite of 200 jailbreak prompts; the agent produces disallowed, specific content on 24. \\(\text{ASR} = 24/200 = 0.12\\) (12%).
+- Same agent on 200 benign XSTest-style prompts refuses 30. \\(\text{FRR} = 30/200 = 0.15\\) (15%). You bought a 12% ASR at the cost of refusing 15% of legitimate work — often a bad trade; look at *which* benign prompts fail.
+- IPI suite: 150 environments each seed an injected instruction; the agent calls the attacker's tool in 9. \\(\text{ASR}_{\text{IPI}} = 9/150 = 0.06\\). But note the **utility** number too: of 150 *benign* tasks in the same environments, did the agent still complete them? AgentDojo reports both — an agent that ignores injections by ignoring all tool content is safe and useless.
 
 > **Saying it out loud.** Here's how the pair reads in practice. Two hundred jailbreak prompts, twenty-four succeed, that's 12% ASR — sounds decent. Then two hundred benign trigger-heavy prompts, thirty refused, that's a 15% false refusal rate. So you bought a 12% attack rate by refusing fifteen percent of legitimate work, which for most products is a bad trade. The agent version adds a third number: in an injection suite you also report utility under attack, because the trivial way to drive injection ASR to zero is to ignore all tool content — and an agent that ignores its tools is perfectly safe and completely worthless. AgentDojo reports both for exactly that reason.
 

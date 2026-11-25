@@ -6,7 +6,7 @@
 
 ## 1. Core intuition: what an agent actually is
 
-**In plain language.** This section is about where the line sits between a chatbot, a scripted pipeline, and a real agent. There is a little notation borrowed from reinforcement learning \( \pi \), \( s_t \), \( o_t \) but all of it is saying one thing: the agent keeps appending what it did and what it saw onto one running context, and that context is the whole state. Read the symbols as shorthand for that and you lose nothing.
+**In plain language.** This section is about where the line sits between a chatbot, a scripted pipeline, and a real agent. There is a little notation borrowed from reinforcement learning \\( \pi \\), \\( s_t \\), \\( o_t \\) but all of it is saying one thing: the agent keeps appending what it did and what it saw onto one running context, and that context is the whole state. Read the symbols as shorthand for that and you lose nothing.
 
 Start with the plainest possible definition, the one Anthropic uses in [*Building Effective Agents*](https://www.anthropic.com/engineering/building-effective-agents):
 
@@ -16,7 +16,7 @@ Contrast that with a plain LLM call, which is a single forward pass: text in, te
 
 The one word that separates an agent from everything else is **control**. In a workflow, the *code* decides the order of steps. In an agent, the *model* decides — at run time, based on what it just saw. The model chooses which tool to call, with what arguments, whether the result was good enough, and whether to stop. That transfer of control from code to model is exactly what makes agents powerful *and* exactly what makes them hard to evaluate.
 
-A useful one-liner: **an agent is a policy in a loop over an environment.** In reinforcement-learning terms, the LLM is the policy \( \pi \) that maps a state (the accumulated context) to an action (a tool call or a final answer); the environment returns an observation; the loop repeats until the policy emits "done" or a budget runs out. Formally, if \( s_t \) is the context at step \( t \), the agent computes \( a_t \sim \pi_\theta(a \mid s_t) \), the environment returns observation \( o_t = \text{env}(a_t) \), and the state updates \( s_{t+1} = s_t \oplus (a_t, o_t) \) — the new context is the old context *concatenated with* the action and its result. That "\( \oplus \)" — the append — is the whole game. It is why context grows, why memory matters, and why a mistake at step 2 is still sitting in \( s_9 \) poisoning every decision after it.
+A useful one-liner: **an agent is a policy in a loop over an environment.** In reinforcement-learning terms, the LLM is the policy \\( \pi \\) that maps a state (the accumulated context) to an action (a tool call or a final answer); the environment returns an observation; the loop repeats until the policy emits "done" or a budget runs out. Formally, if \\( s_t \\) is the context at step \\( t \\), the agent computes \\( a_t \sim \pi_\theta(a \mid s_t) \\), the environment returns observation \\( o_t = \text{env}(a_t) \\), and the state updates \\( s_{t+1} = s_t \oplus (a_t, o_t) \\) — the new context is the old context *concatenated with* the action and its result. That "\\( \oplus \\)" — the append — is the whole game. It is why context grows, why memory matters, and why a mistake at step 2 is still sitting in \\( s_9 \\) poisoning every decision after it.
 
 **The autonomy spectrum.** "Agent" is not binary; it is a dial. At one end sits a single classifier call (zero autonomy). Then a fixed prompt chain (the *code* holds all control). Then a router that picks one of N branches (a sliver of model control). Then a ReAct loop with a tool catalog (the model picks actions but a human wrote the loop and the stop condition). Then a fully open-ended agent that writes and runs its own code, spawns sub-agents, and decides its own budget (maximal autonomy). Every rung you climb, you trade *predictability* for *flexibility* — and you buy a new class of failure. Good engineering is knowing exactly which rung a task needs and refusing to climb higher.
 
@@ -141,13 +141,13 @@ Every agent, under all the framework branding, runs some version of this cycle:
 
 ### The orchestrator's real job: context engineering
 
-Here is the subtlety most tutorials skip. The model is *stateless*. Between step \( t \) and step \( t+1 \) it remembers nothing — the only reason it "knows" what it did before is that the **orchestrator re-sends the relevant history in the prompt every single turn**. So the perceive step is not passive "reading of state"; it is an *active construction* of the prompt from many sources:
+Here is the subtlety most tutorials skip. The model is *stateless*. Between step \\( t \\) and step \\( t+1 \\) it remembers nothing — the only reason it "knows" what it did before is that the **orchestrator re-sends the relevant history in the prompt every single turn**. So the perceive step is not passive "reading of state"; it is an *active construction* of the prompt from many sources:
 
 1. The **system prompt** — role, constraints, tool-use policy, output format.
 2. The **goal / user request** — usually pinned so it never falls out of the window.
 3. The **tool catalog** — names, descriptions, JSON schemas (this alone can be thousands of tokens).
 4. The **scratchpad** — prior Thought/Action/Observation triples, possibly summarized.
-5. **Retrieved long-term memory** — top-\( k \) facts pulled from a vector store for *this* step.
+5. **Retrieved long-term memory** — top-\\( k \\) facts pulled from a vector store for *this* step.
 6. **Ephemeral state** — current time, budget remaining, retry counters.
 
 Assembling this well is **context engineering**: the discipline of deciding, on every turn, *what the model needs to see and what it must not waste tokens on.* The failure modes are two-sided. Include too little and the model forgets the goal or re-does work ("context starvation"). Include too much and you hit three separate problems: (a) you run out of window and truncation silently drops something load-bearing; (b) cost and latency balloon linearly with tokens; and (c) **"context rot" / "lost in the middle"** — models attend most reliably to the *start* and *end* of a long context and can miss a fact buried in the middle (Liu et al., 2023, [*Lost in the Middle*](https://arxiv.org/abs/2307.03172)). A 200K-token window does not mean 200K tokens of *reliable attention*.
@@ -275,7 +275,7 @@ Because working memory *is* the context window, and the window is finite and imp
 ### Memory architectures in practice
 
 - **Short-term** is usually "keep the last N turns in context," with **summarization/compaction** kicking in near the window limit.
-- **Long-term semantic memory** is typically **retrieval-augmented**: write facts as embeddings into a vector store (FAISS, pgvector, Pinecone, Chroma, Weaviate), retrieve top-\( k \) by cosine similarity at each step. Quality is bounded by retrieval quality, so retrieval must be evaluated *separately* (recall\@k, precision, chunk relevance).
+- **Long-term semantic memory** is typically **retrieval-augmented**: write facts as embeddings into a vector store (FAISS, pgvector, Pinecone, Chroma, Weaviate), retrieve top-\\( k \\) by cosine similarity at each step. Quality is bounded by retrieval quality, so retrieval must be evaluated *separately* (recall\@k, precision, chunk relevance).
 - **Episodic memory** stores *whole past trajectories or events* ("last Tuesday the user asked for a refund and we did X"). Retrieval is by similarity to the *current situation*. The classic bug: the agent finds a superficially-similar past episode and over-applies its resolution to a case that differs in a detail that matters.
 - **Procedural memory** stores *how-to* knowledge: successful tool recipes, reflections, learned skills (as in Voyager's skill library for Minecraft, [Wang et al., 2023](https://arxiv.org/abs/2305.16291)). A bad reflection written once ("always retry the API three times") becomes a permanent liability if it was wrong.
 
@@ -429,7 +429,7 @@ ANSWER: 25902068371200.0 meters
 | Step 0–1 chose `search` | Planner + LLM core | Did it identify *both* facts it needed before calculating? |
 | Observations `299792458`, `86400` | Tools / faithfulness | Are the retrieved facts correct? (retrieval eval) |
 | Step 2 expression | Tool-argument correctness | Did it multiply the *right* two numbers? |
-| Result magnitude | Reasoning / sanity | Is ~\(2.6\times10^{13}\) m physically plausible? |
+| Result magnitude | Reasoning / sanity | Is ~\\(2.6\times10^{13}\\) m physically plausible? |
 | Step 3 `finish` | Controller / stop logic | Did it stop at the right time — not too early, not looping? |
 | No `eval` in calculator | Safety | Would a malicious `expression` execute code? (No — it can't.) |
 | `steps ≤ max_steps` | Controller / budget | Did it stay within its iteration cap? |
@@ -448,7 +448,7 @@ The properties that make agents useful are the same ones that break naive evalua
 
 - **Trajectory vs. outcome.** The final answer can be right by luck (two errors canceling) or the *process* can be unacceptable even when the answer is right (it deleted a table, spent $40, leaked a secret). You must decide, per use case, whether you are grading **outcome** (did the DB end in the correct state?), **trajectory** (were the steps valid and efficient?), or both. Most serious evals grade both, with separate metrics.
 
-- **Compounding errors.** If each step is 95% reliable, a 10-step task is \( 0.95^{10} \approx 0.60 \) reliable end-to-end. Small per-step error rates become large task-failure rates. This is why per-step metrics matter and why "the model is great" does not imply "the agent is great."
+- **Compounding errors.** If each step is 95% reliable, a 10-step task is \\( 0.95^{10} \approx 0.60 \\) reliable end-to-end. Small per-step error rates become large task-failure rates. This is why per-step metrics matter and why "the model is great" does not imply "the agent is great."
 
 - **Partial credit.** Real tasks are rarely all-or-nothing. An agent that completes 4 of 5 subgoals, or gets a correct answer via an inefficient 12-step path, deserves a score *between* 0 and 1. Designing partial-credit rubrics (subgoal completion, checkpoint milestones) is a core eval skill.
 
@@ -460,7 +460,7 @@ The properties that make agents useful are the same ones that break naive evalua
 
 The through-line: **grade the process, not just the product; run many times, not once; and log enough state to assign blame.**
 
-> **Saying it out loud.** Short version: agents are nondeterministic, they compound errors, and they have side effects, so a single run graded on the final answer tells you almost nothing. The number that lands is compounding — if each step is 95% reliable, a ten-step task is \( 0.95^{10} \approx 0.60 \), so about 60% end-to-end. That's why a great single-call benchmark score does not predict agent success, and why per-step reliability is the thing to measure. Then add nondeterminism, so you need pass@k over reruns instead of one pass/fail, and hermetic resettable environments, because you can't meaningfully re-run a test after the agent already sent the email. The through-line: grade the process as well as the product, run many times, and log enough state to assign blame.
+> **Saying it out loud.** Short version: agents are nondeterministic, they compound errors, and they have side effects, so a single run graded on the final answer tells you almost nothing. The number that lands is compounding — if each step is 95% reliable, a ten-step task is \\( 0.95^{10} \approx 0.60 \\), so about 60% end-to-end. That's why a great single-call benchmark score does not predict agent success, and why per-step reliability is the thing to measure. Then add nondeterminism, so you need pass@k over reruns instead of one pass/fail, and hermetic resettable environments, because you can't meaningfully re-run a test after the agent already sent the email. The through-line: grade the process as well as the product, run many times, and log enough state to assign blame.
 
 ---
 
@@ -686,7 +686,7 @@ if __name__ == "__main__":
 
 | Code | Concept from §2–§3 | Why it matters in prod / eval |
 |---|---|---|
-| `State` + `add_messages` reducer | Scratchpad / working memory | The append (\(\oplus\)) is explicit and typed; you can log/inspect it |
+| `State` + `add_messages` reducer | Scratchpad / working memory | The append (\\(\oplus\\)) is explicit and typed; you can log/inspect it |
 | `bind_tools(TOOLS)` | Native function calling | Actions come back as structured `tool_calls`, not parsed strings |
 | `tool_node` try/except | Controller error handling | A tool 500 becomes an *observation* the model can react to, not a crash |
 | `should_continue` | Stop condition | Model-driven: loop while it asks for tools, stop when it answers |
@@ -783,7 +783,7 @@ The orchestrator re-sends the relevant history in the prompt every turn — that
 Not necessarily. It can be right by luck (two errors canceling) or reached via an unacceptable trajectory — side effects, excessive cost, unsafe actions. You must grade trajectory *and* outcome, and run multiple times because of nondeterminism.
 
 **Q5. Each step is 95% reliable. What's your end-to-end reliability on a 10-step task, and what does that imply?**
-\( 0.95^{10}\approx 0.60 \). Small per-step errors compound multiplicatively. Implication: measure *per-step* reliability, shorten the critical path, add verification/retries at weak steps, and don't assume a high single-call score predicts agent success.
+\\( 0.95^{10}\approx 0.60 \\). Small per-step errors compound multiplicatively. Implication: measure *per-step* reliability, shorten the critical path, add verification/retries at weak steps, and don't assume a high single-call score predicts agent success.
 
 **Q6. A 15-step run failed. How do you find the cause?**
 Step-level logging. Inspect the trace: which action first diverged, what was in context/memory at that point, whether a tool errored or returned stale data. Distinguish model failures from tool/description/memory/controller failures — they need different fixes. Without per-step state you'll "fix" the wrong thing.
